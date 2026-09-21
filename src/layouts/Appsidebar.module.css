@@ -1,0 +1,51 @@
+.sidebar {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-md);
+  padding: var(--mantine-spacing-lg) 0 var(--mantine-spacing-md) var(--mantine-spacing-sm);
+  background: var(--mantine-color-body);
+  box-shadow: inset -1px 0 0 var(--mantine-color-default-border);
+}
+
+.nav { flex: 1; overflow: hidden auto; scrollbar-width: none; padding-block: 20px; }
+.label { margin: 18px 0 6px 14px; font-size: 11px; font-weight: 600; color: var(--mantine-color-dimmed); }
+.nav > .label:first-child { margin-top: 0; }
+.sidebar[data-collapsed] .label { height: 1px; margin: 14px 18px 14px 6px; font-size: 0; background: var(--mantine-color-default-border); }
+
+.link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 44px;
+  margin-block: 3px;
+  padding-inline: 14px;
+  border-radius: 22px 0 0 22px;
+  color: var(--mantine-color-text);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+.sidebar[data-collapsed] .link { justify-content: center; padding-inline: 0; }
+.link:hover { background: var(--mantine-primary-color-light); color: var(--mantine-primary-color-light-color); }
+.link:focus-visible { outline: 2px solid var(--mantine-primary-color-filled); outline-offset: -4px; }
+
+/* Active: orange tab jo right edge se curves ke saath judta hai */
+.link[aria-current="page"] { background: var(--mantine-primary-color-filled); color: var(--mantine-primary-color-contrast); font-weight: 600; }
+.link[aria-current="page"]::before,
+.link[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  width: 22px;
+  height: 22px;
+  pointer-events: none;
+  --fill: var(--mantine-primary-color-filled);
+}
+.link[aria-current="page"]::before { bottom: 100%; background: radial-gradient(circle at 0 0, transparent 21.5px, var(--fill) 22px); }
+.link[aria-current="page"]::after { top: 100%; background: radial-gradient(circle at 0 100%, transparent 21.5px, var(--fill) 22px); }
+
+.theme { margin-left: 6px; }
+.sidebar[data-collapsed] .theme { margin-left: 10px; }
