@@ -10,6 +10,7 @@ import {
   maintenanceRoutes,
 } from "./routes/maintenance";
 import FleetsLayout from "./layouts/fleets";
+import { insuranceDetailRoutes, insuranceRoutes } from "./routes/Insurance";
 
 const HOME = "/fleets/dashboard";
 
@@ -25,10 +26,12 @@ const App = () => (
         <Route element={<FleetsLayout />}>
           {fleetRoutes}
           {maintenanceRoutes}
+          {insuranceRoutes}
         </Route>
 
         {fleetDetailRoutes}
         {maintenanceDetailRoutes}
+        {insuranceDetailRoutes}
 
         {adminSettingsRoutes}
       </Route>
