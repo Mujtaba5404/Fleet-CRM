@@ -1,21 +1,15 @@
-import { ActionIcon } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconPencil } from "@tabler/icons-react";
-import CanAccess from "../../components/CanAccess";
+import EditTrigger from "../../components/EditTrigger";
 import EditfleetModal from "./EditfleetModal";
 
-const EditfleetModalButton = ({ fleet }) => {
+const EditfleetModalButton = ({ fleet, variant = "icon" }) => {
   const [opened, { open, close }] = useDisclosure(false);
 
   return (
-    // <CanAccess resource="fleet" action="update">
     <>
       <EditfleetModal fleet={fleet} isOpen={opened} onClose={close} />
 
-      <ActionIcon onClick={open}>
-        <IconPencil size={18} />
-      </ActionIcon>
-      {/* </CanAccess> */}
+      <EditTrigger onClick={open} variant={variant} label="Edit vehicle" />
     </>
   );
 };

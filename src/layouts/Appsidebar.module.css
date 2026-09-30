@@ -1,51 +1,181 @@
 .sidebar {
+  position: relative;
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--mantine-spacing-md);
-  padding: var(--mantine-spacing-lg) 0 var(--mantine-spacing-md) var(--mantine-spacing-sm);
   background: var(--mantine-color-body);
-  box-shadow: inset -1px 0 0 var(--mantine-color-default-border);
 }
 
-.nav { flex: 1; overflow: hidden auto; scrollbar-width: none; padding-block: 20px; }
-.label { margin: 18px 0 6px 14px; font-size: 11px; font-weight: 600; color: var(--mantine-color-dimmed); }
-.nav > .label:first-child { margin-top: 0; }
-.sidebar[data-collapsed] .label { height: 1px; margin: 14px 18px 14px 6px; font-size: 0; background: var(--mantine-color-default-border); }
+/* ---------- Brand ---------- */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 60px;
+  padding-inline: 16px;
+  flex-shrink: 0;
+}
+
+.sidebar[data-collapsed="true"] .brand {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.brandMark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: var(--mantine-radius-md);
+  color: var(--mantine-color-white);
+  background: linear-gradient(
+    135deg,
+    var(--mantine-color-brand-5),
+    var(--mantine-color-brand-7)
+  );
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.brandText {
+  min-width: 0;
+  line-height: 1.15;
+}
+
+/* ---------- Nav ---------- */
+.nav {
+  flex: 1;
+  min-height: 0;
+  padding: 8px 12px 16px;
+}
+
+.sectionLabel {
+  margin: 18px 0 6px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mantine-color-dimmed);
+}
+
+.nav > *:first-child > .sectionLabel {
+  margin-top: 2px;
+}
+
+/* Collapsed rail: section titles shrink into a divider line */
+.sidebar[data-collapsed="true"] .sectionLabel {
+  height: 1px;
+  margin: 14px 8px;
+  font-size: 0;
+  background: var(--mantine-color-default-border);
+}
 
 .link {
   position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 44px;
-  margin-block: 3px;
-  padding-inline: 14px;
-  border-radius: 22px 0 0 22px;
+  height: 42px;
+  padding-inline: 12px;
+  border-radius: var(--mantine-radius-md);
   color: var(--mantine-color-text);
   font-size: var(--mantine-font-size-sm);
   font-weight: 500;
   text-decoration: none;
-  transition: background-color 160ms ease, color 160ms ease;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
 }
-.sidebar[data-collapsed] .link { justify-content: center; padding-inline: 0; }
-.link:hover { background: var(--mantine-primary-color-light); color: var(--mantine-primary-color-light-color); }
-.link:focus-visible { outline: 2px solid var(--mantine-primary-color-filled); outline-offset: -4px; }
 
-/* Active: orange tab jo right edge se curves ke saath judta hai */
-.link[aria-current="page"] { background: var(--mantine-primary-color-filled); color: var(--mantine-primary-color-contrast); font-weight: 600; }
-.link[aria-current="page"]::before,
-.link[aria-current="page"]::after {
+.sidebar[data-collapsed="true"] .link {
+  justify-content: center;
+  width: 44px;
+  padding-inline: 0;
+  margin-inline: auto;
+}
+
+.link:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+.link[data-active="true"] {
+  background: var(--mantine-primary-color-light);
+  color: var(--mantine-primary-color-light-color);
+  font-weight: 600;
+}
+
+/* Accent bar on the active item */
+.link[data-active="true"]::before {
   content: "";
   position: absolute;
-  right: 0;
-  width: 22px;
-  height: 22px;
-  pointer-events: none;
-  --fill: var(--mantine-primary-color-filled);
+  left: 0;
+  top: 50%;
+  translate: 0 -50%;
+  width: 3px;
+  height: 20px;
+  border-radius: 0 3px 3px 0;
+  background: var(--mantine-primary-color-filled);
 }
-.link[aria-current="page"]::before { bottom: 100%; background: radial-gradient(circle at 0 0, transparent 21.5px, var(--fill) 22px); }
-.link[aria-current="page"]::after { top: 100%; background: radial-gradient(circle at 0 100%, transparent 21.5px, var(--fill) 22px); }
 
-.theme { margin-left: 6px; }
-.sidebar[data-collapsed] .theme { margin-left: 10px; }
+.sidebar[data-collapsed="true"] .link[data-active="true"]::before {
+  display: none;
+}
+
+.linkIcon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+
+.linkLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Footer ---------- */
+.footer {
+  flex-shrink: 0;
+  padding: 12px;
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.userCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px;
+  border-radius: var(--mantine-radius-md);
+  transition: background-color 150ms ease;
+}
+
+.userCard:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.sidebar[data-collapsed="true"] .userCard {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+/* ---------- Collapse handle ---------- */
+.collapseHandle {
+  position: absolute;
+  top: 70px;
+  right: -12px;
+  z-index: 3;
+}
+
+/* Below `md` the navbar is a full-height overlay, so there is nothing to collapse. */
+@media (max-width: 62em) {
+  .collapseHandle {
+    display: none;
+  }
+}

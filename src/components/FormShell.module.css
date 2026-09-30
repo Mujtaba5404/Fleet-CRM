@@ -1,0 +1,68 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+/* ---------- Header ---------- */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.headerText {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- Body ---------- */
+.body {
+  flex: 1;
+  min-height: 0;
+  background: var(--mantine-color-gray-0);
+}
+
+[data-mantine-color-scheme="dark"] .body {
+  background: var(--mantine-color-dark-8);
+}
+
+.bodyInner {
+  padding: 20px;
+}
+
+@media (max-width: 36em) {
+  .bodyInner {
+    padding: 14px;
+  }
+
+  .header {
+    padding: 12px 14px;
+  }
+}
+
+/* ---------- Footer ---------- */
+.footer {
+  flex-shrink: 0;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 12px 20px;
+  border-top: 1px solid var(--mantine-color-default-border);
+  background: var(--mantine-color-body);
+}
+
+/* On a phone the actions are thumb targets, so let them fill the bar. */
+@media (max-width: 36em) {
+  .footer {
+    padding: 12px 14px;
+  }
+
+  .footer > * {
+    flex: 1;
+  }
+}

@@ -1,15 +1,19 @@
-import { useDeletefleetMutation } from "../../api/fleet";
+import { useDeleteMaintenanceMutation } from "../../api/maintenance";
 import DeleteItemButton from "../../components/DeleteItemButton";
 
-const DeleteMaintenanceButton = ({ maintenanceId, redirect = false }) => {
-  return (
-    <DeleteItemButton
-      label="maintenance"
-      mutationHook={useDeletefleetMutation}
-      itemId={maintenanceId}
-      navigateTo={redirect ? "/maintenance" : undefined}
-    />
-  );
-};
+const DeleteMaintenanceButton = ({
+  maintenanceId,
+  redirect = false,
+  variant = "icon",
+}) => (
+  <DeleteItemButton
+    label="maintenance job"
+    mutationHook={useDeleteMaintenanceMutation}
+    itemId={maintenanceId}
+    variant={variant}
+    buttonText="Delete"
+    navigateTo={redirect ? "/maintenance" : undefined}
+  />
+);
 
 export default DeleteMaintenanceButton;

@@ -1,4 +1,13 @@
-import { Badge, Group, Loader, Paper, SimpleGrid, Stack, Title, Tooltip } from "@mantine/core";
+import {
+  Badge,
+  Group,
+  Loader,
+  Paper,
+  SimpleGrid,
+  Stack,
+  Title,
+  Tooltip,
+} from "@mantine/core";
 import { IconFiles, IconSettingsCheck, IconX } from "@tabler/icons-react";
 import groupBy from "lodash/groupBy";
 import { useGetAllPicklistsQuery } from "../../../api/picklist";
@@ -11,7 +20,10 @@ function groupPicklistsByParentPicklist(picklists = []) {
   const grouped = groupBy(picklists, (p) => p.parentPicklist?._id || null);
 
   return Object.values(grouped)
-    .map((children) => ({ parentPicklist: children[0].parentPicklist, picklists: children }))
+    .map((children) => ({
+      parentPicklist: children[0].parentPicklist,
+      picklists: children,
+    }))
     .sort((a, b) => {
       const titleA = a.parentPicklist?.title || "";
       const titleB = b.parentPicklist?.title || "";
@@ -21,14 +33,23 @@ function groupPicklistsByParentPicklist(picklists = []) {
 }
 
 const PicklistsList = ({ children }) => {
-  const { featureName, scope, resource, field, parentPicklist } = usePicklists();
-  const { data, isLoading, isError } = useGetAllPicklistsQuery({ query: { scope, resource, field, parentPicklist } });
+  const { featureName, scope, resource, field, parentPicklist } =
+    usePicklists();
+  const { data, isLoading, isError } = useGetAllPicklistsQuery({
+    query: { scope, resource, field, parentPicklist },
+  });
 
   if (isLoading) return <Loader />;
 
   if (isError) return <Placeholder title="Error" icon={<IconX size={50} />} />;
 
-  if (!data?.length) return <Placeholder title={`No ${featureName} to display`} icon={<IconFiles size={50} />} />;
+  if (!data?.length)
+    return (
+      <Placeholder
+        title={`No ${featureName} to display`}
+        icon={<IconFiles size={50} />}
+      />
+    );
 
   const groupedPicklists = groupPicklistsByParentPicklist(data);
 
@@ -50,7 +71,11 @@ const PicklistsList = ({ children }) => {
             <Paper key={picklist._id} p={"sm"}>
               <Group gap={0}>
                 <Group gap={"xs"} mr={"auto"}>
-                  {children ? children(picklist) : <Badge color={picklist.color}>{picklist.title}</Badge>}
+                  {children ? (
+                    children(picklist)
+                  ) : (
+                    <Badge color={picklist.color}>{picklist.title}</Badge>
+                  )}
 
                   {picklist.isDefault && (
                     <Tooltip label="Default">

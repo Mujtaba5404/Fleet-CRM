@@ -6,7 +6,9 @@ const api = axios.create({
 });
 
 const setAuthorizationHeader = (config) => {
-  const auth = localStorage.getItem("auth") ? JSON.parse(localStorage.getItem("auth")) : null;
+  const auth = localStorage.getItem("auth")
+    ? JSON.parse(localStorage.getItem("auth"))
+    : null;
 
   if (auth) {
     config.headers.Authorization = `Bearer ${auth.token}`;
@@ -24,7 +26,10 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      const serverMessage = error.response.data?.message || error.response.data?.error || `Request failed with status ${error.response.status}`;
+      const serverMessage =
+        error.response.data?.message ||
+        error.response.data?.error ||
+        `Request failed with status ${error.response.status}`;
 
       error.message = serverMessage;
     } else if (error.request) {

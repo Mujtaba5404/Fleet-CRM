@@ -1,4 +1,14 @@
-import { Avatar, Badge, Grid, Group, Loader, Paper, SimpleGrid, Stack, Text, Tooltip } from "@mantine/core";
+import {
+  Avatar,
+  Badge,
+  Center,
+  Grid,
+  Group,
+  Loader,
+  SimpleGrid,
+  Stack,
+  Text,
+} from "@mantine/core";
 import {
   IconCalendarEvent,
   IconCar,
@@ -8,81 +18,31 @@ import {
   IconGauge,
   IconPaint,
   IconProgressCheck,
+  IconRoad,
   IconSparkles,
   IconUserCheck,
   IconX,
 } from "@tabler/icons-react";
 import { useParams } from "react-router-dom";
 import { useGetfleetByIdQuery } from "../../api/fleet";
-import InfoList from "../../components/InfoList";
+import DetailHero from "../../components/DetailHero";
+import DetailPanel from "../../components/DetailPanel";
+import PageHeader from "../../components/PageHeader";
+import PicklistBadge from "../../components/PicklistBadge";
 import Placeholder from "../../components/Placeholder";
-import classes from "../../index.module.css";
+import StatTile from "../../components/StatTile";
 import formatAmount from "../../utils/formatAmount";
 import formatDate from "../../utils/formatDate";
 import getAbbreviation from "../../utils/getAbbreviation";
 import DeletefleetButton from "./DeletefleetButton";
 import EditfleetModalButton from "./EditfleetModalButton";
 
-const PicklistBadge = ({ item }) => {
-  if (!item?.title)
-    return (
-      <Text size="sm" c={"dimmed"}>
-        —
-      </Text>
-    );
-
-  return (
-    <Badge variant="light" size="sm" color={item.color || "gray"} tt={"capitalize"}>
-      {item.title}
-    </Badge>
-  );
-};
-
-const Field = ({ label, children }) => (
-  <Stack gap={2}>
-    <Text size="xs" c={"dimmed"} fw={500}>
-      {label}
-    </Text>
-
-    {typeof children === "string" || typeof children === "number" ? (
-      <Text size="sm" fw={500}>
-        {children}
-      </Text>
-    ) : (
-      children
-    )}
-  </Stack>
-);
-
-const Section = ({ icon, title, children }) => (
-  <Paper p={"md"}>
-    <Group gap={8} align="flex-end" mb={"md"}>
-      {icon}
-
-      <Text size="xs" c={"dimmed"} fw={500}>
-        {title}
-      </Text>
-    </Group>
-
-    {children}
-  </Paper>
-);
-
-const createInfoListItems = (fleet) => [
-  { icon: <IconCar />, label: "type", children: <PicklistBadge item={fleet.type} /> },
-  { icon: <IconGasStation />, label: "fuel type", children: <PicklistBadge item={fleet.fuelType} /> },
-  { icon: <IconEngine />, label: "transmission", children: <PicklistBadge item={fleet.transmission} /> },
-  { icon: <IconProgressCheck />, label: "status", children: <PicklistBadge item={fleet.status} /> },
-  { icon: <IconSparkles />, label: "condition", children: <PicklistBadge item={fleet.condition} /> },
-  {
-    icon: <IconPaint />,
-    label: "color",
-    children: (
-      <Text size="sm" tt={"capitalize"}>
-        {fleet.color || "—"}
-      </Text>
-    ),
-  },
+const SPEC_FIELDS = [
+  { icon: IconCar, label: "Type", key: "type" },
+  { icon: IconGasStation, label: "Fuel type", key: "fuelType" },
+  { icon: IconEngine, label: "Transmission", key: "transmission" },
+  { icon: IconProgressCheck, label: "Status", key: "status" },
+  { icon: IconSparkles, label: "Condition", key: "condition" },
 ];
 
 const FleetDetails = () => {
@@ -90,112 +50,253 @@ const FleetDetails = () => {
 
   const fleet = useGetfleetByIdQuery(id);
 
-  if (fleet.isLoading) return <Loader />;
+  if (fleet.isLoading)
+    return (
+      <Center h={320}>
+        <Loader />
+      </Center>
+    );
 
-  if (fleet.isError) return <Placeholder title={fleet.error?.response?.data.message || "Error"} icon={<IconX size={50} />} />;
+  if (fleet.isError)
+    return (
+      <>
+        <PageHeader
+          back
+          title="Vehicle"
+          breadcrumbs={[
+            { label: "Fleet" },
+            { label: "Vehicles", to: "/fleets" },
+          ]}
+        />
+
+        <Placeholder
+          title={
+            fleet.error?.response?.data?.message ||
+            fleet.error?.message ||
+            "Error"
+          }
+          description="We could not load this vehicle. It may have been deleted."
+          icon={<IconX size={32} />}
+        />
+      </>
+    );
 
   const data = fleet.data;
 
-  const infoList = createInfoListItems(data);
-
-  const vehicleName = [data.make?.title, data.model?.title].filter(Boolean).join(" ");
-  const distanceDriven = (data.currentOdometer ?? 0) - (data.initialOdometer ?? 0);
+  const vehicleName = [data.make?.title, data.model?.title]
+    .filter(Boolean)
+    .join(" ");
+  const distanceDriven =
+    (data.currentOdometer ?? 0) - (data.initialOdometer ?? 0);
 
   return (
-    <Grid>
-      <Grid.Col span={{ base: 12, md: 4, xl: 3 }}>
-        <Stack>
-          <Group>
-            <Avatar alt={vehicleName} size={"xl"} color={data.make?.color || "gray"}>
-              {getAbbreviation(vehicleName || data.licensePlate)}
-            </Avatar>
+    <>
+      <PageHeader
+        back
+        title={vehicleName || data.licensePlate || "Vehicle"}
+        description={`Added ${formatDate(data.createdAt)}`}
+        breadcrumbs={[
+          { label: "Fleet" },
+          { label: "Vehicles", to: "/fleets" },
+          { label: data.licensePlate || "Vehicle" },
+        ]}
+        actions={
+          <>
+            <EditfleetModalButton fleet={data} variant="button" />
 
-            <Stack gap={4}>
-              <Group gap={"xs"}>
-                <Tooltip label={vehicleName || "—"}>
-                  <Text size="lg" fw={700} tt={"capitalize"}>
-                    {vehicleName || "—"}
-                  </Text>
-                </Tooltip>
+            <DeletefleetButton fleetId={data._id} redirect variant="button" />
+          </>
+        }
+      />
 
-                <EditfleetModalButton fleet={data} />
+      <Stack gap="md">
+        <DetailHero
+          railColor={data.status?.color}
+          title={
+            <Group gap="sm" wrap="nowrap">
+              <Avatar
+                alt={vehicleName}
+                size={44}
+                radius="md"
+                color={data.make?.color || "gray"}
+              >
+                {getAbbreviation(vehicleName || data.licensePlate)}
+              </Avatar>
 
-                <DeletefleetButton fleetId={data._id} redirect />
-              </Group>
-
-              <Group gap={6} mt={4}>
-                <Badge variant="light" tt={"uppercase"}>
-                  {data.licensePlate || "—"}
-                </Badge>
-
-                <Text size="xs" c={"dimmed"} fw={500}>
-                  {data.year || "—"}
-                </Text>
-              </Group>
-
-              <Text size="xs" fw={500}>
-                <Text component="span" c={"dimmed"}>
-                  Added on:
-                </Text>
-                {` ${formatDate(data.createdAt)}`}
+              <Text fz="xl" fw={700} tt="capitalize">
+                {vehicleName || "—"}
               </Text>
+            </Group>
+          }
+          badges={
+            <>
+              <Badge size="md" tt="uppercase">
+                {data.licensePlate || "—"}
+              </Badge>
+
+              <PicklistBadge item={data.status} size="md" />
+              <PicklistBadge item={data.condition} size="md" />
+            </>
+          }
+          subtitle={
+            <Group gap="xs">
+              <Text fz="sm" c="dimmed" tt="capitalize">
+                {[data.year, data.color, data.type?.title]
+                  .filter(Boolean)
+                  .join(" · ") || "No specification recorded"}
+              </Text>
+            </Group>
+          }
+          figureLabel="Purchase price"
+          figure={formatAmount(data.purchaseAmount || 0)}
+          figureHint={
+            data.purchaseDate
+              ? `Bought ${formatDate(data.purchaseDate)}`
+              : "No purchase date"
+          }
+        />
+
+        <SimpleGrid cols={{ base: 2, lg: 4 }} spacing="md">
+          <StatTile
+            label="Current odometer"
+            value={data.currentOdometer?.toLocaleString() ?? "—"}
+            hint="Latest reading"
+            icon={IconGauge}
+          />
+
+          <StatTile
+            label="Distance driven"
+            value={distanceDriven.toLocaleString()}
+            hint={`From ${data.initialOdometer?.toLocaleString() ?? "—"}`}
+            icon={IconRoad}
+            color="cyan"
+          />
+
+          <StatTile
+            label="Monthly rent"
+            value={data.rent ? formatAmount(data.rent) : "—"}
+            hint={data.rent ? "Recurring" : "Not rented out"}
+            icon={IconCash}
+            color="teal"
+          />
+
+          <StatTile
+            label="Assigned"
+            value={data.assignedOn ? formatDate(data.assignedOn) : "—"}
+            hint={data.assignedTo?.name || "Unassigned"}
+            icon={IconUserCheck}
+            color="grape"
+          />
+        </SimpleGrid>
+
+        <Grid>
+          <Grid.Col span={{ base: 12, md: 5, lg: 4 }}>
+            <DetailPanel title="Specification" icon={IconCar} h="100%">
+              <DetailPanel.FieldList>
+                {SPEC_FIELDS.map(({ icon: Icon, label, key }) => (
+                  <Group key={key} justify="space-between" wrap="nowrap">
+                    <Group gap={8} wrap="nowrap">
+                      <Icon size={16} color="var(--mantine-color-dimmed)" />
+
+                      <Text fz="sm" c="dimmed">
+                        {label}
+                      </Text>
+                    </Group>
+
+                    <PicklistBadge item={data[key]} />
+                  </Group>
+                ))}
+
+                <Group justify="space-between" wrap="nowrap">
+                  <Group gap={8} wrap="nowrap">
+                    <IconPaint size={16} color="var(--mantine-color-dimmed)" />
+
+                    <Text fz="sm" c="dimmed">
+                      Colour
+                    </Text>
+                  </Group>
+
+                  <Text fz="sm" fw={500} tt="capitalize">
+                    {data.color || "—"}
+                  </Text>
+                </Group>
+              </DetailPanel.FieldList>
+            </DetailPanel>
+          </Grid.Col>
+
+          <Grid.Col span={{ base: 12, md: 7, lg: 8 }}>
+            <Stack gap="md">
+              <DetailPanel title="Purchase & rent" icon={IconCash}>
+                <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="md">
+                  <DetailPanel.Field label="Purchase amount" numeric>
+                    {formatAmount(data.purchaseAmount || 0)}
+                  </DetailPanel.Field>
+
+                  <DetailPanel.Field label="Purchase date" numeric>
+                    {formatDate(data.purchaseDate)}
+                  </DetailPanel.Field>
+
+                  <DetailPanel.Field label="Monthly rent" numeric>
+                    {data.rent ? formatAmount(data.rent) : "—"}
+                  </DetailPanel.Field>
+                </SimpleGrid>
+              </DetailPanel>
+
+              <DetailPanel title="Odometer" icon={IconGauge}>
+                <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="md">
+                  <DetailPanel.Field label="Current reading" numeric>
+                    {data.currentOdometer?.toLocaleString() ?? "—"}
+                  </DetailPanel.Field>
+
+                  <DetailPanel.Field label="Initial reading" numeric>
+                    {data.initialOdometer?.toLocaleString() ?? "—"}
+                  </DetailPanel.Field>
+
+                  <DetailPanel.Field label="Distance driven" numeric>
+                    {distanceDriven.toLocaleString()}
+                  </DetailPanel.Field>
+                </SimpleGrid>
+              </DetailPanel>
+
+              <DetailPanel title="Assignment" icon={IconUserCheck}>
+                <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="md">
+                  <DetailPanel.Field label="Assigned to">
+                    {data.assignedTo?.name ||
+                      (data.assignedTo ? "Not populated" : "Unassigned")}
+                  </DetailPanel.Field>
+
+                  <DetailPanel.Field label="Assigned on" numeric>
+                    {data.assignedOn ? formatDate(data.assignedOn) : "—"}
+                  </DetailPanel.Field>
+
+                  <DetailPanel.Field label="Inspector">
+                    {data.inspector?.name ||
+                      (data.inspector ? "Not populated" : "—")}
+                  </DetailPanel.Field>
+                </SimpleGrid>
+              </DetailPanel>
+
+              <DetailPanel title="Record" icon={IconCalendarEvent}>
+                <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="md">
+                  <DetailPanel.Field label="Company">
+                    {data.company?.title ||
+                      (data.company ? "Not populated" : "—")}
+                  </DetailPanel.Field>
+
+                  <DetailPanel.Field label="Created on" numeric>
+                    {formatDate(data.createdAt)}
+                  </DetailPanel.Field>
+
+                  <DetailPanel.Field label="Last updated" numeric>
+                    {formatDate(data.updatedAt)}
+                  </DetailPanel.Field>
+                </SimpleGrid>
+              </DetailPanel>
             </Stack>
-          </Group>
-
-          <InfoList>
-            {infoList.map((item, index) => (
-              <InfoList.Item key={index} icon={item.icon} label={item.label}>
-                {item.children}
-              </InfoList.Item>
-            ))}
-          </InfoList>
-        </Stack>
-      </Grid.Col>
-
-      <Grid.Col span={{ base: 12, md: 8, xl: 9 }}>
-        <Stack>
-          <Section icon={<IconCash className={classes.icon} />} title="Purchase & rent">
-            <SimpleGrid cols={{ base: 2, sm: 3 }} spacing={"md"}>
-              <Field label="Purchase amount">{formatAmount(data.purchaseAmount || 0)}</Field>
-
-              <Field label="Purchase date">{formatDate(data.purchaseDate)}</Field>
-
-              <Field label="Monthly rent">{data.rent ? formatAmount(data.rent) : "—"}</Field>
-            </SimpleGrid>
-          </Section>
-
-          <Section icon={<IconGauge className={classes.icon} />} title="Odometer">
-            <SimpleGrid cols={{ base: 2, sm: 3 }} spacing={"md"}>
-              <Field label="Current reading">{data.currentOdometer?.toLocaleString() ?? "—"}</Field>
-
-              <Field label="Initial reading">{data.initialOdometer?.toLocaleString() ?? "—"}</Field>
-
-              <Field label="Distance driven">{distanceDriven.toLocaleString()}</Field>
-            </SimpleGrid>
-          </Section>
-
-          <Section icon={<IconUserCheck className={classes.icon} />} title="Assignment">
-            <SimpleGrid cols={{ base: 2, sm: 3 }} spacing={"md"}>
-              <Field label="Assigned to">{data.assignedTo?.name || (data.assignedTo ? "Not populated" : "Unassigned")}</Field>
-
-              <Field label="Assigned on">{data.assignedOn ? formatDate(data.assignedOn) : "—"}</Field>
-
-              <Field label="Inspector">{data.inspector?.name || (data.inspector ? "Not populated" : "—")}</Field>
-            </SimpleGrid>
-          </Section>
-
-          <Section icon={<IconCalendarEvent className={classes.icon} />} title="Record">
-            <SimpleGrid cols={{ base: 2, sm: 3 }} spacing={"md"}>
-              <Field label="Company">{data.company?.title || (data.company ? "Not populated" : "—")}</Field>
-
-              <Field label="Created on">{formatDate(data.createdAt)}</Field>
-
-              <Field label="Last updated">{formatDate(data.updatedAt)}</Field>
-            </SimpleGrid>
-          </Section>
-        </Stack>
-      </Grid.Col>
-    </Grid>
+          </Grid.Col>
+        </Grid>
+      </Stack>
+    </>
   );
 };
 

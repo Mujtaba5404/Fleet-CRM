@@ -1,4 +1,14 @@
-import { Badge, Button, Stack, Text, TextInput, UnstyledButton } from "@mantine/core";
+import {
+  Badge,
+  Button,
+  Divider,
+  Group,
+  SimpleGrid,
+  Stack,
+  Text,
+  TextInput,
+  UnstyledButton,
+} from "@mantine/core";
 import { DatePicker } from "@mantine/dates";
 import { useLocalStorage } from "@mantine/hooks";
 import { Link } from "react-router-dom";
@@ -45,7 +55,12 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     sortable: true,
     filter: ({ close }) => (
       <Stack gap="xs">
-        <DatePicker size="xs" type="range" value={filters.createdAt} onChange={(value) => setFilters({ createdAt: value })} />
+        <DatePicker
+          size="xs"
+          type="range"
+          value={filters.createdAt}
+          onChange={(value) => setFilters({ createdAt: value })}
+        />
         <Button
           size="xs"
           onClick={() => {
@@ -66,7 +81,14 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     width: 140,
     textAlign: "center",
     sortable: true,
-    filter: <TextInput size="xs" placeholder="Search by plate" value={filters.licensePlate || ""} onChange={(e) => setFilters({ licensePlate: e.target.value })} />,
+    filter: (
+      <TextInput
+        size="xs"
+        placeholder="Search by plate"
+        value={filters.licensePlate || ""}
+        onChange={(e) => setFilters({ licensePlate: e.target.value })}
+      />
+    ),
     filtering: filters.licensePlate,
     render: (row) => (
       <Badge variant="light" tt="uppercase">
@@ -93,7 +115,9 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     accessor: "type",
     width: 150,
     // ...picklistFilter("type", filters, setFilters),
-    render: (row) => <TwoLine top={row.type?.title} bottom={row.fuelType?.title} />,
+    render: (row) => (
+      <TwoLine top={row.type?.title} bottom={row.fuelType?.title} />
+    ),
   },
   {
     accessor: "transmission",
@@ -117,7 +141,7 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
       </Badge>
     ),
   },
-    {
+  {
     accessor: "attachments",
     title: "Files",
     width: 90,
@@ -148,7 +172,12 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     title: "Purchase",
     width: 150,
     sortable: true,
-    render: (row) => <TwoLine top={formatAmount(row.purchaseAmount || 0)} bottom={formatDate(row.purchaseDate)} />,
+    render: (row) => (
+      <TwoLine
+        top={formatAmount(row.purchaseAmount || 0)}
+        bottom={formatDate(row.purchaseDate)}
+      />
+    ),
   },
   {
     accessor: "rent",
@@ -161,7 +190,12 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     title: "Odometer",
     width: 140,
     sortable: true,
-    render: (row) => <TwoLine top={row.currentOdometer?.toLocaleString()} bottom={`Initial: ${row.initialOdometer?.toLocaleString() || "-"}`} />,
+    render: (row) => (
+      <TwoLine
+        top={row.currentOdometer?.toLocaleString()}
+        bottom={`Initial: ${row.initialOdometer?.toLocaleString() || "-"}`}
+      />
+    ),
   },
   {
     accessor: "assignedOn",
@@ -179,7 +213,75 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
   },
 ];
 
-const FleetTable = ({ query, hideColumns = [] }) => {
+/** Compact card shown instead of a table row on phones. */
+const FleetCard = (row) => {
+  const vehicle = [row.make?.title, row.model?.title].filter(Boolean).join(" ");
+
+  return (
+    <Stack gap="sm">
+      <Group justify="space-between" wrap="nowrap" align="flex-start">
+        <UnstyledButton
+          component={Link}
+          to={`/fleets/${row._id}`}
+          style={{ minWidth: 0 }}
+        >
+          <Text size="sm" fw={600} tt="capitalize" truncate>
+            {vehicle || "Unnamed vehicle"}
+          </Text>
+
+          <Group gap={6} mt={4}>
+            <Badge size="sm" tt="uppercase">
+              {row.licensePlate || "-"}
+            </Badge>
+
+            <Text size="xs" c="dimmed" tt="capitalize">
+              {[row.year, row.color].filter(Boolean).join(" · ") || "-"}
+            </Text>
+          </Group>
+        </UnstyledButton>
+
+        <FleetTableRowMenu fleet={row} compact />
+      </Group>
+
+      <Group gap={6}>
+        {row.status?.title && (
+          <Badge size="sm" color={row.status.color} tt="capitalize">
+            {row.status.title}
+          </Badge>
+        )}
+
+        {row.condition?.title && (
+          <Badge size="sm" color={row.condition.color} tt="capitalize">
+            {row.condition.title}
+          </Badge>
+        )}
+
+        {row.type?.title && (
+          <Badge size="sm" color="gray" tt="capitalize">
+            {row.type.title}
+          </Badge>
+        )}
+      </Group>
+
+      <Divider />
+
+      <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs">
+        <TwoLine
+          top={formatAmount(row.purchaseAmount || 0)}
+          bottom="Purchase"
+        />
+        <TwoLine top={row.rent ? formatAmount(row.rent) : "-"} bottom="Rent" />
+        <TwoLine
+          top={row.currentOdometer?.toLocaleString()}
+          bottom="Odometer"
+        />
+        <TwoLine top={formatDate(row.createdAt)} bottom="Added" />
+      </SimpleGrid>
+    </Stack>
+  );
+};
+
+const FleetTable = ({ query, hideColumns = [], toolbar }) => {
   const [globalFilters] = useLocalStorage({
     key: "globalFilters",
     getInitialValueInEffect: false,
@@ -192,6 +294,8 @@ const FleetTable = ({ query, hideColumns = [] }) => {
       columns={DEFAULT_COLUMNS(filters, setFilters)}
       queryParams={{ ...globalFilters, ...filters, ...query }}
       hideColumns={hideColumns}
+      mobileCard={FleetCard}
+      toolbar={toolbar}
     />
   );
 };

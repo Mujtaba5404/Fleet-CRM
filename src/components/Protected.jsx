@@ -3,7 +3,12 @@ import CanAccess from "./CanAccess";
 
 const Protected = ({ resource, action, redirectPath = "/404", children }) => {
   return (
-    <CanAccess resource={resource} action={action} redirect redirectPath={redirectPath}>
+    <CanAccess
+      resource={resource}
+      action={action}
+      redirect
+      redirectPath={redirectPath}
+    >
       {children ?? <Outlet />}
     </CanAccess>
   );

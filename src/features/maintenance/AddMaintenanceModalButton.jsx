@@ -37,7 +37,10 @@ const AddMaintenanceModalButton = () => {
         onClose={closeAddmaintenanceModal}
       />
 
-      <Button onClick={openAddmaintenanceModal} leftSection={<IconPlus size={18} />}>
+      <Button
+        onClick={openAddmaintenanceModal}
+        leftSection={<IconPlus size={18} />}
+      >
         Add maintenance
       </Button>
     </>

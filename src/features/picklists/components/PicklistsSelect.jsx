@@ -13,7 +13,10 @@ const PicklistsSelect = ({ selectProps = {}, queryObject = {} }) => {
       selectValue="_id"
       rightSection={picklists.isLoading && <Loader size={18} />}
       {...selectProps}
-      {...(picklists.isError && { disabled: true, placeholder: "Error loading picklists" })}
+      {...(picklists.isError && {
+        disabled: true,
+        placeholder: "Error loading picklists",
+      })}
     />
   );
 };

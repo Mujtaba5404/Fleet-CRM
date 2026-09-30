@@ -1,10 +1,10 @@
 import { Route } from "react-router-dom";
 import InsuranceDetails from "../features/Insurance/InsuranceDetails";
-import InsuranceTable from "../features/Insurance/InsuranceTable";
+import InsurancePage from "../pages/InsurancePage";
 
 export const insuranceRoutes = (
   <Route path="insurance">
-    <Route index element={<InsuranceTable />} />
+    <Route index element={<InsurancePage />} />
   </Route>
 );
 

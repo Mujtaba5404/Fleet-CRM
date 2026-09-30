@@ -13,7 +13,10 @@ const PicklistsTagsInput = ({ tagsInputProps = {}, queryObject = {} }) => {
       selectLabel="_id"
       placeholder={upperFirst("select from options or type your own")}
       rightSection={picklists.isLoading && <Loader size={18} />}
-      {...(picklists.isError && { disabled: true, placeholder: "Error loading picklists" })}
+      {...(picklists.isError && {
+        disabled: true,
+        placeholder: "Error loading picklists",
+      })}
       {...tagsInputProps}
     />
   );

@@ -3,54 +3,74 @@ import { modals } from "@mantine/modals";
 import { IconTrash } from "@tabler/icons-react";
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import CanAccess from "../components/CanAccess";
 import capitalizeLetters from "../utils/capitalizeLetters";
 
 /**
- * Generic delete button with confirmation modal
+ * Generic delete control with a confirmation step.
  *
- * This component is fully reusable for any entity. It handles:
- * - Permission check via CanAccess
+ * Handles:
  * - Confirmation modal before deletion
- * - RTK Query mutation hook
+ * - React Query mutation hook
  * - Single or multiple deletion
- * - Optional button or icon variant
- * - Optional tooltip
+ * - Button, icon, or caller-supplied trigger
+ * - Optional redirect once the delete actually succeeds
  *
  * @param {Object} props
- * @param {string} props.resource - Resource name for CanAccess (e.g., "Lead")
- * @param {string} props.label - Human-readable label for the modal, tooltip, and button text (e.g., "lead")
- * @param {string|number|Array} props.itemId - The id(s) of the item(s) to delete
- * @param {Function} props.mutationHook - RTK Query mutation hook
+ * @param {string} [props.resource] - Reserved for the CanAccess guard, which
+ *   is not applied yet (permissions are not populated in every deployment).
+ * @param {string} props.label - Human-readable noun for the modal and button
+ *   text (e.g. "policy")
+ * @param {string|number|Array} props.itemId - The id(s) to delete
+ * @param {Function} props.mutationHook - React Query mutation hook
  * @param {string} [props.confirmText] - Optional confirmation modal text
  * @param {'button'|'icon'} [props.variant] - Render as button or icon (default: "icon")
  * @param {Function} [props.onSuccess] - Callback after successful deletion
- * @param {string} [props.navigateTo] - Optional route to navigate after deletion
- * @param {boolean} [props.disabled] - Disable button
+ * @param {string} [props.navigateTo] - Route to go to after a successful delete
+ * @param {boolean} [props.disabled] - Disable the trigger
  * @param {Object} [props.tooltip] - Optional tooltip props { label, withArrow }
- * @param {string} [props.buttonText] - Optional custom button text (for variant="button")
- * @param {React.ReactNode} [props.children] - Optional custom child element to render instead of default button or icon
+ * @param {string} [props.buttonText] - Custom button text (for variant="button")
+ * @param {React.ReactNode} [props.children] - Custom trigger element
  */
-const DeleteItemButton = ({ resource, label, itemId, mutationHook, confirmText, variant = "icon", onSuccess = () => {}, navigateTo, disabled = false, tooltip, buttonText, children }) => {
+const DeleteItemButton = ({
+  label,
+  itemId,
+  mutationHook,
+  confirmText,
+  variant = "icon",
+  onSuccess = () => {},
+  navigateTo,
+  disabled = false,
+  tooltip,
+  buttonText,
+  children,
+}) => {
   const deleteMutation = mutationHook();
   const navigate = useNavigate();
 
   const openDeleteModal = () => {
     modals.openConfirmModal({
-      title: capitalizeLetters(`${label} delete confirmation`),
+      title: capitalizeLetters(`Delete ${label}`),
       centered: true,
-      children: <Text size="sm">{confirmText || `Are you sure you want to delete this ${label}?`}</Text>,
+      children: (
+        <Text size="sm">
+          {confirmText ||
+            `Are you sure you want to delete this ${label}? This cannot be undone.`}
+        </Text>
+      ),
       labels: { confirm: "Delete", cancel: "Cancel" },
-      confirmProps: { color: "red", loading: deleteMutation.isPending },
+      confirmProps: { color: "red" },
       onConfirm: async () => {
+        // mutateAsync, not mutate: mutate() returns undefined, so the previous
+        // `await` resolved immediately and redirected before the request had
+        // finished — and a failed delete still navigated away.
         try {
-          await deleteMutation.mutate(itemId);
+          await deleteMutation.mutateAsync(itemId);
 
           onSuccess();
 
           if (navigateTo) navigate(navigateTo);
-        } catch (err) {
-          console.error(`Failed to delete ${label}`, err);
+        } catch {
+          // The mutation hook already reports the failure via a notification.
         }
       },
     });
@@ -66,36 +86,33 @@ const DeleteItemButton = ({ resource, label, itemId, mutationHook, confirmText, 
   let content;
 
   if (children) {
-    content = React.cloneElement(children, { onClick: openDeleteModal, disabled });
+    content = React.cloneElement(children, {
+      onClick: (event) => {
+        event.stopPropagation();
+        openDeleteModal();
+      },
+      disabled,
+    });
   } else if (variant === "button") {
-    content = <Button {...buttonProps}>{buttonText || `Delete ${Array.isArray(itemId) ? itemId.length : ""} ${label}`}</Button>;
+    content = (
+      <Button {...buttonProps}>
+        {buttonText ||
+          `Delete ${Array.isArray(itemId) ? itemId.length : ""} ${label}`}
+      </Button>
+    );
   } else {
     content = (
-      <ActionIcon variant="subtle" {...buttonProps}>
+      <ActionIcon
+        variant="subtle"
+        aria-label={`Delete ${label}`}
+        {...buttonProps}
+      >
         <IconTrash size={18} />
       </ActionIcon>
     );
   }
 
-//   if (tooltip) {
-//     return (
-//       <CanAccess resource={resource} action={"delete"}>
-//         <Tooltip {...tooltip}>{content}</Tooltip>
-//       </CanAccess>
-//     );
-//   }
-
-//   return (
-//     <CanAccess resource={resource} action={"delete"}>
-//       {content}
-//     </CanAccess>
-//   );
-// };
-  if (tooltip) {
-    return <Tooltip {...tooltip}>{content}</Tooltip>;
-  }
-
-  return content;
+  return tooltip ? <Tooltip {...tooltip}>{content}</Tooltip> : content;
 };
 
 export default DeleteItemButton;

@@ -1,6 +1,5 @@
 import Picklists from "../../../features/picklists/Picklists";
 
-
 const FleetMake = () => {
   return (
     <Picklists featureName="fleet make" resource="Fleet" field="make">

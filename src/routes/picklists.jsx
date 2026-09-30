@@ -17,7 +17,6 @@ import MaintenanceChecklistItem from "../features/picklists/features/Maintenance
 import MaintenanceChecklistStatus from "../features/picklists/features/MaintenanceChecklistStatus";
 import MaintenanceChecklistCondition from "../features/picklists/features/MaintenanceChecklistCondition";
 
-
 export const picklistRoutes = (
   <Route
     path="picklists"

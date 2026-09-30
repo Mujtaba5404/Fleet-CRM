@@ -1,7 +1,14 @@
 import { Navigate } from "react-router-dom";
 import useCanAccess from "../hooks/useCanAccess";
 
-const CanAccess = ({ resource = "", action = "", redirect = false, redirectPath = "", options = { resourcesMode: "any", actionsMode: "any" }, children }) => {
+const CanAccess = ({
+  resource = "",
+  action = "",
+  redirect = false,
+  redirectPath = "",
+  options = { resourcesMode: "any", actionsMode: "any" },
+  children,
+}) => {
   const hasAccess = useCanAccess(resource, action, options);
 
   if (hasAccess) {

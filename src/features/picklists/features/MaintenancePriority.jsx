@@ -1,12 +1,15 @@
 import Picklists from "../../../features/picklists/Picklists";
 
-
 const MaintenancePriority = () => {
   return (
-    <Picklists featureName="maintenance priority" resource="Maintenance" field="priority">
+    <Picklists
+      featureName="maintenance priority"
+      resource="Maintenance"
+      field="priority"
+    >
       <Picklists.AddButton />
 
-      <Picklists.Modal/>
+      <Picklists.Modal />
 
       <Picklists.List />
     </Picklists>

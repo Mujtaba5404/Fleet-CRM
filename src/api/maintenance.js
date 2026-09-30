@@ -6,7 +6,8 @@ import api from "./index";
 export const useGetAllMaintenanceQuery = (params) => {
   return useQuery({
     queryKey: ["maintenance", "all", params],
-    queryFn: () => api.get("maintenance/all", { params }).then(({ data }) => data),
+    queryFn: () =>
+      api.get("maintenance/all", { params }).then(({ data }) => data),
   });
 };
 
@@ -20,7 +21,8 @@ export const useGetMaintenanceWithPaginationQuery = (params) => {
 export const useGetMaintenanceByIdQuery = (maintenanceId) => {
   return useQuery({
     queryKey: ["maintenance", maintenanceId],
-    queryFn: () => api.get(`maintenance/${maintenanceId}`).then(({ data }) => data),
+    queryFn: () =>
+      api.get(`maintenance/${maintenanceId}`).then(({ data }) => data),
   });
 };
 
@@ -69,22 +71,22 @@ export const useUpdateMaintenanceMutation = () => {
   });
 };
 
-export const useDeletefleetMutation = () => {
+export const useDeleteMaintenanceMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (fleetId) => api.delete(`fleets/${fleetId}`),
+    mutationFn: (maintenanceId) => api.delete(`maintenance/${maintenanceId}`),
     onSuccess: () => {
-      queryClient.invalidateQueries(["fleets"]);
+      queryClient.invalidateQueries(["maintenance"]);
       showNotification({
         title: upperFirst("done!"),
-        message: upperFirst("fleet successfully deleted"),
+        message: upperFirst("maintenance successfully deleted"),
         type: "success",
       });
     },
     onError: (error) =>
       showNotification({
         title: upperFirst("error!"),
-        message: upperFirst(error.message || "error deleting fleet"),
+        message: upperFirst(error.message || "error deleting maintenance"),
         type: "error",
       }),
   });

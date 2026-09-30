@@ -1,20 +1,19 @@
-import { ActionIcon } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconPencil } from "@tabler/icons-react";
+import EditTrigger from "../../components/EditTrigger";
 import EditInsuranceModal from "./EditInsuranceModal";
 
-const EditInsuranceModalButton = ({ insurance }) => {
+const EditInsuranceModalButton = ({ insurance, variant = "icon" }) => {
   const [opened, { open, close }] = useDisclosure(false);
 
   return (
-    // <CanAccess resource="insurance" action="update">
     <>
-      <EditInsuranceModal insurance={insurance} isOpen={opened} onClose={close} />
+      <EditInsuranceModal
+        insurance={insurance}
+        isOpen={opened}
+        onClose={close}
+      />
 
-      <ActionIcon onClick={open}>
-        <IconPencil size={18} />
-      </ActionIcon>
-      {/* </CanAccess> */}
+      <EditTrigger onClick={open} variant={variant} label="Edit policy" />
     </>
   );
 };

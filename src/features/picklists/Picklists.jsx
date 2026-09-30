@@ -16,9 +16,16 @@ import PicklistsList from "./components/PicklistsList";
  * @param {string} field - API field name
  * @param {React.ReactNode} children - Compound components (Modal, List, AddButton, etc.)
  */
-const Picklists = ({ featureName = "", scope = PICKLIST_SCOPE.RESOURCE, resource = "", field = "", children }) => {
+const Picklists = ({
+  featureName = "",
+  scope = PICKLIST_SCOPE.RESOURCE,
+  resource = "",
+  field = "",
+  children,
+}) => {
   const [existingPicklist, setExistingPicklist] = useState(null);
-  const [isOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
+  const [isOpened, { open: openModal, close: closeModal }] =
+    useDisclosure(false);
 
   const form = useForm({
     initialValues: {

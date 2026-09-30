@@ -1,62 +1,72 @@
-import { Badge, Box, Indicator, Menu, NavLink, Tooltip } from "@mantine/core";
-import { Link, matchPath, useLocation } from "react-router-dom";
+import { Badge, Text, Tooltip } from "@mantine/core";
+import { Link, useLocation } from "react-router-dom";
+import classes from "./Appsidebar.module.css";
 
-const isMatch = (path, pathname) => !!matchPath({ path, end: false }, pathname);
-const radius = "var(--mantine-radius-md)";
-const expandedStyles = { root: { borderRadius: radius, height: 42 }, label: { fontWeight: 500 } };
-const collapsedStyles = { root: { borderRadius: radius, width: 44, height: 44, justifyContent: "center" }, section: { margin: 0 }, body: { display: "none" } };
-const timeline = { root: { borderRadius: radius, height: 36 }, children: { marginInlineStart: 22, paddingInlineStart: 8, borderInlineStart: "1px solid var(--mantine-color-default-border)" } };
-
-const AppSidebarLink = ({ link: { title, path, icon: Icon, count = 0, children }, collapsed }) => {
+/**
+ * A single sidebar entry.
+ *
+ * Active state matches the link path *and* everything nested under it, so a
+ * detail route such as `/fleets/64af…` keeps "Vehicles" highlighted.
+ */
+const AppSidebarLink = ({ link, collapsed = false, onNavigate }) => {
+  const { title, path, icon: Icon, description, count = 0 } = link;
   const { pathname } = useLocation();
-  const active = children ? children.some((c) => isMatch(c.path, pathname)) : isMatch(path, pathname);
-  const icon = <Icon size={20} stroke={1.6} />;
-  const nav = children ? {} : { component: Link, to: path };
+
+  const active = pathname === path || pathname.startsWith(`${path}/`);
+
+  const node = (
+    <Text
+      component={Link}
+      to={path}
+      onClick={onNavigate}
+      className={classes.link}
+      data-active={active}
+      aria-label={title}
+      aria-current={active ? "page" : undefined}
+    >
+      <span className={classes.linkIcon}>
+        <Icon size={20} stroke={1.6} />
+      </span>
+
+      {!collapsed && (
+        <>
+          <span className={classes.linkLabel}>{title}</span>
+
+          {count > 0 && (
+            <Badge
+              size="sm"
+              circle
+              ml="auto"
+              variant={active ? "filled" : "light"}
+            >
+              {count > 99 ? "99+" : count}
+            </Badge>
+          )}
+        </>
+      )}
+    </Text>
+  );
 
   if (collapsed) {
-    const trigger = (
-      <Indicator disabled={!count} size={8} offset={8}>
-        <NavLink {...nav} active={active} variant="filled" leftSection={icon} aria-label={title} styles={collapsedStyles} />
-      </Indicator>
-    );
-
-    return children ? (
-      <Menu trigger="hover" position="right-start" offset={14} withArrow>
-        <Menu.Target>{trigger}</Menu.Target>
-        <Menu.Dropdown>
-          <Menu.Label>{title}</Menu.Label>
-          {children.map((c) => (
-            <Menu.Item key={c.path} component={Link} to={c.path} c={isMatch(c.path, pathname) ? "var(--mantine-primary-color-filled)" : undefined}>{c.title}</Menu.Item>
-          ))}
-        </Menu.Dropdown>
-      </Menu>
-    ) : (
-      <Tooltip label={title} position="right" withArrow offset={14}>{trigger}</Tooltip>
+    return (
+      <Tooltip label={title} position="right" offset={12} withArrow>
+        {node}
+      </Tooltip>
     );
   }
 
-  return (
-    <NavLink
-      {...nav}
-      label={title}
-      leftSection={icon}
-      active={active}
-      variant="filled"
-      defaultOpened={active}
-      childrenOffset={0}
-      styles={children ? { ...expandedStyles, children: timeline.children } : expandedStyles}
-      rightSection={!children && count > 0 && <Badge size="sm" circle variant={active ? "white" : "light"}>{count > 9 ? "9+" : count}</Badge>}
+  return description ? (
+    <Tooltip
+      label={description}
+      position="right"
+      offset={12}
+      openDelay={600}
+      withArrow
     >
-      {children?.map((c) => {
-        const childActive = isMatch(c.path, pathname);
-        return (
-          <NavLink
-            key={c.path} component={Link} to={c.path} label={c.title} active={childActive} variant="subtle" styles={timeline}
-            leftSection={<Box w={7} h={7} bg={childActive ? "var(--mantine-primary-color-filled)" : "var(--mantine-color-default-border)"} style={{ borderRadius: "50%" }} />}
-          />
-        );
-      })}
-    </NavLink>
+      {node}
+    </Tooltip>
+  ) : (
+    node
   );
 };
 

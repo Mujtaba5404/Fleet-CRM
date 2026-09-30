@@ -1,37 +1,44 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import Login from "./features/auth/Login";
 import RequireAuth from "./components/RequireAuth";
+import Login from "./features/auth/Login";
 import AppLayout from "./layouts/AppLayout";
+import { HOME_PATH } from "./layouts/navigation";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import { adminSettingsRoutes } from "./routes/adminSettings";
 import { fleetDetailRoutes, fleetRoutes } from "./routes/fleets";
+import { insuranceDetailRoutes, insuranceRoutes } from "./routes/Insurance";
 import {
   maintenanceDetailRoutes,
   maintenanceRoutes,
 } from "./routes/maintenance";
-import FleetsLayout from "./layouts/fleets";
-import { insuranceDetailRoutes, insuranceRoutes } from "./routes/Insurance";
+import { taxDetailRoutes, taxRoutes } from "./routes/tax";
 
-const HOME = "/fleets/dashboard";
-
+/**
+ * Every authenticated screen sits directly under <AppLayout />, which owns the
+ * sidebar. List and detail routes are siblings, so navigating into a record
+ * keeps its section highlighted instead of dropping out of the shell.
+ */
 const App = () => (
   <Routes>
     <Route path="login" element={<Login />} />
 
     <Route element={<RequireAuth />}>
       <Route element={<AppLayout />}>
-        <Route index element={<Navigate to={HOME} replace />} />
-        <Route path="dashboard" element={<Navigate to={HOME} replace />} />
+        <Route index element={<Navigate to={HOME_PATH} replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
 
-        <Route element={<FleetsLayout />}>
-          {fleetRoutes}
-          {maintenanceRoutes}
-          {insuranceRoutes}
-        </Route>
-
+        {fleetRoutes}
         {fleetDetailRoutes}
+
+        {maintenanceRoutes}
         {maintenanceDetailRoutes}
+
+        {insuranceRoutes}
         {insuranceDetailRoutes}
+
+        {taxRoutes}
+        {taxDetailRoutes}
 
         {adminSettingsRoutes}
       </Route>

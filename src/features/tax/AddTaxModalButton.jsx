@@ -22,7 +22,7 @@
 import { Button } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
-import AddInsuranceModal from "./AddInsuranceModal";
+import AddTaxModal from "./AddTaxModal";
 
 const AddTaxModalButton = () => {
   const [
@@ -32,13 +32,16 @@ const AddTaxModalButton = () => {
 
   return (
     <>
-      <AddInsuranceModal
+      <AddTaxModal
         isOpen={addmaintenanceModalOpened}
         onClose={closeAddmaintenanceModal}
       />
 
-      <Button onClick={openAddmaintenanceModal} leftSection={<IconPlus size={18} />}>
-        Add insurance
+      <Button
+        onClick={openAddmaintenanceModal}
+        leftSection={<IconPlus size={18} />}
+      >
+        Add tax
       </Button>
     </>
   );

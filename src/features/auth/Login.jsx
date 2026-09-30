@@ -7,104 +7,75 @@ import {
   Stack,
   Text,
   TextInput,
-  ThemeIcon,
   Title,
-  useMantineColorScheme,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useLocalStorage } from "@mantine/hooks";
 import {
   IconAt,
-  IconBriefcase,
   IconLock,
-  IconTrendingUp,
-  IconUsers,
+  IconReceiptTax,
+  IconShieldCheck,
+  IconTool,
+  IconTruck,
 } from "@tabler/icons-react";
 import { memo } from "react";
 import { useNavigate } from "react-router-dom";
+import Logo from "../../components/Logo";
+import classes from "./Login.module.css";
 
-const STATS = [
-  { icon: IconUsers, label: "Active clients", value: "1,284" },
-  { icon: IconBriefcase, label: "Open deals", value: "326" },
-  { icon: IconTrendingUp, label: "Win rate", value: "32%" },
+/** What the product actually does, rather than generic CRM copy. */
+const HIGHLIGHTS = [
+  { icon: IconTruck, label: "Vehicles", note: "Specs, status and odometer" },
+  { icon: IconTool, label: "Maintenance", note: "Jobs, parts and checklists" },
+  { icon: IconShieldCheck, label: "Insurance", note: "Policies and renewals" },
+  { icon: IconReceiptTax, label: "Tax", note: "Challans and filing dates" },
 ];
-const glass = {
-  background: "rgba(255,255,255,0.12)",
-  border: "1px solid rgba(255,255,255,0.2)",
-  backdropFilter: "blur(10px)",
-};
-const ring = (size, pos) => ({
-  position: "absolute",
-  width: size,
-  height: size,
-  borderRadius: "50%",
-  border: "1px solid rgba(255,255,255,0.15)",
-  ...pos,
-});
 
 const BrandPanel = memo(() => (
-  <Box
-    visibleFrom="md"
-    pos="relative"
-    p={"xl"}
-    c="white"
-    style={{
-      overflow: "hidden",
-      background:
-        "linear-gradient(150deg, var(--mantine-primary-color-5), var(--mantine-primary-color-9))",
-    }}
-  >
-    <Box style={ring(420, { top: -160, left: -140 })} />
-    <Box style={ring(300, { bottom: -120, left: 60 })} />
-    <svg
-      viewBox="0 0 100 100"
-      preserveAspectRatio="none"
-      style={{
-        position: "absolute",
-        top: 0,
-        right: -1,
-        height: "100%",
-        width: 70,
-      }}
-    >
-      <path
-        d="M100 0H55C95 35 10 65 60 100H100Z"
-        style={{ fill: "var(--mantine-color-body)" }}
-      />
-    </svg>
-    <Stack h="100%" justify="space-between" pos="relative" pr={40}>
-      <Text fw={800} fz={22}>
-        C.R.M
+  <Box visibleFrom="md" className={classes.brandPanel}>
+    <div className={classes.glow} />
+
+    <Stack h="100%" justify="space-between" pos="relative" gap="xl">
+      <Text fw={800} fz="lg" lts="0.02em">
+        FleetCRM
       </Text>
-      <Stack gap="md">
-        <Title order={2} c="white" fz={32}>
-          Manage clients, deals and your team in one place.
+
+      <Stack gap="lg">
+        <Title order={2} c="white" fz={30} lh={1.25}>
+          Every vehicle, service and renewal in one place.
         </Title>
+
         <Text opacity={0.85} fz="sm">
-          Track every lead from first contact to closed deal.
+          Stop chasing spreadsheets for what is due, what is covered and what it
+          cost.
         </Text>
-        <Paper radius="md" p="md" style={glass}>
-          <SimpleGrid cols={3}>
-            {STATS.map(({ icon: Icon, label, value }) => (
-              <Stack key={label} gap={4}>
-                <Icon size={18} stroke={1.6} />
-                <Text fw={700} fz="lg" c="white">
-                  {value}
-                </Text>
-                <Text fz="xs" opacity={0.8}>
-                  {label}
-                </Text>
-              </Stack>
-            ))}
-          </SimpleGrid>
-        </Paper>
+
+        <SimpleGrid cols={2} spacing="sm">
+          {HIGHLIGHTS.map(({ icon: Icon, label, note }) => (
+            <Paper key={label} className={classes.glassCard} p="sm" radius="md">
+              <Icon size={18} stroke={1.6} />
+
+              <Text fw={600} fz="sm" c="white" mt={6}>
+                {label}
+              </Text>
+
+              <Text fz="xs" opacity={0.75} lh={1.35}>
+                {note}
+              </Text>
+            </Paper>
+          ))}
+        </SimpleGrid>
       </Stack>
+
       <Text fz="xs" opacity={0.7}>
-        © {new Date().getFullYear()} fleet CRM
+        © {new Date().getFullYear()} FleetCRM
       </Text>
     </Stack>
   </Box>
 ));
+
+BrandPanel.displayName = "BrandPanel";
 
 const Login = () => {
   const [, setAuth] = useLocalStorage({
@@ -113,12 +84,15 @@ const Login = () => {
   });
   const navigate = useNavigate();
   // const loginMutation = useLoginMutation();
-  const { colorScheme } = useMantineColorScheme();
-  const dark = colorScheme === "dark";
 
   const form = useForm({
     mode: "uncontrolled",
     initialValues: { email: "", password: "" },
+    validate: {
+      email: (value) =>
+        /^\S+@\S+\.\S+$/.test(value) ? null : "Enter a valid email address",
+      password: (value) => (value ? null : "Password is required"),
+    },
   });
 
   // const handleSubmit = (values) => {
@@ -130,41 +104,38 @@ const Login = () => {
   //   });
   // };
   const handleSubmit = (values) => {
-    // TODO: API lagne par ye hata kar loginMutation.mutate(...) wapas lagayein
+    // TODO: swap back to loginMutation.mutate(...) once the API is wired up.
     setAuth({ name: "Super Admin", email: values.email });
-    navigate("/fleets/dashboard", { replace: true });
+    navigate("/dashboard", { replace: true });
   };
 
   return (
-    <Box
-      mih="100vh"
-      p={{ base: "md", sm: "xl" }}
-      bg={dark ? "dark.8" : "gray.1"}
-      style={{ display: "grid", placeItems: "center" }}
-    >
+    <Box className={classes.page}>
       <Paper
         w="100%"
-        maw={980}
+        maw={1000}
         radius="lg"
         shadow="xl"
-        withBorder
-        style={{ overflow: "hidden" }}
+        className={classes.card}
       >
-        <SimpleGrid cols={{ base: 1, md: 2 }} spacing={0} mih={580}>
+        <SimpleGrid cols={{ base: 1, md: 2 }} spacing={0} mih={560}>
           <BrandPanel />
 
-          <Stack justify="center" p={{ base: "xl", sm: 56 }} gap="xl">
+          <Stack justify="center" p={{ base: "xl", sm: 48 }} gap="xl">
             <Stack gap={6}>
-              <ThemeIcon hiddenFrom="md" size={44} radius="md" mb="sm">
-                <IconBriefcase size={24} />
-              </ThemeIcon>
+              <Box hiddenFrom="md" mb="xs">
+                <Logo w={150} alt="FleetCRM" />
+              </Box>
+
               <Title order={1} fz={28} fw={700}>
                 Welcome back
               </Title>
+
               <Text c="dimmed" fz="sm">
-                Sign in to your CRM account to continue.
+                Sign in to manage your fleet.
               </Text>
             </Stack>
+
             <Stack
               component="form"
               gap="md"
@@ -176,25 +147,25 @@ const Login = () => {
                 autoFocus
                 autoComplete="email"
                 label="Email address"
-                placeholder="johndoe@example.com"
-                radius="md"
+                placeholder="you@company.com"
                 leftSection={<IconAt size={18} stroke={1.6} />}
                 leftSectionPointerEvents="none"
                 key={form.key("email")}
                 {...form.getInputProps("email")}
               />
+
               <PasswordInput
                 autoComplete="current-password"
                 label="Password"
                 placeholder="Your password"
-                radius="md"
                 leftSection={<IconLock size={18} stroke={1.6} />}
                 leftSectionPointerEvents="none"
                 key={form.key("password")}
                 {...form.getInputProps("password")}
               />
-              <Button type="submit" radius="md" mt="sm" fullWidth>
-                Login
+
+              <Button type="submit" mt="sm" fullWidth >
+                Sign in
               </Button>
             </Stack>
           </Stack>

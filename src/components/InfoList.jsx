@@ -36,7 +36,11 @@ InfoList.Item = ({ icon, label, fallback = "-", children }) => {
           {label}
         </Text>
 
-        {typeof content === "string" ? <Text size="sm">{content}</Text> : content}
+        {typeof content === "string" ? (
+          <Text size="sm">{content}</Text>
+        ) : (
+          content
+        )}
       </Stack>
     </Group>
   );

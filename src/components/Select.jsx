@@ -2,7 +2,14 @@ import { Select as MantineSelect } from "@mantine/core";
 import _ from "lodash";
 import capitalizeLetters from "../utils/capitalizeLetters";
 
-const Select = ({ data = [], selectLabel = "", selectValue = "", capitalizeLabel = true, groupBy = "", ...props }) => {
+const Select = ({
+  data = [],
+  selectLabel = "",
+  selectValue = "",
+  capitalizeLabel = true,
+  groupBy = "",
+  ...props
+}) => {
   const formattedData = () => {
     if (groupBy) {
       return _.chain(data)
@@ -10,7 +17,9 @@ const Select = ({ data = [], selectLabel = "", selectValue = "", capitalizeLabel
         .map((items, group) => ({
           group: capitalizeLetters(group),
           items: items.map((e) => ({
-            label: capitalizeLabel ? capitalizeLetters(e[selectLabel]) : e[selectLabel],
+            label: capitalizeLabel
+              ? capitalizeLetters(e[selectLabel])
+              : e[selectLabel],
             value: e[selectValue],
           })),
         }))
@@ -18,7 +27,9 @@ const Select = ({ data = [], selectLabel = "", selectValue = "", capitalizeLabel
     }
 
     return data.map((e) => ({
-      label: capitalizeLabel ? capitalizeLetters(e[selectLabel]) : e[selectLabel],
+      label: capitalizeLabel
+        ? capitalizeLetters(e[selectLabel])
+        : e[selectLabel],
       value: e[selectValue],
     }));
   };

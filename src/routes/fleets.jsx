@@ -1,13 +1,13 @@
-import { Route } from "react-router-dom";
+import { Navigate, Route } from "react-router-dom";
 import FleetDetails from "../features/fleets/FleetDetails";
-import FleetTable from "../features/fleets/FleetTable";
-import FleetsLayout from "../layouts/fleets";
-import Dashboard from "../pages/Dashboard";
+import FleetsPage from "../pages/FleetsPage";
 
 export const fleetRoutes = (
   <Route path="fleets">
-    <Route index element={<FleetTable />} />
-    <Route path="dashboard" element={<Dashboard />} />
+    <Route index element={<FleetsPage />} />
+
+    {/* The dashboard used to live under /fleets; keep old links working. */}
+    <Route path="dashboard" element={<Navigate to="/dashboard" replace />} />
   </Route>
 );
 

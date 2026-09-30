@@ -15,7 +15,10 @@ const PicklistsMultiSelect = ({ multiSelectProps = {}, queryObject = {} }) => {
       placeholder={upperFirst(`select picklists`)}
       rightSection={picklists.isLoading && <Loader size={18} />}
       {...multiSelectProps}
-      {...(picklists.isError && { disabled: true, placeholder: "Error loading picklists" })}
+      {...(picklists.isError && {
+        disabled: true,
+        placeholder: "Error loading picklists",
+      })}
     />
   );
 };

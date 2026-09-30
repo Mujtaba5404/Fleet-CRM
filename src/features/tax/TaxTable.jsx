@@ -1,17 +1,18 @@
 import {
   Badge,
   Button,
+  Divider,
   Group,
+  SimpleGrid,
   Stack,
   Text,
   TextInput,
-  Tooltip,
   UnstyledButton,
 } from "@mantine/core";
 import { DatePicker } from "@mantine/dates";
 import { useLocalStorage } from "@mantine/hooks";
 import { Link } from "react-router-dom";
-import { useGetInsuranceWithPaginationQuery } from "../../api/insurance";
+import { useGetTaxWithPaginationQuery } from "../../api/tax";
 import PaginatedTable from "../../components/PaginatedTable";
 import useFilters from "../../hooks/useFilters";
 import formatAmount from "../../utils/formatAmount";
@@ -33,13 +34,10 @@ const title = (value) =>
   typeof value === "object" && value?.title ? value.title : null;
 const color = (value) => (typeof value === "object" ? value?.color : undefined);
 
-const payable = (row) =>
-  row.totalAmount ?? row.totalPremium ?? row.premium ?? 0;
-
 // const picklistFilter = (field, filters, setFilters) => ({
 //   filter: (
 //     <PicklistsMultiSelect
-//       queryObject={{ resource: "Insurance", field }}
+//       queryObject={{ resource: "Taxation", field }}
 //       multiSelectProps={{
 //         size: "xs",
 //         placeholder: `Select ${field}`,
@@ -82,27 +80,27 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     render: (row) => formatDate(row.createdAt),
   },
   {
-    accessor: "policyNumber",
-    title: "Policy",
-    width: 160,
+    accessor: "challanNumber",
+    title: "Challan",
+    width: 170,
     sortable: true,
     filter: (
       <TextInput
         size="xs"
-        placeholder="Search by policy no."
-        value={filters.policyNumber || ""}
-        onChange={(e) => setFilters({ policyNumber: e.target.value })}
+        placeholder="Search by challan no."
+        value={filters.challanNumber || ""}
+        onChange={(e) => setFilters({ challanNumber: e.target.value })}
       />
     ),
-    filtering: filters.policyNumber,
+    filtering: filters.challanNumber,
     render: (row) => (
-      <UnstyledButton component={Link} to={`/insurance/${row._id}`}>
+      <UnstyledButton component={Link} to={`/tax/${row._id}`}>
         <Badge variant="light" tt="uppercase">
-          {row.policyNumber || "-"}
+          {row.challanNumber || "-"}
         </Badge>
 
         <Text size="xs" c="dimmed" tt="capitalize" mt={2}>
-          {title(row.type) || "-"}
+          {title(row.jurisdiction) || "-"}
         </Text>
       </UnstyledButton>
     ),
@@ -150,22 +148,20 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     ),
   },
   {
-    accessor: "provider",
-    width: 150,
-    // ...picklistFilter("provider", filters, setFilters),
+    accessor: "jurisdiction",
+    width: 140,
+    textAlign: "center",
+    // ...picklistFilter("jurisdiction", filters, setFilters),
     render: (row) => (
-      <TwoLine
-        top={title(row.provider)}
-        bottom={
-          title(row.broker) ? `Broker: ${title(row.broker)}` : "No broker"
-        }
-      />
+      <Badge variant="light" color={color(row.jurisdiction)} tt="capitalize">
+        {title(row.jurisdiction) || "-"}
+      </Badge>
     ),
   },
   {
     accessor: "startDate",
-    title: "Cover period",
-    width: 160,
+    title: "Tax period",
+    width: 170,
     sortable: true,
     render: (row) => {
       const expired = row.endDate && new Date(row.endDate) < new Date();
@@ -183,7 +179,7 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
 
             {expired && (
               <Badge size="xs" variant="light" color="red">
-                Expired
+                Lapsed
               </Badge>
             )}
           </Group>
@@ -192,99 +188,113 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     },
   },
   {
-    accessor: "totalAmount",
-    title: "Payable",
-    width: 150,
-    sortable: true,
-    render: (row) => (
-      <TwoLine
-        top={formatAmount(payable(row))}
-        bottom={[
-          row.taxAmount ? `Tax ${formatAmount(row.taxAmount)}` : null,
-          row.discountAmount ? `− ${formatAmount(row.discountAmount)}` : null,
-        ]
-          .filter(Boolean)
-          .join(" · ")}
-      />
-    ),
-  },
-  {
-    accessor: "deductible",
-    width: 120,
+    accessor: "filingDate",
+    title: "Filed",
+    width: 130,
+    textAlign: "center",
     sortable: true,
     render: (row) =>
-      row.deductible != null ? formatAmount(row.deductible) : "-",
-  },
-  {
-    accessor: "coverages",
-    title: "Coverage",
-    width: 200,
-    render: (row) => {
-      if (row.coverages?.length)
-        return (
-          <Group gap={4}>
-            {row.coverages.map((cover, index) => (
-              <Tooltip
-                key={index}
-                label={`Limit ${formatAmount(cover.limit || 0)} · Premium ${formatAmount(cover.premium || 0)}`}
-                withArrow
-              >
-                <Badge
-                  variant="light"
-                  color={color(cover.type)}
-                  tt="capitalize"
-                >
-                  {title(cover.type) || formatAmount(cover.limit || 0)}
-                </Badge>
-              </Tooltip>
-            ))}
-          </Group>
-        );
-
-      // if (row.coverage) return <Text size="sm">{formatAmount(row.coverage)}</Text>;
-
-      return (
-        <Text size="sm" c="dimmed">
-          -
-        </Text>
-      );
-    },
-  },
-  {
-    accessor: "cancellationDate",
-    title: "Cancelled",
-    width: 160,
-    sortable: true,
-    render: (row) =>
-      row.cancellationDate ? (
-        <TwoLine
-          top={formatDate(row.cancellationDate)}
-          bottom={row.cancellationReason}
-        />
+      row.filingDate ? (
+        formatDate(row.filingDate)
       ) : (
-        <Text size="sm" c="dimmed">
-          -
-        </Text>
+        <Badge size="xs" variant="light" color="orange">
+          Not filed
+        </Badge>
       ),
   },
   {
-    accessor: "notes",
-    width: 200,
-    render: (row) => (
-      <Text size="xs" c="dimmed" lineClamp={2}>
-        {row.notes || "-"}
-      </Text>
-    ),
+    accessor: "taxAmount",
+    title: "Amount",
+    width: 130,
+    sortable: true,
+    render: (row) =>
+      row.taxAmount != null ? formatAmount(row.taxAmount) : "-",
   },
   {
     accessor: "menu",
     width: 60,
     textAlign: "center",
-    render: (row) => <TaxTableRowMenu insurance={row} compact />,
+    render: (row) => <TaxTableRowMenu tax={row} compact />,
   },
 ];
 
-const TaxTable = ({ query, hideColumns = [] }) => {
+/** Compact card shown instead of a table row on phones. */
+const TaxCard = (row) => {
+  const lapsed = row.endDate && new Date(row.endDate) < new Date();
+
+  return (
+    <Stack gap="sm">
+      <Group justify="space-between" wrap="nowrap" align="flex-start">
+        <UnstyledButton
+          component={Link}
+          to={`/tax/${row._id}`}
+          style={{ minWidth: 0 }}
+        >
+          <Text size="sm" fw={600} tt="uppercase" truncate>
+            {row.challanNumber || "No challan number"}
+          </Text>
+
+          <Group gap={6} mt={4}>
+            {row.fleet?.licensePlate && (
+              <Badge size="sm" color="gray" tt="uppercase">
+                {row.fleet.licensePlate}
+              </Badge>
+            )}
+
+            <Text size="xs" c="dimmed" tt="capitalize">
+              {title(row.jurisdiction) || "No jurisdiction"}
+            </Text>
+          </Group>
+        </UnstyledButton>
+
+        <TaxTableRowMenu tax={row} compact />
+      </Group>
+
+      <Group gap={6}>
+        {title(row.status) && (
+          <Badge size="sm" color={color(row.status)} tt="capitalize">
+            {title(row.status)}
+          </Badge>
+        )}
+
+        {!row.filingDate && (
+          <Badge size="sm" color="orange">
+            Not filed
+          </Badge>
+        )}
+
+        {lapsed && (
+          <Badge size="sm" color="red">
+            Lapsed
+          </Badge>
+        )}
+      </Group>
+
+      <Divider />
+
+      <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs">
+        <TwoLine
+          top={row.taxAmount != null ? formatAmount(row.taxAmount) : "-"}
+          bottom="Amount"
+        />
+        <TwoLine
+          top={row.filingDate ? formatDate(row.filingDate) : "-"}
+          bottom="Filed"
+        />
+        <TwoLine
+          top={row.startDate ? formatDate(row.startDate) : "-"}
+          bottom="Period from"
+        />
+        <TwoLine
+          top={row.endDate ? formatDate(row.endDate) : "Open"}
+          bottom="Period to"
+        />
+      </SimpleGrid>
+    </Stack>
+  );
+};
+
+const TaxTable = ({ query, hideColumns = [], toolbar }) => {
   const [globalFilters] = useLocalStorage({
     key: "globalFilters",
     getInitialValueInEffect: false,
@@ -293,10 +303,12 @@ const TaxTable = ({ query, hideColumns = [] }) => {
 
   return (
     <PaginatedTable
-      queryHook={useGetInsuranceWithPaginationQuery}
+      queryHook={useGetTaxWithPaginationQuery}
       columns={DEFAULT_COLUMNS(filters, setFilters)}
       queryParams={{ ...globalFilters, ...filters, ...query }}
       hideColumns={hideColumns}
+      mobileCard={TaxCard}
+      toolbar={toolbar}
     />
   );
 };

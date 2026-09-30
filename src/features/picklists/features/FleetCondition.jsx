@@ -29,11 +29,7 @@ const AdditionalFields = () => {
 
 const FleetCondition = () => {
   return (
-    <Picklists
-      featureName="fleet condition"
-      resource="Fleet"
-      field="condition"
-    >
+    <Picklists featureName="fleet condition" resource="Fleet" field="condition">
       <Picklists.AddButton />
 
       <Picklists.Modal>

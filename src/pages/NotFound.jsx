@@ -6,7 +6,15 @@ const NotFound = () => {
   const navigate = useNavigate();
 
   return (
-    <Container component={Stack} gap={0} size={"xl"} mih={"100vh"} align="flex-start" justify="center" className="pattern-bg">
+    <Container
+      component={Stack}
+      gap={0}
+      size={"xl"}
+      mih={"100vh"}
+      align="flex-start"
+      justify="center"
+      className="pattern-bg"
+    >
       <Stack gap={0} align="center" justify="center">
         <Title size={rem(72)}>404</Title>
 
@@ -14,7 +22,11 @@ const NotFound = () => {
           Page not found
         </Text>
 
-        <Button leftSection={<IconArrowLeft size={18} />} mt={"xl"} onClick={() => navigate(-1)}>
+        <Button
+          leftSection={<IconArrowLeft size={18} />}
+          mt={"xl"}
+          onClick={() => navigate(-1)}
+        >
           Go back
         </Button>
       </Stack>

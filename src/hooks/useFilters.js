@@ -17,7 +17,8 @@ const isDateString = (value) => {
   if (typeof value !== "string") return false;
 
   // Strict ISO 8601 format: YYYY-MM-DD or YYYY-MM-DDTHH:mm:ssZ
-  const isoDateRegex = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?)?$/;
+  const isoDateRegex =
+    /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?)?$/;
 
   return isoDateRegex.test(value) && !isNaN(new Date(value).getTime());
 };
@@ -26,7 +27,9 @@ const parseDatesDeep = (value) => {
   if (Array.isArray(value)) return value.map(parseDatesDeep);
 
   if (value && typeof value === "object") {
-    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, parseDatesDeep(v)]));
+    return Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [k, parseDatesDeep(v)]),
+    );
   }
 
   if (isDateString(value)) {
@@ -40,7 +43,9 @@ const serializeDatesDeep = (value) => {
   if (Array.isArray(value)) return value.map(serializeDatesDeep);
 
   if (value && typeof value === "object" && !(value instanceof Date)) {
-    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, serializeDatesDeep(v)]));
+    return Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [k, serializeDatesDeep(v)]),
+    );
   }
 
   if (value instanceof Date) {

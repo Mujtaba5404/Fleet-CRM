@@ -6,7 +6,8 @@ import api from "./index";
 export const useGetAllInsuranceQuery = (params) => {
   return useQuery({
     queryKey: ["insurance", "all", params],
-    queryFn: () => api.get("insurance/all", { params }).then(({ data }) => data),
+    queryFn: () =>
+      api.get("insurance/all", { params }).then(({ data }) => data),
   });
 };
 

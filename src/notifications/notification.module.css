@@ -1,5 +1,8 @@
 .root {
-  background-color: var(--notification-color, var(--mantine-primary-color-filled)) !important;
+  background-color: var(
+    --notification-color,
+    var(--mantine-primary-color-filled)
+  ) !important;
 
   &::before {
     background-color: var(--mantine-color-white) !important;

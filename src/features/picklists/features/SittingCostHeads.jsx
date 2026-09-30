@@ -6,12 +6,24 @@ import Picklists from "src/features/picklists/Picklists";
 const AdditionalFields = () => {
   const { form } = usePicklists();
 
-  return <Select required label="currency" defaultValue={CURRENCY.PKR} data={Object.values(CURRENCY)} {...form.getInputProps("meta.currency")} />;
+  return (
+    <Select
+      required
+      label="currency"
+      defaultValue={CURRENCY.PKR}
+      data={Object.values(CURRENCY)}
+      {...form.getInputProps("meta.currency")}
+    />
+  );
 };
 
 const SittingCostHeads = () => {
   return (
-    <Picklists featureName="sitting cost head" resource="SittingCost" field="costHead">
+    <Picklists
+      featureName="sitting cost head"
+      resource="SittingCost"
+      field="costHead"
+    >
       <Picklists.AddButton />
 
       <Picklists.Modal fieldsConfig={{ color: false, isDefault: false }}>

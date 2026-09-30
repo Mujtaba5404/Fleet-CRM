@@ -20,7 +20,13 @@ import { usePicklists } from "../../../context/PicklistContext";
 const AddPicklistModalButton = () => {
   const { featureName, openCreateModal } = usePicklists();
 
-  return <AddButton title={`create ${featureName}`} subtitle={`add a new ${featureName}`} onClick={openCreateModal} />;
+  return (
+    <AddButton
+      title={`create ${featureName}`}
+      subtitle={`add a new ${featureName}`}
+      onClick={openCreateModal}
+    />
+  );
 };
 
 export default AddPicklistModalButton;

@@ -1,59 +1,150 @@
-import { Paper, ScrollArea, Tabs } from "@mantine/core";
-import { upperFirst } from "@mantine/hooks";
+import {
+  Box,
+  NavLink,
+  Paper,
+  ScrollArea,
+  Select,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import PageHeader from "../components/PageHeader";
 
-const tabList = [
-  { label: upperFirst("fleet make"), value: "fleet-make", index: true },
-  { label: upperFirst("fleet model"), value: "fleet-model" },
-  { label: upperFirst("fleet type"), value: "fleet-type" },
-  { label: upperFirst("fleet fuel type"), value: "fleet-fuel-type" },
-  { label: upperFirst("fleet transmission"), value: "fleet-transmission" },
-  { label: upperFirst("fleet status"), value: "fleet-status" },
-  { label: upperFirst("fleet condition"), value: "fleet-condition" },
-  { label: upperFirst("maintenance type"), value: "maintenance-type" },
-  { label: upperFirst("maintenance status"), value: "maintenance-status" },
-  { label: upperFirst("maintenance priority"), value: "maintenance-priority" },
-  { label: upperFirst("maintenance provider"), value: "maintenance-provider" },
-  { label: upperFirst("maintenance components"), value: "maintenance-components" },
-  { label: upperFirst("checklist item"), value: "checklist-item" },
-  { label: upperFirst("checklist status"), value: "checklist-status" },
-  { label: upperFirst("checklist condition"), value: "checklist-condition" },
+const BASE = "/admin-settings/picklists";
+
+/**
+ * Picklists are configuration, not a workflow, so they get a settings style
+ * two pane layout rather than a tab strip: fifteen tabs never fit on screen.
+ */
+const GROUPS = [
+  {
+    label: "Vehicles",
+    items: [
+      { value: "fleet-make", label: "Make" },
+      { value: "fleet-model", label: "Model" },
+      { value: "fleet-type", label: "Type" },
+      { value: "fleet-fuel-type", label: "Fuel type" },
+      { value: "fleet-transmission", label: "Transmission" },
+      { value: "fleet-status", label: "Status" },
+      { value: "fleet-condition", label: "Condition" },
+    ],
+  },
+  {
+    label: "Maintenance",
+    items: [
+      { value: "maintenance-type", label: "Type" },
+      { value: "maintenance-status", label: "Status" },
+      { value: "maintenance-priority", label: "Priority" },
+      { value: "maintenance-provider", label: "Provider" },
+      { value: "maintenance-components", label: "Components" },
+    ],
+  },
+  {
+    label: "Inspection checklist",
+    items: [
+      { value: "checklist-item", label: "Item" },
+      { value: "checklist-status", label: "Status" },
+      { value: "checklist-condition", label: "Condition" },
+    ],
+  },
 ];
+
+const ALL_ITEMS = GROUPS.flatMap((group) =>
+  group.items.map((item) => ({ ...item, group: group.label })),
+);
+
+const DEFAULT_ITEM = "fleet-make";
 
 const Picklists = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  const indexTab = tabList.find((tab) => tab.index);
-
-  const pathParts = pathname.split("/");
-  const lastSegment = pathParts[pathParts.length - 1];
-
-  const activeTab =
-    tabList.find((tab) => tab.value === lastSegment)?.value || indexTab.value;
+  const lastSegment = pathname.split("/").filter(Boolean).pop();
+  const active =
+    ALL_ITEMS.find((item) => item.value === lastSegment)?.value ?? DEFAULT_ITEM;
+  const activeItem = ALL_ITEMS.find((item) => item.value === active);
 
   return (
     <>
-      <Tabs
-        variant="pills"
-        mb="lg"
-        value={activeTab}
-        onChange={(value) => navigate(`/admin-settings/picklists/${value}`)}
-      >
-        <Paper p={4}>
-          <ScrollArea w="100%" scrollbars="x" scrollbarSize={10}>
-            <Tabs.List style={{ flexWrap: "nowrap" }}>
-              {tabList.map((tab, i) => (
-                <Tabs.Tab key={i} value={tab.value}>
-                  {tab.label}
-                </Tabs.Tab>
-              ))}
-            </Tabs.List>
-          </ScrollArea>
-        </Paper>
-      </Tabs>
+      <PageHeader
+        title="Picklists"
+        description="The dropdown values used across vehicles, maintenance and inspections."
+        breadcrumbs={[
+          { label: "Configuration" },
+          { label: "Picklists", to: BASE },
+          { label: `${activeItem.group} · ${activeItem.label}` },
+        ]}
+      />
 
-      <Outlet />
+      {/* Phones get a single select; there is no room for a side rail. */}
+      <Box hiddenFrom="sm" mb="md">
+        <Select
+          value={active}
+          onChange={(value) => navigate(`${BASE}/${value}`)}
+          allowDeselect={false}
+          searchable={false}
+          data={GROUPS.map((group) => ({
+            group: group.label,
+            items: group.items.map((item) => ({
+              value: item.value,
+              label: item.label,
+            })),
+          }))}
+        />
+      </Box>
+
+      <Box
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          gap: "var(--mantine-spacing-md)",
+        }}
+      >
+        <Paper
+          p="xs"
+          w={230}
+          visibleFrom="sm"
+          style={{ flexShrink: 0, position: "sticky", top: 76 }}
+        >
+          <ScrollArea.Autosize mah="calc(100vh - 160px)" scrollbarSize={4}>
+            <Stack gap="xs">
+              {GROUPS.map((group) => (
+                <Stack key={group.label} gap={2}>
+                  <Text
+                    fz={11}
+                    fw={600}
+                    c="dimmed"
+                    tt="uppercase"
+                    lts="0.05em"
+                    px="xs"
+                    pt={6}
+                  >
+                    {group.label}
+                  </Text>
+
+                  {group.items.map((item) => (
+                    <NavLink
+                      key={item.value}
+                      label={item.label}
+                      active={active === item.value}
+                      variant="light"
+                      onClick={() => navigate(`${BASE}/${item.value}`)}
+                      styles={{
+                        root: { borderRadius: "var(--mantine-radius-sm)" },
+                        label: { fontSize: "var(--mantine-font-size-sm)" },
+                      }}
+                    />
+                  ))}
+                </Stack>
+              ))}
+            </Stack>
+          </ScrollArea.Autosize>
+        </Paper>
+
+        <Box flex={1} miw={0}>
+          <Outlet />
+        </Box>
+      </Box>
     </>
   );
 };

@@ -1,4 +1,14 @@
-import { Badge, Button, Group, Stack, Text, TextInput, UnstyledButton } from "@mantine/core";
+import {
+  Badge,
+  Button,
+  Divider,
+  Group,
+  SimpleGrid,
+  Stack,
+  Text,
+  TextInput,
+  UnstyledButton,
+} from "@mantine/core";
 import { DatePicker } from "@mantine/dates";
 import { useLocalStorage } from "@mantine/hooks";
 import { Link } from "react-router-dom";
@@ -45,7 +55,12 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     sortable: true,
     filter: ({ close }) => (
       <Stack gap="xs">
-        <DatePicker size="xs" type="range" value={filters.createdAt} onChange={(value) => setFilters({ createdAt: value })} />
+        <DatePicker
+          size="xs"
+          type="range"
+          value={filters.createdAt}
+          onChange={(value) => setFilters({ createdAt: value })}
+        />
         <Button
           size="xs"
           onClick={() => {
@@ -64,7 +79,14 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     accessor: "fleet",
     title: "Vehicle",
     width: 180,
-    filter: <TextInput size="xs" placeholder="Search by plate" value={filters.licensePlate || ""} onChange={(e) => setFilters({ licensePlate: e.target.value })} />,
+    filter: (
+      <TextInput
+        size="xs"
+        placeholder="Search by plate"
+        value={filters.licensePlate || ""}
+        onChange={(e) => setFilters({ licensePlate: e.target.value })}
+      />
+    ),
     filtering: filters.licensePlate,
     render: (row) =>
       row.fleet ? (
@@ -74,7 +96,8 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
           </Badge>
 
           <Text size="xs" c="dimmed" tt="capitalize" mt={2}>
-            {[row.fleet.year, row.fleet.color].filter(Boolean).join(" · ") || "-"}
+            {[row.fleet.year, row.fleet.color].filter(Boolean).join(" · ") ||
+              "-"}
           </Text>
         </UnstyledButton>
       ) : (
@@ -87,7 +110,9 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     accessor: "type",
     width: 150,
     // ...picklistFilter("type", filters, setFilters),
-    render: (row) => <TwoLine top={row.type?.title} bottom={row.provider?.title} />,
+    render: (row) => (
+      <TwoLine top={row.type?.title} bottom={row.provider?.title} />
+    ),
   },
   {
     accessor: "status",
@@ -116,22 +141,33 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     title: "Schedule",
     width: 150,
     sortable: true,
-    render: (row) => <TwoLine top={row.startedDate ? formatDate(row.startedDate) : "-"} bottom={row.endDate ? `Ends ${formatDate(row.endDate)}` : "Open"} />,
+    render: (row) => (
+      <TwoLine
+        top={row.startedDate ? formatDate(row.startedDate) : "-"}
+        bottom={row.endDate ? `Ends ${formatDate(row.endDate)}` : "Open"}
+      />
+    ),
   },
   {
     accessor: "odometer",
     width: 120,
     textAlign: "center",
     sortable: true,
-    render: (row) => (row.odometer != null ? row.odometer.toLocaleString() : "-"),
+    render: (row) =>
+      row.odometer != null ? row.odometer.toLocaleString() : "-",
   },
   {
     accessor: "cost",
     width: 140,
     sortable: true,
-    render: (row) => <TwoLine top={formatAmount(row.cost || 0)} bottom={`${row.components?.length || 0} parts`} />,
+    render: (row) => (
+      <TwoLine
+        top={formatAmount(row.cost || 0)}
+        bottom={`${row.components?.length || 0} parts`}
+      />
+    ),
   },
-    {
+  {
     accessor: "checklist",
     title: "Check List",
     width: 200,
@@ -139,7 +175,12 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
       row.checklist?.length ? (
         <Group gap={4}>
           {row.checklist.map((check, index) => (
-            <Badge key={index} variant="light" color={check.status?.color || "gray"} tt="capitalize">
+            <Badge
+              key={index}
+              variant="light"
+              color={check.status?.color || "gray"}
+              tt="capitalize"
+            >
               {check.item?.title || "-"}
             </Badge>
           ))}
@@ -167,7 +208,73 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
   },
 ];
 
-const MaintenanceTable = ({ query, hideColumns = [] }) => {
+/** Compact card shown instead of a table row on phones. */
+const MaintenanceCard = (row) => (
+  <Stack gap="sm">
+    <Group justify="space-between" wrap="nowrap" align="flex-start">
+      <UnstyledButton
+        component={Link}
+        to={`/maintenance/${row._id}`}
+        style={{ minWidth: 0 }}
+      >
+        <Text size="sm" fw={600} tt="capitalize" truncate>
+          {row.type?.title || "Maintenance job"}
+        </Text>
+
+        <Group gap={6} mt={4}>
+          {row.fleet?.licensePlate && (
+            <Badge size="sm" color="gray" tt="uppercase">
+              {row.fleet.licensePlate}
+            </Badge>
+          )}
+
+          <Text size="xs" c="dimmed" tt="capitalize">
+            {row.provider?.title || "No provider"}
+          </Text>
+        </Group>
+      </UnstyledButton>
+
+      <MaintenanceTableRowMenu maintenance={row} compact />
+    </Group>
+
+    <Group gap={6}>
+      {row.status?.title && (
+        <Badge size="sm" color={row.status.color} tt="capitalize">
+          {row.status.title}
+        </Badge>
+      )}
+
+      {row.priority?.title && (
+        <Badge size="sm" color={row.priority.color} tt="capitalize">
+          {row.priority.title}
+        </Badge>
+      )}
+
+      {row.checklist?.length > 0 && (
+        <Badge size="sm" color="gray">
+          {row.checklist.length} checks
+        </Badge>
+      )}
+    </Group>
+
+    <Divider />
+
+    <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs">
+      <TwoLine top={formatAmount(row.cost || 0)} bottom="Cost" />
+      <TwoLine top={row.odometer?.toLocaleString()} bottom="Odometer" />
+      <TwoLine
+        top={row.startedDate ? formatDate(row.startedDate) : "-"}
+        bottom="Started"
+      />
+      <TwoLine
+        top={row.endDate ? formatDate(row.endDate) : "Open"}
+        bottom="Ends"
+      />
+    </SimpleGrid>
+  </Stack>
+);
+
+const MaintenanceTable = ({ query, hideColumns = [], toolbar }) => {
   const [globalFilters] = useLocalStorage({
     key: "globalFilters",
     getInitialValueInEffect: false,
@@ -180,6 +287,8 @@ const MaintenanceTable = ({ query, hideColumns = [] }) => {
       columns={DEFAULT_COLUMNS(filters, setFilters)}
       queryParams={{ ...globalFilters, ...filters, ...query }}
       hideColumns={hideColumns}
+      mobileCard={MaintenanceCard}
+      toolbar={toolbar}
     />
   );
 };

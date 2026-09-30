@@ -5,12 +5,25 @@ import PicklistsSelect from "src/features/picklists/components/PicklistsSelect";
 const AdditionalFields = () => {
   const { form, resource } = usePicklists();
 
-  return <PicklistsSelect queryObject={{ resource, field: "serviceProvider" }} selectProps={{ required: true, label: "service provider", ...form.getInputProps("parentPicklist") }} />;
+  return (
+    <PicklistsSelect
+      queryObject={{ resource, field: "serviceProvider" }}
+      selectProps={{
+        required: true,
+        label: "service provider",
+        ...form.getInputProps("parentPicklist"),
+      }}
+    />
+  );
 };
 
 const SubscriptionServices = () => {
   return (
-    <Picklists featureName="subscription service" resource="Subscription" field="service">
+    <Picklists
+      featureName="subscription service"
+      resource="Subscription"
+      field="service"
+    >
       <Picklists.AddButton />
 
       <Picklists.Modal fieldsConfig={{ isDefault: false }}>

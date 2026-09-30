@@ -20,7 +20,8 @@ const PicklistContext = createContext(null);
 export const usePicklists = () => {
   const ctx = useContext(PicklistContext);
 
-  if (!ctx) throw new Error("usePicklists must be used within PicklistProvider");
+  if (!ctx)
+    throw new Error("usePicklists must be used within PicklistProvider");
 
   return ctx;
 };

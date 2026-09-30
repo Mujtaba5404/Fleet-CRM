@@ -5,8 +5,17 @@
   box-sizing: border-box;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  background-color: #f8f8f8;
+  background-color: #f6f7f9;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Respect the iOS notch / Android gesture bar. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 ul,
@@ -38,7 +47,85 @@ svg.tabler-icon {
   stroke-width: 1.5;
 }
 
+/* The app shell surfaces sit on the body tint, so give them the card colour. */
+.mantine-AppShell-header,
+.mantine-AppShell-navbar {
+  background-color: var(--mantine-color-body);
+}
+
+/* The sidebar's collapse handle deliberately hangs over the navbar edge. */
+.mantine-AppShell-navbar {
+  overflow: visible;
+}
+
+/*
+ * Figures line up digit for digit. Applied to every amount, odometer reading
+ * and count so columns of numbers scan vertically instead of jittering.
+ */
+.numeric,
+.mantine-Datatable-table td {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Surfaces that navigate somewhere lift slightly on hover. */
+[data-interactive] {
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+[data-interactive]:hover {
+  border-color: var(--mantine-primary-color-filled);
+  box-shadow: var(--mantine-shadow-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-interactive] {
+    transition: none;
+  }
+}
+
+/*
+ * Table grid lines.
+ *
+ * mantine-datatable drives its own borders from these two custom properties,
+ * so set those rather than trying to out-specify the library's selectors.
+ * The default token is nearly invisible on the dark surface, which is why the
+ * column rules did not read at all.
+ */
+.mantine-datatable {
+  --mantine-datatable-border-color: var(--mantine-color-gray-3);
+  --mantine-datatable-row-border-color: var(--mantine-color-gray-3);
+}
+
+[data-mantine-color-scheme="dark"] .mantine-datatable {
+  --mantine-datatable-border-color: var(--mantine-color-dark-4);
+  --mantine-datatable-row-border-color: var(--mantine-color-dark-4);
+}
+
+/* The header is a band, not just another row. */
+.mantine-datatable-header th {
+  background: var(--mantine-color-gray-0);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+[data-mantine-color-scheme="dark"] .mantine-datatable-header th {
+  background: var(--mantine-color-dark-6);
+}
+
+/* Never let a long unbroken id or note force a horizontal page scroll. */
+.mantine-AppShell-main {
+  overflow-x: hidden;
+}
+
 /* Background pattern */
+.pattern-bg {
+  position: relative;
+  isolation: isolate;
+}
+
 .pattern-bg::before {
   content: "";
   width: 100%;
@@ -46,17 +133,14 @@ svg.tabler-icon {
   position: absolute;
   top: 0;
   left: 0;
-  background: url("src/fleets/bg.svg");
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  opacity: 0.15;
-  filter: invert(1);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--mantine-color-default-border) 1px,
+    transparent 0
+  );
+  background-size: 28px 28px;
+  opacity: 0.7;
   z-index: -1;
-}
-
-[data-mantine-color-scheme="dark"] .pattern-bg::before {
-  filter: none;
 }
 
 /* Loader  */

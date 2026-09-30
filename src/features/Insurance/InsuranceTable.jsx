@@ -1,4 +1,15 @@
-import { Badge, Button, Group, Stack, Text, TextInput, Tooltip, UnstyledButton } from "@mantine/core";
+import {
+  Badge,
+  Button,
+  Divider,
+  Group,
+  SimpleGrid,
+  Stack,
+  Text,
+  TextInput,
+  Tooltip,
+  UnstyledButton,
+} from "@mantine/core";
 import { DatePicker } from "@mantine/dates";
 import { useLocalStorage } from "@mantine/hooks";
 import { Link } from "react-router-dom";
@@ -20,10 +31,12 @@ const TwoLine = ({ top, bottom }) => (
   </Stack>
 );
 
-const title = (value) => (typeof value === "object" && value?.title ? value.title : null);
+const title = (value) =>
+  typeof value === "object" && value?.title ? value.title : null;
 const color = (value) => (typeof value === "object" ? value?.color : undefined);
 
-const payable = (row) => row.totalAmount ?? row.totalPremium ?? row.premium ?? 0;
+const payable = (row) =>
+  row.totalAmount ?? row.totalPremium ?? row.premium ?? 0;
 
 // const picklistFilter = (field, filters, setFilters) => ({
 //   filter: (
@@ -50,7 +63,12 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     sortable: true,
     filter: ({ close }) => (
       <Stack gap="xs">
-        <DatePicker size="xs" type="range" value={filters.createdAt} onChange={(value) => setFilters({ createdAt: value })} />
+        <DatePicker
+          size="xs"
+          type="range"
+          value={filters.createdAt}
+          onChange={(value) => setFilters({ createdAt: value })}
+        />
         <Button
           size="xs"
           onClick={() => {
@@ -70,7 +88,14 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     title: "Policy",
     width: 160,
     sortable: true,
-    filter: <TextInput size="xs" placeholder="Search by policy no." value={filters.policyNumber || ""} onChange={(e) => setFilters({ policyNumber: e.target.value })} />,
+    filter: (
+      <TextInput
+        size="xs"
+        placeholder="Search by policy no."
+        value={filters.policyNumber || ""}
+        onChange={(e) => setFilters({ policyNumber: e.target.value })}
+      />
+    ),
     filtering: filters.policyNumber,
     render: (row) => (
       <UnstyledButton component={Link} to={`/insurance/${row._id}`}>
@@ -88,7 +113,14 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     accessor: "fleet",
     title: "Vehicle",
     width: 160,
-    filter: <TextInput size="xs" placeholder="Search by plate" value={filters.licensePlate || ""} onChange={(e) => setFilters({ licensePlate: e.target.value })} />,
+    filter: (
+      <TextInput
+        size="xs"
+        placeholder="Search by plate"
+        value={filters.licensePlate || ""}
+        onChange={(e) => setFilters({ licensePlate: e.target.value })}
+      />
+    ),
     filtering: filters.licensePlate,
     render: (row) =>
       row.fleet ? (
@@ -98,7 +130,8 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
           </Badge>
 
           <Text size="xs" c="dimmed" tt="capitalize" mt={2}>
-            {[row.fleet.year, row.fleet.color].filter(Boolean).join(" · ") || "-"}
+            {[row.fleet.year, row.fleet.color].filter(Boolean).join(" · ") ||
+              "-"}
           </Text>
         </UnstyledButton>
       ) : (
@@ -122,7 +155,14 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     accessor: "provider",
     width: 150,
     // ...picklistFilter("provider", filters, setFilters),
-    render: (row) => <TwoLine top={title(row.provider)} bottom={title(row.broker) ? `Broker: ${title(row.broker)}` : "No broker"} />,
+    render: (row) => (
+      <TwoLine
+        top={title(row.provider)}
+        bottom={
+          title(row.broker) ? `Broker: ${title(row.broker)}` : "No broker"
+        }
+      />
+    ),
   },
   {
     accessor: "startDate",
@@ -134,7 +174,9 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
 
       return (
         <Stack gap={0}>
-          <Text size="sm">{row.startDate ? formatDate(row.startDate) : "-"}</Text>
+          <Text size="sm">
+            {row.startDate ? formatDate(row.startDate) : "-"}
+          </Text>
 
           <Group gap={6}>
             <Text size="xs" c="dimmed">
@@ -159,7 +201,12 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     render: (row) => (
       <TwoLine
         top={formatAmount(payable(row))}
-        bottom={[row.taxAmount ? `Tax ${formatAmount(row.taxAmount)}` : null, row.discountAmount ? `− ${formatAmount(row.discountAmount)}` : null].filter(Boolean).join(" · ")}
+        bottom={[
+          row.taxAmount ? `Tax ${formatAmount(row.taxAmount)}` : null,
+          row.discountAmount ? `− ${formatAmount(row.discountAmount)}` : null,
+        ]
+          .filter(Boolean)
+          .join(" · ")}
       />
     ),
   },
@@ -167,7 +214,8 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     accessor: "deductible",
     width: 120,
     sortable: true,
-    render: (row) => (row.deductible != null ? formatAmount(row.deductible) : "-"),
+    render: (row) =>
+      row.deductible != null ? formatAmount(row.deductible) : "-",
   },
   {
     accessor: "coverages",
@@ -178,8 +226,16 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
         return (
           <Group gap={4}>
             {row.coverages.map((cover, index) => (
-              <Tooltip key={index} label={`Limit ${formatAmount(cover.limit || 0)} · Premium ${formatAmount(cover.premium || 0)}`} withArrow>
-                <Badge variant="light" color={color(cover.type)} tt="capitalize">
+              <Tooltip
+                key={index}
+                label={`Limit ${formatAmount(cover.limit || 0)} · Premium ${formatAmount(cover.premium || 0)}`}
+                withArrow
+              >
+                <Badge
+                  variant="light"
+                  color={color(cover.type)}
+                  tt="capitalize"
+                >
                   {title(cover.type) || formatAmount(cover.limit || 0)}
                 </Badge>
               </Tooltip>
@@ -202,7 +258,16 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     width: 160,
     sortable: true,
     render: (row) =>
-      row.cancellationDate ? <TwoLine top={formatDate(row.cancellationDate)} bottom={row.cancellationReason} /> : <Text size="sm" c="dimmed">-</Text>,
+      row.cancellationDate ? (
+        <TwoLine
+          top={formatDate(row.cancellationDate)}
+          bottom={row.cancellationReason}
+        />
+      ) : (
+        <Text size="sm" c="dimmed">
+          -
+        </Text>
+      ),
   },
   {
     accessor: "notes",
@@ -221,7 +286,80 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
   },
 ];
 
-const InsuranceTable = ({ query, hideColumns = [] }) => {
+/** Compact card shown instead of a table row on phones. */
+const InsuranceCard = (row) => {
+  const expired = row.endDate && new Date(row.endDate) < new Date();
+
+  return (
+    <Stack gap="sm">
+      <Group justify="space-between" wrap="nowrap" align="flex-start">
+        <UnstyledButton
+          component={Link}
+          to={`/insurance/${row._id}`}
+          style={{ minWidth: 0 }}
+        >
+          <Text size="sm" fw={600} tt="uppercase" truncate>
+            {row.policyNumber || "No policy number"}
+          </Text>
+
+          <Group gap={6} mt={4}>
+            {row.fleet?.licensePlate && (
+              <Badge size="sm" color="gray" tt="uppercase">
+                {row.fleet.licensePlate}
+              </Badge>
+            )}
+
+            <Text size="xs" c="dimmed" tt="capitalize">
+              {title(row.provider) || "No provider"}
+            </Text>
+          </Group>
+        </UnstyledButton>
+
+        <InsuranceTableRowMenu insurance={row} compact />
+      </Group>
+
+      <Group gap={6}>
+        {title(row.status) && (
+          <Badge size="sm" color={color(row.status)} tt="capitalize">
+            {title(row.status)}
+          </Badge>
+        )}
+
+        {title(row.type) && (
+          <Badge size="sm" color="gray" tt="capitalize">
+            {title(row.type)}
+          </Badge>
+        )}
+
+        {expired && (
+          <Badge size="sm" color="red">
+            Expired
+          </Badge>
+        )}
+      </Group>
+
+      <Divider />
+
+      <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs">
+        <TwoLine top={formatAmount(payable(row))} bottom="Payable" />
+        <TwoLine
+          top={row.deductible != null ? formatAmount(row.deductible) : "-"}
+          bottom="Deductible"
+        />
+        <TwoLine
+          top={row.startDate ? formatDate(row.startDate) : "-"}
+          bottom="Cover from"
+        />
+        <TwoLine
+          top={row.endDate ? formatDate(row.endDate) : "Open"}
+          bottom="Cover to"
+        />
+      </SimpleGrid>
+    </Stack>
+  );
+};
+
+const InsuranceTable = ({ query, hideColumns = [], toolbar }) => {
   const [globalFilters] = useLocalStorage({
     key: "globalFilters",
     getInitialValueInEffect: false,
@@ -234,6 +372,8 @@ const InsuranceTable = ({ query, hideColumns = [] }) => {
       columns={DEFAULT_COLUMNS(filters, setFilters)}
       queryParams={{ ...globalFilters, ...filters, ...query }}
       hideColumns={hideColumns}
+      mobileCard={InsuranceCard}
+      toolbar={toolbar}
     />
   );
 };

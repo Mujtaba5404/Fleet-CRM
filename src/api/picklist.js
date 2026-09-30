@@ -1,12 +1,13 @@
 import { upperFirst } from "@mantine/hooks";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { showNotification } from "../notifications/showNotification";
-import api from "../api/index"
+import api from "../api/index";
 
 export const useGetAllPicklistsQuery = (params) => {
   return useQuery({
     queryKey: ["picklists", "all", params],
-    queryFn: () => api.get("picklists/all", { params }).then(({ data }) => data),
+    queryFn: () =>
+      api.get("picklists/all", { params }).then(({ data }) => data),
   });
 };
 
@@ -44,7 +45,8 @@ export const useUpdatePicklistMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ picklistId, payload }) => api.patch(`picklists/${picklistId}`, payload),
+    mutationFn: ({ picklistId, payload }) =>
+      api.patch(`picklists/${picklistId}`, payload),
     onSuccess: () => {
       queryClient.invalidateQueries(["picklists"]);
       showNotification({
