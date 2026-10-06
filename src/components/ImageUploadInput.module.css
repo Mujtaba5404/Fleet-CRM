@@ -1,0 +1,31 @@
+/* The dashed drop area. The colours live in custom properties because the
+   element's own border and colour are set inline (Mantine's Dropzone styles
+   would otherwise win), and inline styles can still read a variable the class
+   flips on hover. */
+.zone {
+  --zone-bd: var(--mantine-color-default-border);
+  --zone-fg: var(--mantine-color-dimmed);
+}
+
+.zone:hover {
+  --zone-bd: var(--mantine-primary-color-filled);
+  --zone-fg: var(--mantine-primary-color-filled);
+}
+
+.thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-sm);
+}
+
+/* The remove button only appears once the pointer is on the thumbnail, so a
+   row of photos stays clean until you mean to change it. */
+.thumb .remove {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.thumb:hover .remove,
+.thumb .remove:focus-visible {
+  opacity: 1;
+}

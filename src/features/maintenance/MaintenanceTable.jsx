@@ -3,6 +3,7 @@ import {
   Button,
   Divider,
   Group,
+  MultiSelect,
   SimpleGrid,
   Stack,
   Text,
@@ -13,11 +14,18 @@ import { DatePicker } from "@mantine/dates";
 import { useLocalStorage } from "@mantine/hooks";
 import { Link } from "react-router-dom";
 import { useGetMaintenanceWithPaginationQuery } from "../../api/maintenance";
+import NoteHoverCell from "../../components/NoteHoverCell";
 import PaginatedTable from "../../components/PaginatedTable";
 import useFilters from "../../hooks/useFilters";
 import formatAmount from "../../utils/formatAmount";
 import formatDate from "../../utils/formatDate";
+import PicklistsMultiSelect from "../picklists/components/PicklistsMultiSelect";
+import { MAINTENANCE_STATUS_OPTIONS } from "./maintenanceForm";
+import MaintenanceStatusBadge from "./MaintenanceStatusBadge";
 import MaintenanceTableRowMenu from "./MaintenanceTableRowMenu";
+
+const photoCount = (row) =>
+  (row.conditionBefore?.length || 0) + (row.conditionAfter?.length || 0);
 
 const TwoLine = ({ top, bottom }) => (
   <Stack gap={0}>
@@ -30,21 +38,21 @@ const TwoLine = ({ top, bottom }) => (
   </Stack>
 );
 
-// const picklistFilter = (field, filters, setFilters) => ({
-//   filter: (
-//     <PicklistsMultiSelect
-//       queryObject={{ resource: "Maintenance", field }}
-//       multiSelectProps={{
-//         size: "xs",
-//         placeholder: `Select ${field}`,
-//         value: filters[field] || [],
-//         onChange: (value) => setFilters({ [field]: value }),
-//         comboboxProps: { withinPortal: false },
-//       }}
-//     />
-//   ),
-//   filtering: filters[field]?.length,
-// });
+const picklistFilter = (field, filters, setFilters) => ({
+  filter: (
+    <PicklistsMultiSelect
+      queryObject={{ resource: "Maintenance", field }}
+      multiSelectProps={{
+        size: "xs",
+        placeholder: `Select ${field}`,
+        value: filters[field] || [],
+        onChange: (value) => setFilters({ [field]: value }),
+        comboboxProps: { withinPortal: false },
+      }}
+    />
+  ),
+  filtering: filters[field]?.length,
+});
 
 const DEFAULT_COLUMNS = (filters, setFilters) => [
   {
@@ -109,27 +117,36 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
   {
     accessor: "type",
     width: 150,
-    // ...picklistFilter("type", filters, setFilters),
+    ...picklistFilter("type", filters, setFilters),
     render: (row) => (
-      <TwoLine top={row.type?.title} bottom={row.provider?.title} />
+      <TwoLine top={row.type?.title} bottom={row.vendor?.title} />
     ),
   },
   {
     accessor: "status",
-    width: 130,
+    width: 140,
     textAlign: "center",
-    // ...picklistFilter("status", filters, setFilters),
-    render: (row) => (
-      <Badge color={row.status?.color} tt="capitalize">
-        {row.status?.title || "-"}
-      </Badge>
+    filter: (
+      <MultiSelect
+        size="xs"
+        placeholder="Select status"
+        data={MAINTENANCE_STATUS_OPTIONS.map(({ value, label }) => ({
+          value,
+          label,
+        }))}
+        value={filters.status || []}
+        onChange={(value) => setFilters({ status: value })}
+        comboboxProps={{ withinPortal: false }}
+      />
     ),
+    filtering: filters.status?.length,
+    render: (row) => <MaintenanceStatusBadge status={row.status} />,
   },
   {
     accessor: "priority",
     width: 120,
     textAlign: "center",
-    // ...picklistFilter("priority", filters, setFilters),
+    ...picklistFilter("priority", filters, setFilters),
     render: (row) => (
       <Badge variant="light" color={row.priority?.color} tt="capitalize">
         {row.priority?.title || "-"}
@@ -137,16 +154,33 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     ),
   },
   {
-    accessor: "startedDate",
+    accessor: "startDate",
     title: "Schedule",
     width: 150,
     sortable: true,
     render: (row) => (
       <TwoLine
-        top={row.startedDate ? formatDate(row.startedDate) : "-"}
+        top={row.startDate ? formatDate(row.startDate) : "-"}
         bottom={row.endDate ? `Ends ${formatDate(row.endDate)}` : "Open"}
       />
     ),
+  },
+  {
+    accessor: "photos",
+    title: "Photos",
+    width: 120,
+    textAlign: "center",
+    render: (row) =>
+      photoCount(row) ? (
+        <TwoLine
+          top={`${row.conditionBefore?.length || 0} before`}
+          bottom={`${row.conditionAfter?.length || 0} after`}
+        />
+      ) : (
+        <Text size="sm" c="dimmed">
+          -
+        </Text>
+      ),
   },
   {
     accessor: "odometer",
@@ -195,9 +229,11 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     accessor: "notes",
     width: 220,
     render: (row) => (
-      <Text size="xs" c="dimmed" lineClamp={2}>
-        {row.notes || "-"}
-      </Text>
+      <NoteHoverCell
+        note={row.notes}
+        author={row.createdBy}
+        date={row.updatedAt || row.createdAt}
+      />
     ),
   },
   {
@@ -229,7 +265,7 @@ const MaintenanceCard = (row) => (
           )}
 
           <Text size="xs" c="dimmed" tt="capitalize">
-            {row.provider?.title || "No provider"}
+            {row.vendor?.title || "No vendor"}
           </Text>
         </Group>
       </UnstyledButton>
@@ -238,9 +274,11 @@ const MaintenanceCard = (row) => (
     </Group>
 
     <Group gap={6}>
-      {row.status?.title && (
-        <Badge size="sm" color={row.status.color} tt="capitalize">
-          {row.status.title}
+      {row.status && <MaintenanceStatusBadge status={row.status} />}
+
+      {photoCount(row) > 0 && (
+        <Badge size="sm" color="gray">
+          {photoCount(row)} photos
         </Badge>
       )}
 
@@ -263,7 +301,7 @@ const MaintenanceCard = (row) => (
       <TwoLine top={formatAmount(row.cost || 0)} bottom="Cost" />
       <TwoLine top={row.odometer?.toLocaleString()} bottom="Odometer" />
       <TwoLine
-        top={row.startedDate ? formatDate(row.startedDate) : "-"}
+        top={row.startDate ? formatDate(row.startDate) : "-"}
         bottom="Started"
       />
       <TwoLine

@@ -14,10 +14,12 @@ import { DatePicker } from "@mantine/dates";
 import { useLocalStorage } from "@mantine/hooks";
 import { Link } from "react-router-dom";
 import { useGetInsuranceWithPaginationQuery } from "../../api/insurance";
+import NoteHoverCell from "../../components/NoteHoverCell";
 import PaginatedTable from "../../components/PaginatedTable";
 import useFilters from "../../hooks/useFilters";
 import formatAmount from "../../utils/formatAmount";
 import formatDate from "../../utils/formatDate";
+import PicklistsMultiSelect from "../picklists/components/PicklistsMultiSelect";
 import InsuranceTableRowMenu from "./InsuranceTableRowMenu";
 
 const TwoLine = ({ top, bottom }) => (
@@ -38,21 +40,21 @@ const color = (value) => (typeof value === "object" ? value?.color : undefined);
 const payable = (row) =>
   row.totalAmount ?? row.totalPremium ?? row.premium ?? 0;
 
-// const picklistFilter = (field, filters, setFilters) => ({
-//   filter: (
-//     <PicklistsMultiSelect
-//       queryObject={{ resource: "Insurance", field }}
-//       multiSelectProps={{
-//         size: "xs",
-//         placeholder: `Select ${field}`,
-//         value: filters[field] || [],
-//         onChange: (value) => setFilters({ [field]: value }),
-//         comboboxProps: { withinPortal: false },
-//       }}
-//     />
-//   ),
-//   filtering: filters[field]?.length,
-// });
+const picklistFilter = (field, filters, setFilters) => ({
+  filter: (
+    <PicklistsMultiSelect
+      queryObject={{ resource: "Insurance", field }}
+      multiSelectProps={{
+        size: "xs",
+        placeholder: `Select ${field}`,
+        value: filters[field] || [],
+        onChange: (value) => setFilters({ [field]: value }),
+        comboboxProps: { withinPortal: false },
+      }}
+    />
+  ),
+  filtering: filters[field]?.length,
+});
 
 const DEFAULT_COLUMNS = (filters, setFilters) => [
   {
@@ -144,7 +146,7 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     accessor: "status",
     width: 120,
     textAlign: "center",
-    // ...picklistFilter("status", filters, setFilters),
+    ...picklistFilter("status", filters, setFilters),
     render: (row) => (
       <Badge variant="light" color={color(row.status)} tt="capitalize">
         {title(row.status) || "-"}
@@ -154,7 +156,7 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
   {
     accessor: "provider",
     width: 150,
-    // ...picklistFilter("provider", filters, setFilters),
+    ...picklistFilter("provider", filters, setFilters),
     render: (row) => (
       <TwoLine
         top={title(row.provider)}
@@ -273,9 +275,11 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     accessor: "notes",
     width: 200,
     render: (row) => (
-      <Text size="xs" c="dimmed" lineClamp={2}>
-        {row.notes || "-"}
-      </Text>
+      <NoteHoverCell
+        note={row.notes}
+        author={row.createdBy}
+        date={row.updatedAt || row.createdAt}
+      />
     ),
   },
   {

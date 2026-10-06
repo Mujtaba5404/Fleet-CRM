@@ -8,6 +8,7 @@ const Select = ({
   selectValue = "",
   capitalizeLabel = true,
   groupBy = "",
+  value,
   ...props
 }) => {
   const formattedData = () => {
@@ -36,7 +37,14 @@ const Select = ({
 
   const _data = formattedData();
 
-  return <MantineSelect data={_data} {...props} />;
+  // Mantine only treats null as empty: "" still shows the clear button.
+  return (
+    <MantineSelect
+      data={_data}
+      value={value === "" ? null : value}
+      {...props}
+    />
+  );
 };
 
 export default Select;

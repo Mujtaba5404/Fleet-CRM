@@ -5,15 +5,20 @@ import FormShell from "../../components/FormShell";
 import {
   MaintenanceAsideFields,
   MaintenanceMainFields,
+  MaintenancePhotoFields,
 } from "./MaintenanceFormFields";
 import {
   MAINTENANCE_INITIAL_VALUES,
   MAINTENANCE_VALIDATION,
+  maintenanceToFormData,
+  photosForStatus,
 } from "./maintenanceForm";
+import useConditionPhotos from "./useConditionPhotos";
 
 const AddMaintenanceModal = ({ isOpen = false, onClose = () => {} }) => {
   const createMaintenanceMutation = useCreateMaintenanceMutation();
   const navigate = useNavigate();
+  const { photos, setPhotoField, resetPhotos } = useConditionPhotos();
 
   const form = useForm({
     initialValues: MAINTENANCE_INITIAL_VALUES,
@@ -22,13 +27,20 @@ const AddMaintenanceModal = ({ isOpen = false, onClose = () => {} }) => {
 
   const handleClose = () => {
     form.reset();
+    resetPhotos();
     onClose();
   };
 
   const handleSubmit = (values) => {
-    createMaintenanceMutation.mutate(values, {
+    const payload = maintenanceToFormData(
+      values,
+      photosForStatus(values.status, photos),
+    );
+
+    createMaintenanceMutation.mutate(payload, {
       onSuccess: ({ data }) => {
         form.reset();
+        resetPhotos();
         onClose();
         navigate(`/maintenance/${data._id}`);
       },
@@ -39,13 +51,22 @@ const AddMaintenanceModal = ({ isOpen = false, onClose = () => {} }) => {
     <FormShell
       opened={isOpen}
       onClose={handleClose}
-      title="Log maintenance"
-      description="Record a service job, its parts and its checks"
-      submitLabel="Log job"
+      title="Add maintenance"
+      description="Record a service job, its checks and the vehicle's condition"
+      submitLabel="Add maintenance"
       onSubmit={form.onSubmit(handleSubmit)}
       isSubmitting={createMaintenanceMutation.isPending}
       error={createMaintenanceMutation.error}
-      aside={<MaintenanceAsideFields form={form} />}
+      aside={
+        <>
+          <MaintenancePhotoFields
+            form={form}
+            photos={photos}
+            onPhotosChange={setPhotoField}
+          />
+          <MaintenanceAsideFields form={form} />
+        </>
+      }
     >
       <MaintenanceMainFields form={form} />
     </FormShell>

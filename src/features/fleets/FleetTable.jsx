@@ -17,6 +17,7 @@ import PaginatedTable from "../../components/PaginatedTable";
 import useFilters from "../../hooks/useFilters";
 import formatAmount from "../../utils/formatAmount";
 import formatDate from "../../utils/formatDate";
+import PicklistsMultiSelect from "../picklists/components/PicklistsMultiSelect";
 import FleetTableRowMenu from "./FleetTableRowMenu";
 
 const TwoLine = ({ top, bottom }) => (
@@ -30,21 +31,21 @@ const TwoLine = ({ top, bottom }) => (
   </Stack>
 );
 
-// const picklistFilter = (field, filters, setFilters) => ({
-//   filter: (
-//     <PicklistsMultiSelect
-//       queryObject={{ resource: "Fleet", field }}
-//       multiSelectProps={{
-//         size: "xs",
-//         placeholder: `Select ${field}`,
-//         value: filters[field] || [],
-//         onChange: (value) => setFilters({ [field]: value }),
-//         comboboxProps: { withinPortal: false },
-//       }}
-//     />
-//   ),
-//   filtering: filters[field]?.length,
-// });
+const picklistFilter = (field, filters, setFilters) => ({
+  filter: (
+    <PicklistsMultiSelect
+      queryObject={{ resource: "Fleet", field }}
+      multiSelectProps={{
+        size: "xs",
+        placeholder: `Select ${field}`,
+        value: filters[field] || [],
+        onChange: (value) => setFilters({ [field]: value }),
+        comboboxProps: { withinPortal: false },
+      }}
+    />
+  ),
+  filtering: filters[field]?.length,
+});
 
 const DEFAULT_COLUMNS = (filters, setFilters) => [
   {
@@ -98,8 +99,8 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
   },
   {
     accessor: "vehicle",
-    width: 200,
-    // ...picklistFilter("make", filters, setFilters),
+    width: 160,
+    ...picklistFilter("make", filters, setFilters),
     render: (row) => (
       <UnstyledButton component={Link} to={`/fleets/${row._id}`}>
         <Text size="sm" tt="capitalize">
@@ -114,7 +115,7 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
   {
     accessor: "type",
     width: 150,
-    // ...picklistFilter("type", filters, setFilters),
+    ...picklistFilter("type", filters, setFilters),
     render: (row) => (
       <TwoLine top={row.type?.title} bottom={row.fuelType?.title} />
     ),
@@ -123,7 +124,7 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     accessor: "transmission",
     width: 130,
     textAlign: "center",
-    // ...picklistFilter("transmission", filters, setFilters),
+    ...picklistFilter("transmission", filters, setFilters),
     render: (row) => (
       <Text size="sm" tt="capitalize">
         {row.transmission?.title || "-"}
@@ -134,22 +135,22 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     accessor: "status",
     width: 130,
     textAlign: "center",
-    // ...picklistFilter("status", filters, setFilters),
+    ...picklistFilter("status", filters, setFilters),
     render: (row) => (
-      <Badge color={row.status?.color} tt="capitalize">
+      <Badge variant="light" color={row.status?.color} tt="capitalize">
         {row.status?.title || "-"}
       </Badge>
     ),
   },
   {
-    accessor: "attachments",
     title: "Files",
+    accessor: "documents",
     width: 90,
     textAlign: "center",
     render: (row) =>
-      row.attachments?.length ? (
+      row.documents?.length ? (
         <Badge variant="light" color="gray">
-          {row.attachments.length}
+          {row.documents.length}
         </Badge>
       ) : (
         <Text size="sm" c="dimmed">
@@ -162,7 +163,7 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     width: 120,
     textAlign: "center",
     render: (row) => (
-      <Badge color={row.condition?.color} tt="capitalize">
+      <Badge variant="light" color={row.condition?.color} tt="capitalize">
         {row.condition?.title || "-"}
       </Badge>
     ),
@@ -207,13 +208,13 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
   },
   {
     accessor: "menu",
-    width: 60,
+    width: 100,
     textAlign: "center",
     render: (row) => <FleetTableRowMenu fleet={row} compact />,
   },
 ];
 
-/** Compact card shown instead of a table row on phones. */
+
 const FleetCard = (row) => {
   const vehicle = [row.make?.title, row.model?.title].filter(Boolean).join(" ");
 

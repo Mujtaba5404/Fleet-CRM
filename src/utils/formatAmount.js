@@ -1,12 +1,30 @@
+import CURRENCY from "../constants/CURRENCY";
+
 /**
  * The currency every amount in the CRM is displayed in.
  *
- * NOTE: this is "USD", which is what the app has always rendered — but the
- * data model says otherwise (CURRENCY lists PKR first and SittingCostHeads
- * defaults to it, and the domain language is challans and jurisdictions).
- * If amounts should read as PKR, change this one line.
+ * Change these two lines and the whole app follows: every table cell, detail
+ * figure, dashboard tile and form input, because nothing else in the codebase
+ * hardcodes a currency.
+ *
+ * `en-PK` is the locale rather than `en-US` because it renders PKR as "Rs"
+ * instead of "PKR", while keeping ordinary thousands grouping
+ * (Rs 5,500,000 — not the lakh/crore 55,00,000 form).
  */
-const DISPLAY_CURRENCY = "USD";
+const DISPLAY_CURRENCY = CURRENCY.PKR;
+const DISPLAY_LOCALE = "en-PK";
+
+/** Just the symbol ("Rs"), derived so form inputs cannot drift from output. */
+export const CURRENCY_SYMBOL =
+  new Intl.NumberFormat(DISPLAY_LOCALE, {
+    style: "currency",
+    currency: DISPLAY_CURRENCY,
+  })
+    .formatToParts(0)
+    .find((part) => part.type === "currency")?.value ?? "";
+
+/** Prefix for a NumberInput holding an amount, e.g. "Rs ". */
+export const CURRENCY_PREFIX = `${CURRENCY_SYMBOL} `;
 
 const formatAmount = (amount = 0, options = {}) => {
   const defaultOptions = {
@@ -16,7 +34,7 @@ const formatAmount = (amount = 0, options = {}) => {
       options.notation === "compact" ? 2 : Number.isInteger(amount) ? 0 : 2,
   };
 
-  const formatter = new Intl.NumberFormat("en-US", {
+  const formatter = new Intl.NumberFormat(DISPLAY_LOCALE, {
     ...defaultOptions,
     ...options,
   });

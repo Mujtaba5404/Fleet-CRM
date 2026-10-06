@@ -24,6 +24,33 @@ export const useGetfleetByIdQuery = (fleetId) => {
   });
 };
 
+/**
+ * Fleet counts and purchase totals, grouped two levels deep.
+ *
+ * @param {Object} params
+ * @param {string} params.primaryGroup   Fleet field to group by, e.g. "fuelType"
+ * @param {string} params.secondaryGroup Field to break each primary group down by
+ *
+ * Response shape:
+ * {
+ *   primaryGroupWise: [
+ *     { _id, groupType, title, color, count, purchaseAmount,
+ *       secondaryGroupWise: [{ _id, title, color, count, purchaseAmount }] }
+ *   ],
+ *   secondaryGroupWise: [{ _id, title, color, count, purchaseAmount }],
+ *   totalCount,
+ *   totalPurchaseAmount
+ * }
+ */
+export const useGetfleetSummaryByGroupQuery = (params, options = {}) => {
+  return useQuery({
+    queryKey: ["fleets", "summary", "byGroup", params],
+    queryFn: () =>
+      api.get("fleets/summary/byGroup", { params }).then(({ data }) => data),
+    ...options,
+  });
+};
+
 export const useCreatefleetMutation = () => {
   const queryfleet = useQueryClient();
 

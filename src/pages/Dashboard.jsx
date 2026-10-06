@@ -28,6 +28,7 @@ import { useGetAllTaxQuery } from "../api/tax";
 import DetailPanel from "../components/DetailPanel";
 import PageHeader from "../components/PageHeader";
 import StatTile from "../components/StatTile";
+import MaintenanceStatusBadge from "../features/maintenance/MaintenanceStatusBadge";
 import formatAmount from "../utils/formatAmount";
 import formatDate from "../utils/formatDate";
 
@@ -324,16 +325,10 @@ const Dashboard = () => {
                     key={job._id}
                     to={`/maintenance/${job._id}`}
                     title={job.type?.title || "Maintenance"}
-                    subtitle={`${job.fleet?.licensePlate || "—"} · ${job.provider?.title || "No provider"}`}
+                    subtitle={`${job.fleet?.licensePlate || "—"} · ${job.vendor?.title || "No vendor"}`}
                     right={
-                      job.status?.title ? (
-                        <Badge
-                          size="sm"
-                          color={job.status.color}
-                          tt="capitalize"
-                        >
-                          {job.status.title}
-                        </Badge>
+                      job.status ? (
+                        <MaintenanceStatusBadge status={job.status} />
                       ) : null
                     }
                     rightSub={formatAmount(job.cost || 0)}

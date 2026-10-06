@@ -1,9 +1,30 @@
 .page {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
   padding: var(--mantine-spacing-md);
-  background: var(--mantine-color-gray-1);
+
+  /* Every ink the backdrop uses, in one place and themeable. */
+  --login-grid: rgba(15, 23, 42, 0.05);
+  --login-road: rgba(37, 99, 235, 0.07);
+  --login-lane: rgba(37, 99, 235, 0.22);
+  --login-node: rgba(37, 99, 235, 0.4);
+
+  background:
+    radial-gradient(
+      90% 55% at 50% 0%,
+      rgba(191, 219, 254, 0.5),
+      rgba(191, 219, 254, 0) 62%
+    ),
+    linear-gradient(
+      180deg,
+      var(--mantine-color-gray-0),
+      var(--mantine-color-gray-2)
+    );
 }
 
 @media (min-width: 48em) {
@@ -13,10 +34,81 @@
 }
 
 :root[data-mantine-color-scheme="dark"] .page {
-  background: var(--mantine-color-dark-8);
+  --login-grid: rgba(148, 163, 184, 0.07);
+  --login-road: rgba(96, 165, 250, 0.08);
+  --login-lane: rgba(147, 197, 253, 0.2);
+  --login-node: rgba(147, 197, 253, 0.45);
+
+  background:
+    radial-gradient(
+      90% 55% at 50% 0%,
+      rgba(37, 99, 235, 0.16),
+      rgba(37, 99, 235, 0) 62%
+    ),
+    linear-gradient(
+      180deg,
+      var(--mantine-color-dark-7),
+      var(--mantine-color-dark-9)
+    );
 }
 
+/* ---------- Route backdrop ---------- */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Lane markings drifting along their road: the fleet is moving. */
+.lane {
+  stroke-dasharray: 10 14;
+  animation: flow linear infinite;
+}
+
+@keyframes flow {
+  to {
+    stroke-dashoffset: -48;
+  }
+}
+
+.pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pulse 3.4s ease-out infinite;
+}
+
+@keyframes pulse {
+  from {
+    transform: scale(0.5);
+    opacity: 0.4;
+  }
+
+  to {
+    transform: scale(3.2);
+    opacity: 0;
+  }
+}
+
+/* The map still reads perfectly well standing still. */
+@media (prefers-reduced-motion: reduce) {
+  .lane,
+  .pulse {
+    animation: none;
+  }
+
+  .pulse,
+  .car {
+    display: none;
+  }
+}
+
+/* Above the map, and opaque, so the routes pass behind it. */
 .card {
+  position: relative;
+  z-index: 1;
   overflow: hidden;
 }
 

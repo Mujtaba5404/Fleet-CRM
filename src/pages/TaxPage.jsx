@@ -42,6 +42,7 @@ const TaxPage = () => (
                   <DatePicker
                     type="range"
                     size="sm"
+                    fullWidth
                     mt={4}
                     value={filters.createdAt || [null, null]}
                     onChange={(value) => setFilters({ createdAt: value })}
@@ -64,7 +65,7 @@ const TaxPage = () => (
           noun="challan"
           search={{
             key: "challanNumber",
-            placeholder: "Search by challan no.…",
+            placeholder: "Search by challan no.â€¦",
           }}
           filterLabels={FILTER_LABELS}
         />

@@ -16,6 +16,7 @@ import {
 } from "@mantine/core";
 import {
   IconAlertTriangle,
+  IconCamera,
   IconCalendarCheck,
   IconCalendarEvent,
   IconCash,
@@ -40,8 +41,12 @@ import Placeholder from "../../components/Placeholder";
 import StatTile from "../../components/StatTile";
 import formatAmount from "../../utils/formatAmount";
 import formatDate from "../../utils/formatDate";
+import CompleteMaintenanceButton from "./CompleteMaintenanceButton";
+import ConditionGallery from "./ConditionGallery";
 import DeleteMaintenanceButton from "./DeleteMaintenanceButton";
 import EditMaintenanceModalButton from "./EditMaintenanceModalButton";
+import { getMaintenanceStatusOption, isCompleted } from "./maintenanceForm";
+import MaintenanceStatusBadge from "./MaintenanceStatusBadge";
 
 const daysBetween = (from, to) => {
   if (!from || !to) return null;
@@ -96,7 +101,10 @@ const MaintenanceDetails = () => {
   );
   const labour = (Number(data.cost) || 0) - partsTotal;
   const partsShare = data.cost ? Math.round((partsTotal / data.cost) * 100) : 0;
-  const duration = daysBetween(data.startedDate, data.endDate);
+  const duration = daysBetween(data.startDate, data.endDate);
+  const completed = isCompleted(data.status);
+  const photosBefore = data.conditionBefore || [];
+  const photosAfter = data.conditionAfter || [];
 
   const timelineItems = [
     {
@@ -114,7 +122,7 @@ const MaintenanceDetails = () => {
     {
       key: "started",
       label: "Work started",
-      date: data.startedDate,
+      date: data.startDate,
       icon: <IconPlayerPlay size={12} />,
     },
     {
@@ -138,6 +146,8 @@ const MaintenanceDetails = () => {
         ]}
         actions={
           <>
+            <CompleteMaintenanceButton maintenance={data} />
+
             <EditMaintenanceModalButton maintenance={data} variant="button" />
 
             <DeleteMaintenanceButton
@@ -151,11 +161,11 @@ const MaintenanceDetails = () => {
 
       <Stack gap="md">
         <DetailHero
-          railColor={data.status?.color}
+          railColor={getMaintenanceStatusOption(data.status)?.color}
           title={data.type?.title || "Maintenance"}
           badges={
             <>
-              <PicklistBadge item={data.status} size="md" />
+              <MaintenanceStatusBadge status={data.status} size="md" />
 
               <Tooltip label="Priority" withArrow>
                 <Badge
@@ -247,9 +257,9 @@ const MaintenanceDetails = () => {
                 icon={IconClipboardText}
                 action={
                   <Text size="xs" c="dimmed">
-                    {data.provider?.title
-                      ? `Handled by ${data.provider.title}`
-                      : "No provider"}
+                    {data.vendor?.title
+                      ? `Handled by ${data.vendor.title}`
+                      : "No vendor"}
                   </Text>
                 }
               >
@@ -276,6 +286,22 @@ const MaintenanceDetails = () => {
                     No dates recorded
                   </Text>
                 )}
+              </DetailPanel>
+
+              <DetailPanel
+                title="Vehicle condition"
+                icon={IconCamera}
+                action={
+                  <Badge size="lg" color="gray">
+                    {photosBefore.length + photosAfter.length} photos
+                  </Badge>
+                }
+              >
+                <ConditionGallery
+                  before={photosBefore}
+                  after={photosAfter}
+                  completed={completed}
+                />
               </DetailPanel>
 
               <DetailPanel
@@ -407,8 +433,8 @@ const MaintenanceDetails = () => {
                       (data.assignedTo ? "Not populated" : "Unassigned")}
                   </DetailPanel.Field>
 
-                  <DetailPanel.Field label="Provider">
-                    <PicklistBadge item={data.provider} />
+                  <DetailPanel.Field label="Vendor">
+                    <PicklistBadge item={data.vendor} />
                   </DetailPanel.Field>
 
                   <DetailPanel.Field label="Company">

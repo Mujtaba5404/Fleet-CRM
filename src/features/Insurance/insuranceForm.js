@@ -3,8 +3,7 @@
  */
 
 export const INSURANCE_INITIAL_VALUES = {
-  company: "",
-  fleet: "",
+  fleet: null,
   policyNumber: "",
   provider: null,
   status: null,
@@ -24,7 +23,6 @@ export const INSURANCE_VALIDATION = {
   policyNumber: (value) =>
     !value?.trim() ? "Policy number is required" : null,
   fleet: required("Vehicle is required"),
-  company: required("Company is required"),
   provider: required("Pick a provider"),
   status: required("Pick a status"),
   startDate: required("Start date is required"),
@@ -48,8 +46,7 @@ const toId = (value) => value?._id ?? value ?? null;
 const toDate = (value) => (value ? new Date(value) : null);
 
 export const insuranceToFormValues = (insurance = {}) => ({
-  company: toId(insurance.company) || "",
-  fleet: toId(insurance.fleet) || "",
+  fleet: toId(insurance.fleet),
   policyNumber: insurance.policyNumber || "",
   provider: toId(insurance.provider),
   status: toId(insurance.status),

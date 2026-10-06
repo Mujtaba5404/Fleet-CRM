@@ -1,12 +1,15 @@
 import { Grid, NumberInput, TextInput } from "@mantine/core";
-import { DateInput } from "@mantine/dates";
+import { DateInput, YearPickerInput } from "@mantine/dates";
 import { IconCar, IconCash, IconUserCheck } from "@tabler/icons-react";
+import CurrencyInput from "../../components/CurrencyInput";
 import FormSection from "../../components/FormSection";
-import ReferenceInput from "../../components/ReferenceInput";
+import CompaniesSelect from "../companies/CompaniesSelect";
 import PicklistsSelect from "../picklists/components/PicklistsSelect";
+import UsersSelect from "../users/UsersSelect";
 
 const HALF = { base: 12, sm: 6 };
 const THIRD = { base: 12, sm: 4 };
+const CURRENT_YEAR = new Date().getFullYear();
 
 /** Builders shared by both columns, so field wiring lives in one place. */
 const useFleetFields = (form) => {
@@ -45,15 +48,17 @@ export const FleetMainFields = ({ form }) => {
   const { picklist } = useFleetFields(form);
   const { make } = form.values;
 
+  // The form keeps the year as a number; the picker speaks "YYYY-01-01".
+  const yearProps = form.getInputProps("year");
+
   return (
     <FormSection
       title="Vehicle"
       description="What this vehicle is and how it is identified"
       icon={IconCar}
     >
-      {picklist("make", "Make", { span: 12, withAsterisk: true })}
+      {picklist("make", "Make", { withAsterisk: true })}
       {picklist("model", "Model", {
-        span: 12,
         withAsterisk: true,
         disabled: !make,
         query: { parentPicklist: make },
@@ -65,17 +70,22 @@ export const FleetMainFields = ({ form }) => {
           withAsterisk
           label="License plate"
           placeholder="ABC1234"
-          tt="uppercase"
           {...form.getInputProps("licensePlate")}
         />
       </Grid.Col>
 
       <Grid.Col span={HALF}>
-        <NumberInput
+        <YearPickerInput
+          clearable
           label="Year"
-          placeholder={`${new Date().getFullYear()}`}
-          hideControls
-          {...form.getInputProps("year")}
+          placeholder={`${CURRENT_YEAR}`}
+          minDate="1900-01-01"
+          maxDate={`${CURRENT_YEAR + 1}-12-31`}
+          {...yearProps}
+          value={yearProps.value ? `${yearProps.value}-01-01` : null}
+          onChange={(value) =>
+            yearProps.onChange(value ? Number(value.slice(0, 4)) : "")
+          }
         />
       </Grid.Col>
 
@@ -83,7 +93,7 @@ export const FleetMainFields = ({ form }) => {
 
       <Grid.Col span={HALF}>
         <TextInput
-          label="Colour"
+          label="Color"
           placeholder="White"
           {...form.getInputProps("color")}
         />
@@ -109,13 +119,10 @@ export const FleetAsideFields = ({ form, showCurrentOdometer = false }) => {
         icon={IconCash}
       >
         <Grid.Col span={THIRD}>
-          <NumberInput
+          <CurrencyInput
             withAsterisk
             label="Purchase amount"
             placeholder="5,500,000"
-            min={0}
-            thousandSeparator=","
-            hideControls
             {...form.getInputProps("purchaseAmount")}
           />
         </Grid.Col>
@@ -127,12 +134,9 @@ export const FleetAsideFields = ({ form, showCurrentOdometer = false }) => {
         })}
 
         <Grid.Col span={THIRD}>
-          <NumberInput
+          <CurrencyInput
             label="Monthly rent"
             placeholder="15,000"
-            min={0}
-            thousandSeparator=","
-            hideControls
             {...form.getInputProps("rent")}
           />
         </Grid.Col>
@@ -168,20 +172,32 @@ export const FleetAsideFields = ({ form, showCurrentOdometer = false }) => {
         icon={IconUserCheck}
       >
         <Grid.Col span={THIRD}>
-          <ReferenceInput label="Company" {...form.getInputProps("company")} />
-        </Grid.Col>
-
-        <Grid.Col span={THIRD}>
-          <ReferenceInput
-            label="Assigned to"
-            {...form.getInputProps("assignedTo")}
+          <CompaniesSelect
+            selectProps={{
+              label: "Company",
+              placeholder: "Select company",
+              ...form.getInputProps("company"),
+            }}
           />
         </Grid.Col>
 
         <Grid.Col span={THIRD}>
-          <ReferenceInput
-            label="Inspector"
-            {...form.getInputProps("inspector")}
+          <UsersSelect
+            selectProps={{
+              label: "Assigned to",
+              placeholder: "Select user",
+              ...form.getInputProps("assignedTo"),
+            }}
+          />
+        </Grid.Col>
+
+        <Grid.Col span={THIRD}>
+          <UsersSelect
+            selectProps={{
+              label: "Inspector",
+              placeholder: "Select inspector",
+              ...form.getInputProps("inspector"),
+            }}
           />
         </Grid.Col>
 

@@ -1,4 +1,4 @@
-import { Grid, NumberInput, Textarea, TextInput } from "@mantine/core";
+import { Grid, Textarea, TextInput } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import {
   IconBan,
@@ -7,8 +7,9 @@ import {
   IconFileDescription,
   IconShieldCheck,
 } from "@tabler/icons-react";
+import CurrencyInput from "../../components/CurrencyInput";
 import FormSection from "../../components/FormSection";
-import ReferenceInput from "../../components/ReferenceInput";
+import FleetsSelect from "../fleets/FleetsSelect";
 import PicklistsSelect from "../picklists/components/PicklistsSelect";
 
 const HALF = { base: 12, sm: 6 };
@@ -62,7 +63,6 @@ export const InsuranceMainFields = ({ form }) => {
             withAsterisk
             label="Policy number"
             placeholder="POL-2026-0001"
-            tt="uppercase"
             {...form.getInputProps("policyNumber")}
           />
         </Grid.Col>
@@ -71,18 +71,13 @@ export const InsuranceMainFields = ({ form }) => {
         {picklist("provider", "Provider", { withAsterisk: true })}
 
         <Grid.Col span={12}>
-          <ReferenceInput
-            withAsterisk
-            label="Vehicle"
-            {...form.getInputProps("fleet")}
-          />
-        </Grid.Col>
-
-        <Grid.Col span={12}>
-          <ReferenceInput
-            withAsterisk
-            label="Company"
-            {...form.getInputProps("company")}
+          <FleetsSelect
+            selectProps={{
+              withAsterisk: true,
+              label: "Vehicle",
+              placeholder: "Search by plate, make or model",
+              ...form.getInputProps("fleet"),
+            }}
           />
         </Grid.Col>
       </FormSection>
@@ -114,25 +109,19 @@ export const InsuranceAsideFields = ({ form }) => {
         icon={IconCash}
       >
         <Grid.Col span={HALF}>
-          <NumberInput
+          <CurrencyInput
             withAsterisk
             label="Premium"
             placeholder="12,000"
-            min={0}
-            thousandSeparator=","
-            hideControls
             {...form.getInputProps("premium")}
           />
         </Grid.Col>
 
         <Grid.Col span={HALF}>
-          <NumberInput
+          <CurrencyInput
             withAsterisk
             label="Coverage limit"
             placeholder="100,000"
-            min={0}
-            thousandSeparator=","
-            hideControls
             {...form.getInputProps("coverage")}
           />
         </Grid.Col>
@@ -158,7 +147,7 @@ export const InsuranceAsideFields = ({ form }) => {
         <Textarea
           placeholder="Anything worth recording about this policy"
           autosize
-          minRows={4}
+          minRows={3}
           maxRows={10}
           {...form.getInputProps("notes")}
         />

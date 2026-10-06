@@ -1,18 +1,19 @@
-import { Grid, NumberInput, Textarea, TextInput } from "@mantine/core";
-import { DateInput } from "@mantine/dates";
+import { Grid, Textarea, TextInput } from "@mantine/core";
+import { DateInput, YearPickerInput } from "@mantine/dates";
 import {
   IconCalendarEvent,
   IconCash,
   IconFileDescription,
   IconReceiptTax,
 } from "@tabler/icons-react";
+import dayjs from "dayjs";
+import CurrencyInput from "../../components/CurrencyInput";
 import FormSection from "../../components/FormSection";
-import ReferenceInput from "../../components/ReferenceInput";
+import FleetsSelect from "../fleets/FleetsSelect";
 import PicklistsSelect from "../picklists/components/PicklistsSelect";
 
 const HALF = { base: 12, sm: 6 };
 
-/** Field builders bound to a form instance. */
 const useTaxFields = (form) => {
   const picklist = (path, label, { span = HALF, field, ...props } = {}) => (
     <Grid.Col span={span}>
@@ -41,12 +42,38 @@ const useTaxFields = (form) => {
     </Grid.Col>
   );
 
-  return { picklist, date };
+  // Tax is paid yearly, so the period is picked by year. The end of the
+  // period is stored as 31 Dec of the picked year.
+  const year = (path, label, { span = HALF, endOfYear = false, ...props } = {}) => {
+    const input = form.getInputProps(path);
+
+    return (
+      <Grid.Col span={span}>
+        <YearPickerInput
+          clearable
+          valueFormat="YYYY"
+          label={label}
+          placeholder="Pick year"
+          {...props}
+          {...input}
+          onChange={(value) =>
+            input.onChange(
+              value && endOfYear
+                ? dayjs(value).endOf("year").format("YYYY-MM-DD")
+                : value,
+            )
+          }
+        />
+      </Grid.Col>
+    );
+  };
+
+  return { picklist, date, year };
 };
 
-/** Left column: the challan itself and the period it covers. */
+
 export const TaxMainFields = ({ form }) => {
-  const { picklist, date } = useTaxFields(form);
+  const { picklist, date, year } = useTaxFields(form);
 
   return (
     <>
@@ -60,27 +87,21 @@ export const TaxMainFields = ({ form }) => {
             withAsterisk
             label="Challan number"
             placeholder="ABCD1234"
-            tt="uppercase"
             {...form.getInputProps("challanNumber")}
           />
         </Grid.Col>
 
-        {picklist("status", "Status", { withAsterisk: true })}
-        {picklist("jurisdiction", "Jurisdiction", { withAsterisk: true })}
+        {picklist("status", "Status")}
+        {picklist("jurisdiction", "Jurisdiction")}
 
         <Grid.Col span={12}>
-          <ReferenceInput
-            withAsterisk
-            label="Vehicle"
-            {...form.getInputProps("fleet")}
-          />
-        </Grid.Col>
-
-        <Grid.Col span={12}>
-          <ReferenceInput
-            withAsterisk
-            label="Company"
-            {...form.getInputProps("company")}
+          <FleetsSelect
+            selectProps={{
+              withAsterisk: true,
+              label: "Vehicle",
+              placeholder: "Search by plate, make or model",
+              ...form.getInputProps("fleet"),
+            }}
           />
         </Grid.Col>
       </FormSection>
@@ -90,9 +111,10 @@ export const TaxMainFields = ({ form }) => {
         description="What period this challan covers"
         icon={IconCalendarEvent}
       >
-        {date("startDate", "Period start", { withAsterisk: true })}
-        {date("endDate", "Period end", {
+        {year("startDate", "Period start", { withAsterisk: true })}
+        {year("endDate", "Period end", {
           withAsterisk: true,
+          endOfYear: true,
           minDate: form.values.startDate || undefined,
         })}
         {date("filingDate", "Filed on", { span: 12 })}
@@ -101,7 +123,7 @@ export const TaxMainFields = ({ form }) => {
   );
 };
 
-/** Right column: amount and notes. */
+
 export const TaxAsideFields = ({ form }) => (
   <>
     <FormSection
@@ -110,13 +132,10 @@ export const TaxAsideFields = ({ form }) => (
       icon={IconCash}
     >
       <Grid.Col span={12}>
-        <NumberInput
+        <CurrencyInput
           withAsterisk
           label="Tax amount"
           placeholder="1,000"
-          min={0}
-          thousandSeparator=","
-          hideControls
           {...form.getInputProps("taxAmount")}
         />
       </Grid.Col>
@@ -126,7 +145,7 @@ export const TaxAsideFields = ({ form }) => (
       <Textarea
         placeholder="Anything worth recording about this filing"
         autosize
-        minRows={5}
+        minRows={3}
         maxRows={12}
         {...form.getInputProps("notes")}
       />

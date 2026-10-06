@@ -33,9 +33,9 @@ const AddTaxModal = ({ isOpen = false, onClose = () => {} }) => {
     <FormShell
       opened={isOpen}
       onClose={handleClose}
-      title="Add challan"
+      title="Add tax"
       description="Record a tax filing for a vehicle"
-      submitLabel="Add challan"
+      submitLabel="Add tax"
       onSubmit={form.onSubmit(handleSubmit)}
       isSubmitting={createTaxMutation.isPending}
       error={createTaxMutation.error}

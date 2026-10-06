@@ -42,6 +42,7 @@ const InsurancePage = () => (
                   <DatePicker
                     type="range"
                     size="sm"
+                    fullWidth
                     mt={4}
                     value={filters.createdAt || [null, null]}
                     onChange={(value) => setFilters({ createdAt: value })}
@@ -63,7 +64,7 @@ const InsurancePage = () => (
           isLoading={isLoading}
           noun="policy"
           nounPlural="policies"
-          search={{ key: "policyNumber", placeholder: "Search by policy no.…" }}
+          search={{ key: "policyNumber", placeholder: "Search by policy no.â€¦" }}
           filterLabels={FILTER_LABELS}
         />
       )}

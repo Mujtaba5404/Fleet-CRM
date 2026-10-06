@@ -34,6 +34,7 @@ const MaintenancePage = () => (
                   <DatePicker
                     type="range"
                     size="sm"
+                    fullWidth
                     mt={4}
                     value={filters.createdAt || [null, null]}
                     onChange={(value) => setFilters({ createdAt: value })}
@@ -54,7 +55,7 @@ const MaintenancePage = () => (
           totalRecords={totalRecords}
           isLoading={isLoading}
           noun="job"
-          search={{ key: "licensePlate", placeholder: "Search by plate…" }}
+          search={{ key: "licensePlate", placeholder: "Search by plateâ€¦" }}
           filterLabels={FILTER_LABELS}
         />
       )}

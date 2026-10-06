@@ -1,23 +1,14 @@
 import {
   IconCar,
+  IconChartPie,
   IconLayoutDashboard,
   IconListDetails,
   IconReceiptTax,
   IconShieldCheck,
+  IconShieldLock,
   IconTool,
 } from "@tabler/icons-react";
 
-/**
- * Single source of truth for the app navigation.
- *
- * Every entry drives three things at once:
- * - the desktop sidebar + mobile navigation drawer
- * - the page header breadcrumbs
- * - the document title
- *
- * `resource` (optional) is checked against the logged in user's permissions
- * with <CanAccess resource={resource} action="read" />.
- */
 export const NAV_SECTIONS = [
   {
     label: "Overview",
@@ -27,6 +18,13 @@ export const NAV_SECTIONS = [
         path: "/dashboard",
         icon: IconLayoutDashboard,
         description: "Fleet health at a glance",
+      },
+      {
+        title: "Summary",
+        path: "/fleets/summary",
+        icon: IconChartPie,
+        description: "Counts and value, grouped",
+        resource: "fleet",
       },
     ],
   },
@@ -72,6 +70,13 @@ export const NAV_SECTIONS = [
         icon: IconListDetails,
         description: "Dropdown values used across the CRM",
         resource: "picklist",
+      },
+      {
+        title: "Roles",
+        path: "/admin-settings/roles",
+        icon: IconShieldLock,
+        description: "Who can see and change what",
+        resource: "role",
       },
     ],
   },

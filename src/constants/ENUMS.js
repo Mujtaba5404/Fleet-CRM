@@ -5,6 +5,12 @@ const ENUMS = {
       UPSALE: "upsale",
     },
   },
+  MAINTENANCE: {
+    STATUSES: {
+      INITIATED: "initiated",
+      COMPLETED: "completed",
+    },
+  },
   TASK: {
     STATUSES: {
       OPEN: "open",

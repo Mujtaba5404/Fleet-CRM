@@ -23,6 +23,7 @@ import { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import Logo from "../../components/Logo";
 import classes from "./Login.module.css";
+import LoginBackdrop from "./LoginBackdrop";
 
 /** What the product actually does, rather than generic CRM copy. */
 const HIGHLIGHTS = [
@@ -111,6 +112,8 @@ const Login = () => {
 
   return (
     <Box className={classes.page}>
+      <LoginBackdrop />
+
       <Paper
         w="100%"
         maw={1000}
@@ -164,7 +167,7 @@ const Login = () => {
                 {...form.getInputProps("password")}
               />
 
-              <Button type="submit" mt="sm" fullWidth >
+              <Button type="submit" mt="sm" fullWidth>
                 Sign in
               </Button>
             </Stack>

@@ -7,10 +7,15 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      // Two dozen picklist components already import as "src/...". None are
-      // routed yet, so nothing breaks today, but each one would fail to
-      // resolve the moment it is. This makes that style work.
       src: fileURLToPath(new URL("./src", import.meta.url)),
     },
+  },
+  server: {
+    port: 5175,
+    strictPort: true,
+  },
+  preview: {
+    port: 5175,
+    strictPort: true,
   },
 });

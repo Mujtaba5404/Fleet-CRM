@@ -1,0 +1,106 @@
+.matrix {
+  --matrix-columns: minmax(0, 1fr) repeat(4, 60px) 36px;
+
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  overflow: hidden;
+}
+
+.head,
+.rowMain {
+  display: grid;
+  grid-template-columns: var(--matrix-columns);
+  align-items: center;
+  column-gap: 4px;
+  padding: 8px 12px;
+}
+
+.head {
+  background: var(--mantine-color-default-hover);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.headCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.cell {
+  display: flex;
+  justify-content: center;
+}
+
+.row + .row {
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.row {
+  transition: background-color 120ms ease;
+}
+
+.row[data-active] {
+  background: var(--mantine-color-brand-0);
+}
+
+[data-mantine-color-scheme="dark"] .row[data-active] {
+  background: color-mix(in srgb, var(--mantine-color-brand-9) 18%, transparent);
+}
+
+.resource {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.fields {
+  padding: 4px 12px 14px 52px;
+}
+
+.chevron {
+  transition: transform 150ms ease;
+}
+
+.chevron[data-open] {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 36em) {
+  .matrix {
+    --matrix-columns: minmax(0, 1fr) repeat(4, 40px) 28px;
+  }
+
+  .head,
+  .rowMain {
+    padding: 8px;
+  }
+
+  .resourceIcon {
+    display: none;
+  }
+
+  .fields {
+    padding: 4px 8px 12px;
+  }
+}
+
+/* Scope picker cards. */
+.scopeCard {
+  padding: 12px;
+  height: 100%;
+  border-radius: var(--mantine-radius-md);
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+.scopeCard[data-checked] {
+  border-color: var(--mantine-primary-color-filled);
+  background: var(--mantine-color-brand-0);
+}
+
+[data-mantine-color-scheme="dark"] .scopeCard[data-checked] {
+  background: color-mix(in srgb, var(--mantine-color-brand-9) 22%, transparent);
+}

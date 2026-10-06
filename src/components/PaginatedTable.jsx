@@ -17,16 +17,18 @@ import Placeholder from "./Placeholder";
 
 const DEFAULT_TABLE_PROPS = {
   // Grid lines on both axes: with this many numeric columns, row stripes alone
-  // do not tell you where one cell ends and the next begins.
+  // do not tell you where one cell ends and the next begins. They are kept
+  // hairline-light in index.css so the grid guides without weighing rows down.
   withColumnBorders: true,
   withRowBorders: true,
   withTableBorder: true,
   highlightOnHover: true,
   borderRadius: "md",
-  verticalSpacing: "sm",
+  shadow: "xs",
+  verticalSpacing: 6,
   horizontalSpacing: "md",
   pinLastColumn: true,
-  rowStyle: () => ({ height: 56 }),
+  rowStyle: () => ({ height: 52 }),
 };
 
 /**

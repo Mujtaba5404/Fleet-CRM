@@ -1,18 +1,14 @@
 import { Badge, Text, Tooltip } from "@mantine/core";
 import { Link, useLocation } from "react-router-dom";
+import { findNavLink } from "./navigation";
 import classes from "./Appsidebar.module.css";
 
-/**
- * A single sidebar entry.
- *
- * Active state matches the link path *and* everything nested under it, so a
- * detail route such as `/fleets/64af…` keeps "Vehicles" highlighted.
- */
+
 const AppSidebarLink = ({ link, collapsed = false, onNavigate }) => {
   const { title, path, icon: Icon, description, count = 0 } = link;
   const { pathname } = useLocation();
 
-  const active = pathname === path || pathname.startsWith(`${path}/`);
+  const active = findNavLink(pathname)?.path === path;
 
   const node = (
     <Text

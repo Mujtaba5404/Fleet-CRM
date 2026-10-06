@@ -11,15 +11,7 @@ import AppSidebarLink from "./AppSidebarLink";
 import { NAV_SECTIONS } from "./navigation";
 import classes from "./Appsidebar.module.css";
 
-/**
- * Hides a nav entry the user cannot read.
- *
- * `useCanAccess` denies everything when `effectivePermissions` is missing, and
- * permissions are not populated in every deployment yet (the CanAccess guards
- * elsewhere in the app are still commented out). Falling back to "show it"
- * when we have no permission data at all avoids an empty sidebar; once the
- * backend sends permissions the guard starts applying on its own.
- */
+
 const Guard = ({ resource, children }) => {
   const [auth] = useLocalStorage({
     key: "auth",
@@ -35,13 +27,7 @@ const Guard = ({ resource, children }) => {
   );
 };
 
-/**
- * Primary navigation.
- *
- * Rendered in two places: inside the AppShell navbar on desktop (where it can
- * collapse to an icon rail) and inside a Drawer on mobile (always expanded,
- * `onNavigate` closes the drawer after a tap).
- */
+
 const AppSidebar = ({ collapsed = false, onToggle, onNavigate }) => (
   <div className={classes.sidebar} data-collapsed={collapsed}>
     {onToggle && (
@@ -97,11 +83,6 @@ const AppSidebar = ({ collapsed = false, onToggle, onNavigate }) => (
         </div>
       ))}
     </ScrollArea>
-
-    {/*
-      No user card down here: the account lives in the header's user menu,
-      which is where the name, scheme toggle and sign out now sit.
-    */}
   </div>
 );
 

@@ -2,25 +2,36 @@ import {
   Badge,
   Button,
   Grid,
+  Group,
   NumberInput,
+  Select,
   Stack,
+  Text,
   Textarea,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import {
+  IconCalendarEvent,
+  IconCamera,
   IconChecklist,
   IconClipboardText,
   IconFileDescription,
+  IconPhotoCheck,
   IconPlus,
   IconTool,
-  IconUserCheck,
 } from "@tabler/icons-react";
+import CurrencyInput from "../../components/CurrencyInput";
 import FormSection from "../../components/FormSection";
-import ReferenceInput from "../../components/ReferenceInput";
 import RepeaterRow from "../../components/RepeaterRow";
-import formatAmount from "../../utils/formatAmount";
+import FleetsSelect from "../fleets/FleetsSelect";
 import PicklistsSelect from "../picklists/components/PicklistsSelect";
-import { EMPTY_CHECKLIST_ITEM, EMPTY_COMPONENT } from "./maintenanceForm";
+import ConditionPhotosField from "./ConditionPhotosField";
+import {
+  EMPTY_CHECKLIST_ITEM,
+  getMaintenanceStatusOption,
+  isCompleted,
+  MAINTENANCE_STATUS_OPTIONS,
+} from "./maintenanceForm";
 
 const HALF = { base: 12, sm: 6 };
 
@@ -56,9 +67,27 @@ const useMaintenanceFields = (form) => {
   return { picklist, date };
 };
 
-/** Left column: what the job is, who is on it and when. */
+const StatusIcon = ({ status }) => {
+  const option = getMaintenanceStatusOption(status);
+  if (!option) return null;
+
+  const Icon = option.icon;
+  return (
+    <Icon size={16} color={`var(--mantine-color-${option.color}-filled)`} />
+  );
+};
+
+/** Left column: what the job is and who is doing it. */
 export const MaintenanceMainFields = ({ form }) => {
   const { picklist, date } = useMaintenanceFields(form);
+  const statusInput = form.getInputProps("status");
+
+  // Completing a job almost always means "today", so fill it in.
+  const handleStatusChange = (value) => {
+    statusInput.onChange(value);
+    if (isCompleted(value) && !form.values.endDate)
+      form.setFieldValue("endDate", new Date());
+  };
 
   return (
     <>
@@ -68,25 +97,47 @@ export const MaintenanceMainFields = ({ form }) => {
         icon={IconClipboardText}
       >
         <Grid.Col span={12}>
-          <ReferenceInput
-            withAsterisk
-            label="Vehicle"
-            {...form.getInputProps("fleet")}
+          <FleetsSelect
+            selectProps={{
+              withAsterisk: true,
+              label: "Vehicle",
+              placeholder: "Search by plate, make or model",
+              ...form.getInputProps("fleet"),
+            }}
           />
         </Grid.Col>
 
         <Grid.Col span={12}>
-          <ReferenceInput
+          <Select
             withAsterisk
-            label="Company"
-            {...form.getInputProps("company")}
+            label="Status"
+            placeholder="Select status"
+            searchable={false}
+            description={
+              isCompleted(statusInput.value)
+                ? "Add photos of the vehicle after service on the right."
+                : "Add photos of the vehicle before service on the right."
+            }
+            data={MAINTENANCE_STATUS_OPTIONS.map(({ value, label }) => ({
+              value,
+              label,
+            }))}
+            leftSection={<StatusIcon status={statusInput.value} />}
+            renderOption={({ option }) => (
+              <Group gap="xs" wrap="nowrap">
+                <StatusIcon status={option.value} />
+                <Text fz="sm">{option.label}</Text>
+              </Group>
+            )}
+            {...statusInput}
+            onChange={handleStatusChange}
           />
         </Grid.Col>
 
+        {/* Vendor values are managed under Picklists → Maintenance → Provider. */}
+        {picklist("vendor", "Vendor", { span: 12, field: "provider" })}
         {picklist("type", "Type", { withAsterisk: true })}
-        {picklist("status", "Status", { withAsterisk: true })}
         {picklist("priority", "Priority", { withAsterisk: true })}
-        {picklist("provider", "Provider")}
 
         <Grid.Col span={12}>
           <NumberInput
@@ -102,29 +153,14 @@ export const MaintenanceMainFields = ({ form }) => {
       </FormSection>
 
       <FormSection
-        title="People & schedule"
-        description="Who is handling it and when"
-        icon={IconUserCheck}
+        title="Schedule"
+        description="When the vehicle went in and came back"
+        icon={IconCalendarEvent}
       >
-        <Grid.Col span={HALF}>
-          <ReferenceInput
-            label="Reported by"
-            {...form.getInputProps("reportedBy")}
-          />
-        </Grid.Col>
-
-        <Grid.Col span={HALF}>
-          <ReferenceInput
-            label="Assigned to"
-            {...form.getInputProps("assignedTo")}
-          />
-        </Grid.Col>
-
-        {date("assignedOn", "Assigned on")}
-        {date("startedDate", "Started")}
-        {date("endDate", "Completed", {
-          span: 12,
-          minDate: form.values.startedDate || undefined,
+        {date("startDate", "Start date", { withAsterisk: true })}
+        {date("endDate", "End date", {
+          withAsterisk: isCompleted(form.values.status),
+          minDate: form.values.startDate || undefined,
         })}
       </FormSection>
 
@@ -141,117 +177,48 @@ export const MaintenanceMainFields = ({ form }) => {
   );
 };
 
-/** Right column: the line items — parts used and checks performed. */
-export const MaintenanceAsideFields = ({ form }) => {
-  const { components, checklist } = form.values;
-
-  const componentsTotal = components.reduce(
-    (sum, row) => sum + (Number(row.totalCost) || 0),
-    0,
+/**
+ * Vehicle condition photos, driven by status: Initiated shows the "before"
+ * set, Completed swaps it for the "after" set.
+ *
+ * @param {Object}   props
+ * @param {Object}   props.form
+ * @param {{conditionBefore: File[], conditionAfter: File[]}} props.photos
+ * @param {Function} props.onPhotosChange (field, files) => void
+ * @param {Object}   [props.job]           Saved job, for its existing photos.
+ */
+export const MaintenancePhotoFields = ({
+  form,
+  photos,
+  onPhotosChange,
+  job,
+}) =>
+  isCompleted(form.values.status) ? (
+    <ConditionPhotosField
+      title="Condition after service"
+      description="How the vehicle looked when the work was done"
+      icon={IconPhotoCheck}
+      saved={job?.conditionAfter}
+      value={photos.conditionAfter}
+      onChange={(files) => onPhotosChange("conditionAfter", files)}
+    />
+  ) : (
+    <ConditionPhotosField
+      title="Condition before service"
+      description="How the vehicle looked when it came in"
+      icon={IconCamera}
+      saved={job?.conditionBefore}
+      value={photos.conditionBefore}
+      onChange={(files) => onPhotosChange("conditionBefore", files)}
+    />
   );
 
-  // Quantity and unit cost drive the line total, so recompute on either edit.
-  const setComponentField = (index, key, value) => {
-    form.setFieldValue(`components.${index}.${key}`, value);
-
-    const row = { ...components[index], [key]: value };
-
-    form.setFieldValue(
-      `components.${index}.totalCost`,
-      (Number(row.quantity) || 0) * (Number(row.unitCost) || 0),
-    );
-  };
+/** Right column: the checks performed and what it all cost. */
+export const MaintenanceAsideFields = ({ form }) => {
+  const { checklist } = form.values;
 
   return (
     <>
-      <FormSection
-        title="Parts & components"
-        description="Itemised parts used on this job"
-        icon={IconTool}
-        action={
-          <Badge size="lg" className="numeric">
-            {formatAmount(componentsTotal)}
-          </Badge>
-        }
-        plain
-      >
-        <Stack gap="sm">
-          {components.map((row, index) => (
-            <RepeaterRow
-              key={index}
-              index={index}
-              canRemove={components.length > 1}
-              onRemove={() => form.removeListItem("components", index)}
-            >
-              <Grid align="flex-start" gutter="xs">
-                <Grid.Col span={{ base: 12, sm: 6 }}>
-                  <PicklistsSelect
-                    queryObject={{
-                      resource: "Maintenance",
-                      field: "components.component",
-                    }}
-                    selectProps={{
-                      label: "Component",
-                      placeholder: "Select component",
-                      ...form.getInputProps(`components.${index}.component`),
-                    }}
-                  />
-                </Grid.Col>
-
-                <Grid.Col span={{ base: 4, sm: 2 }}>
-                  <NumberInput
-                    label="Qty"
-                    placeholder="1"
-                    min={1}
-                    hideControls
-                    value={row.quantity}
-                    onChange={(value) =>
-                      setComponentField(index, "quantity", value)
-                    }
-                  />
-                </Grid.Col>
-
-                <Grid.Col span={{ base: 4, sm: 2 }}>
-                  <NumberInput
-                    label="Unit cost"
-                    placeholder="100"
-                    min={0}
-                    thousandSeparator=","
-                    hideControls
-                    value={row.unitCost}
-                    onChange={(value) =>
-                      setComponentField(index, "unitCost", value)
-                    }
-                  />
-                </Grid.Col>
-
-                <Grid.Col span={{ base: 4, sm: 2 }}>
-                  <NumberInput
-                    label="Line total"
-                    readOnly
-                    variant="filled"
-                    thousandSeparator=","
-                    hideControls
-                    value={row.totalCost}
-                  />
-                </Grid.Col>
-              </Grid>
-            </RepeaterRow>
-          ))}
-
-          <Button
-            variant="light"
-            size="xs"
-            leftSection={<IconPlus size={16} />}
-            onClick={() =>
-              form.insertListItem("components", { ...EMPTY_COMPONENT })
-            }
-          >
-            Add part
-          </Button>
-        </Stack>
-      </FormSection>
-
       <FormSection
         title="Inspection checklist"
         description="What was checked and how it looked"
@@ -272,8 +239,8 @@ export const MaintenanceAsideFields = ({ form }) => {
               onRemove={() => form.removeListItem("checklist", index)}
             >
               <Grid align="flex-start" gutter="xs">
-                {["item", "status", "condition"].map((field) => (
-                  <Grid.Col key={field} span={{ base: 12, sm: 4 }}>
+                {["item", "condition"].map((field) => (
+                  <Grid.Col key={field} span={HALF}>
                     <PicklistsSelect
                       queryObject={{
                         resource: "Maintenance",
@@ -305,17 +272,10 @@ export const MaintenanceAsideFields = ({ form }) => {
       </FormSection>
 
       <FormSection title="Total cost" icon={IconTool} plain>
-        <NumberInput
+        <CurrencyInput
           label="Total cost"
           placeholder="150,500"
-          min={0}
-          thousandSeparator=","
-          hideControls
-          description={
-            componentsTotal
-              ? `Parts add up to ${formatAmount(componentsTotal)}`
-              : "Parts plus labour"
-          }
+          description="Parts plus labour"
           {...form.getInputProps("cost")}
         />
       </FormSection>

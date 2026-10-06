@@ -21,10 +21,10 @@ export const FLEET_INITIAL_VALUES = {
   currentOdometer: "",
   status: null,
   condition: null,
-  company: "",
-  assignedTo: "",
+  company: null,
+  assignedTo: null,
   assignedOn: null,
-  inspector: "",
+  inspector: null,
 };
 
 const required = (message) => (value) =>
@@ -85,8 +85,8 @@ export const fleetToFormValues = (fleet = {}) => ({
   currentOdometer: fleet.currentOdometer ?? "",
   status: toId(fleet.status),
   condition: toId(fleet.condition),
-  company: toId(fleet.company) || "",
-  assignedTo: toId(fleet.assignedTo) || "",
+  company: toId(fleet.company) || null,
+  assignedTo: toId(fleet.assignedTo) || null,
   assignedOn: toDate(fleet.assignedOn),
-  inspector: toId(fleet.inspector) || "",
+  inspector: toId(fleet.inspector) || null,
 });

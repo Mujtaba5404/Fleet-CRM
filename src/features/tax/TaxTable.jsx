@@ -17,6 +17,7 @@ import PaginatedTable from "../../components/PaginatedTable";
 import useFilters from "../../hooks/useFilters";
 import formatAmount from "../../utils/formatAmount";
 import formatDate from "../../utils/formatDate";
+import PicklistsMultiSelect from "../picklists/components/PicklistsMultiSelect";
 import TaxTableRowMenu from "./TaxTableRowMenu";
 
 const TwoLine = ({ top, bottom }) => (
@@ -34,21 +35,21 @@ const title = (value) =>
   typeof value === "object" && value?.title ? value.title : null;
 const color = (value) => (typeof value === "object" ? value?.color : undefined);
 
-// const picklistFilter = (field, filters, setFilters) => ({
-//   filter: (
-//     <PicklistsMultiSelect
-//       queryObject={{ resource: "Taxation", field }}
-//       multiSelectProps={{
-//         size: "xs",
-//         placeholder: `Select ${field}`,
-//         value: filters[field] || [],
-//         onChange: (value) => setFilters({ [field]: value }),
-//         comboboxProps: { withinPortal: false },
-//       }}
-//     />
-//   ),
-//   filtering: filters[field]?.length,
-// });
+const picklistFilter = (field, filters, setFilters) => ({
+  filter: (
+    <PicklistsMultiSelect
+      queryObject={{ resource: "Tax", field }}
+      multiSelectProps={{
+        size: "xs",
+        placeholder: `Select ${field}`,
+        value: filters[field] || [],
+        onChange: (value) => setFilters({ [field]: value }),
+        comboboxProps: { withinPortal: false },
+      }}
+    />
+  ),
+  filtering: filters[field]?.length,
+});
 
 const DEFAULT_COLUMNS = (filters, setFilters) => [
   {
@@ -140,7 +141,7 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     accessor: "status",
     width: 120,
     textAlign: "center",
-    // ...picklistFilter("status", filters, setFilters),
+    ...picklistFilter("status", filters, setFilters),
     render: (row) => (
       <Badge variant="light" color={color(row.status)} tt="capitalize">
         {title(row.status) || "-"}
@@ -151,7 +152,7 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     accessor: "jurisdiction",
     width: 140,
     textAlign: "center",
-    // ...picklistFilter("jurisdiction", filters, setFilters),
+    ...picklistFilter("jurisdiction", filters, setFilters),
     render: (row) => (
       <Badge variant="light" color={color(row.jurisdiction)} tt="capitalize">
         {title(row.jurisdiction) || "-"}
