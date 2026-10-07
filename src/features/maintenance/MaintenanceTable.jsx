@@ -195,10 +195,9 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     width: 140,
     sortable: true,
     render: (row) => (
-      <TwoLine
-        top={formatAmount(row.cost || 0)}
-        bottom={`${row.components?.length || 0} parts`}
-      />
+      <Text size="sm" className="numeric">
+        {formatAmount(row.cost || 0)}
+      </Text>
     ),
   },
   {

@@ -3,7 +3,7 @@ import RequireAuth from "./components/RequireAuth";
 import Login from "./features/auth/Login";
 import AppLayout from "./layouts/AppLayout";
 import { HOME_PATH } from "./layouts/navigation";
-import Dashboard from "./pages/Dashboard";
+import SummaryPage from "./pages/SummaryPage";
 import NotFound from "./pages/NotFound";
 import { adminSettingsRoutes } from "./routes/adminSettings";
 import { fleetDetailRoutes, fleetRoutes } from "./routes/fleets";
@@ -26,7 +26,9 @@ const App = () => (
     <Route element={<RequireAuth />}>
       <Route element={<AppLayout />}>
         <Route index element={<Navigate to={HOME_PATH} replace />} />
-        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="summary" element={<SummaryPage />} />
+        {/* The summary used to be called the dashboard; keep old links working. */}
+        <Route path="dashboard" element={<Navigate to={HOME_PATH} replace />} />
 
         {fleetRoutes}
         {fleetDetailRoutes}

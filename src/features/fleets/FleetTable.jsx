@@ -3,6 +3,7 @@ import {
   Button,
   Divider,
   Group,
+  MultiSelect,
   SimpleGrid,
   Stack,
   Text,
@@ -18,6 +19,8 @@ import useFilters from "../../hooks/useFilters";
 import formatAmount from "../../utils/formatAmount";
 import formatDate from "../../utils/formatDate";
 import PicklistsMultiSelect from "../picklists/components/PicklistsMultiSelect";
+import { FLEET_STATUS_OPTIONS } from "./fleetStatus";
+import FleetStatusBadge from "./FleetStatusBadge";
 import FleetTableRowMenu from "./FleetTableRowMenu";
 
 const TwoLine = ({ top, bottom }) => (
@@ -133,14 +136,30 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
   },
   {
     accessor: "status",
-    width: 130,
+    width: 150,
     textAlign: "center",
-    ...picklistFilter("status", filters, setFilters),
-    render: (row) => (
-      <Badge variant="light" color={row.status?.color} tt="capitalize">
-        {row.status?.title || "-"}
-      </Badge>
+    filter: (
+      <MultiSelect
+        size="xs"
+        placeholder="Select status"
+        data={FLEET_STATUS_OPTIONS.map(({ value, label }) => ({
+          value,
+          label,
+        }))}
+        value={filters.status || []}
+        onChange={(value) => setFilters({ status: value })}
+        comboboxProps={{ withinPortal: false }}
+      />
     ),
+    filtering: filters.status?.length,
+    render: (row) =>
+      row.status ? (
+        <FleetStatusBadge status={row.status} />
+      ) : (
+        <Text size="sm" c="dimmed">
+          -
+        </Text>
+      ),
   },
   {
     title: "Files",
@@ -214,7 +233,6 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
   },
 ];
 
-
 const FleetCard = (row) => {
   const vehicle = [row.make?.title, row.model?.title].filter(Boolean).join(" ");
 
@@ -245,11 +263,7 @@ const FleetCard = (row) => {
       </Group>
 
       <Group gap={6}>
-        {row.status?.title && (
-          <Badge size="sm" color={row.status.color} tt="capitalize">
-            {row.status.title}
-          </Badge>
-        )}
+        {row.status && <FleetStatusBadge status={row.status} />}
 
         {row.condition?.title && (
           <Badge size="sm" color={row.condition.color} tt="capitalize">

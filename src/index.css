@@ -1,3 +1,20 @@
+/*
+ * Data-viz roles, read by the chart components (BarBreakdown, ColumnChart,
+ * DonutChart). The fill is the brand blue: shade 6 on the white card, shade 5
+ * on the dark one (#111827), where 6 drops below 3:1.
+ */
+:root {
+  --viz-fill: #2563eb;
+  --viz-grid: #e6e8ec;
+  --viz-axis: #c9ccd3;
+}
+
+[data-mantine-color-scheme="dark"] {
+  --viz-fill: #3b82f6;
+  --viz-grid: #2b3444;
+  --viz-axis: #374151;
+}
+
 /* General styling */
 * {
   padding: 0;

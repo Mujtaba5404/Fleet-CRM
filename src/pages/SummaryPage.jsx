@@ -4,38 +4,43 @@ import {
   Center,
   Group,
   Loader,
-  Progress,
   SimpleGrid,
   Stack,
   Text,
+  Title,
   UnstyledButton,
 } from "@mantine/core";
 import {
   IconAlertTriangle,
   IconCar,
+  IconCash,
   IconChevronRight,
   IconFileText,
-  IconReceiptTax,
-  IconShieldCheck,
   IconTool,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { Link } from "react-router-dom";
-import { useGetfleetsWithPaginationQuery } from "../api/fleet";
+import { useGetAllfleetsQuery } from "../api/fleet";
 import { useGetAllInsuranceQuery } from "../api/insurance";
-import { useGetMaintenanceWithPaginationQuery } from "../api/maintenance";
+import { useGetAllMaintenanceQuery } from "../api/maintenance";
 import { useGetAllTaxQuery } from "../api/tax";
 import DetailPanel from "../components/DetailPanel";
 import PageHeader from "../components/PageHeader";
 import StatTile from "../components/StatTile";
+import FleetBreakdowns from "../features/dashboard/FleetBreakdowns";
+import FleetGroupSummary from "../features/dashboard/FleetGroupSummary";
+import { isCompleted } from "../features/maintenance/maintenanceForm";
 import MaintenanceStatusBadge from "../features/maintenance/MaintenanceStatusBadge";
-import formatAmount from "../utils/formatAmount";
+import formatAmount, { formatAmountCompact } from "../utils/formatAmount";
 import formatDate from "../utils/formatDate";
 
 const RENEWAL_WINDOW_DAYS = 60;
+const RECENT_ROWS = 5;
 
 /** The `/all` endpoints return a bare array; the paginated ones wrap it. */
 const toList = (data) => (Array.isArray(data) ? data : (data?.data ?? []));
+
+const newestFirst = (a, b) => new Date(b.createdAt) - new Date(a.createdAt);
 
 /** Same card as the detail screens use, so the dashboard reads as one system. */
 const Panel = (props) => <DetailPanel h="100%" {...props} />;
@@ -53,6 +58,12 @@ const EmptyRow = ({ children }) => (
   <Text fz="sm" c="dimmed" py="lg" ta="center">
     {children}
   </Text>
+);
+
+const PanelLoader = () => (
+  <Center h={120}>
+    <Loader size="sm" />
+  </Center>
 );
 
 const Row = ({ to, title, subtitle, right, rightSub }) => (
@@ -87,58 +98,26 @@ const Row = ({ to, title, subtitle, right, rightSub }) => (
   </UnstyledButton>
 );
 
-/** Share-of-total bar for the vehicle status mix. */
-const StatusMix = ({ fleets }) => {
-  const counts = fleets.reduce((acc, fleet) => {
-    const key = fleet.status?.title || "Unknown";
-    acc[key] = acc[key] || { count: 0, color: fleet.status?.color || "gray" };
-    acc[key].count += 1;
-    return acc;
-  }, {});
+/** A heading between the page's bands. */
+const SectionTitle = ({ title, description }) => (
+  <Stack gap={2} mt="sm">
+    <Title order={4}>{title}</Title>
+    {description && (
+      <Text fz="sm" c="dimmed">
+        {description}
+      </Text>
+    )}
+  </Stack>
+);
 
-  const entries = Object.entries(counts).sort(
-    (a, b) => b[1].count - a[1].count,
-  );
-  const total = fleets.length;
-
-  if (!total) return <EmptyRow>No vehicles yet</EmptyRow>;
-
-  return (
-    <Stack gap="sm">
-      <Progress.Root size={14}>
-        {entries.map(([label, { count, color }]) => (
-          <Progress.Section
-            key={label}
-            value={(count / total) * 100}
-            color={color}
-          >
-            <Progress.Label>{count}</Progress.Label>
-          </Progress.Section>
-        ))}
-      </Progress.Root>
-
-      <Group gap="xs">
-        {entries.map(([label, { count, color }]) => (
-          <Badge key={label} size="sm" color={color} tt="capitalize">
-            {label} · {count}
-          </Badge>
-        ))}
-      </Group>
-    </Stack>
-  );
-};
-
-const Dashboard = () => {
-  const fleets = useGetfleetsWithPaginationQuery({
-    page: 1,
-    pageSize: 100,
-    sort: "-createdAt",
-  });
-  const maintenance = useGetMaintenanceWithPaginationQuery({
-    page: 1,
-    pageSize: 5,
-    sort: "-createdAt",
-  });
+/**
+ * The home screen (formerly "Dashboard"): headline numbers, the fleet's mix as
+ * progress bars, the two-level grouped breakdown with charts, and what needs
+ * attention or happened recently.
+ */
+const SummaryPage = () => {
+  const fleets = useGetAllfleetsQuery();
+  const maintenance = useGetAllMaintenanceQuery();
   const insurance = useGetAllInsuranceQuery();
   const tax = useGetAllTaxQuery();
 
@@ -146,6 +125,16 @@ const Dashboard = () => {
   const maintenanceList = toList(maintenance.data);
   const insuranceList = toList(insurance.data);
   const taxList = toList(tax.data);
+
+  const fleetValue = fleetList.reduce(
+    (sum, fleet) => sum + (Number(fleet.purchaseAmount) || 0),
+    0,
+  );
+  const openJobs = maintenanceList.filter((job) => !isCompleted(job.status));
+  const maintenanceCost = maintenanceList.reduce(
+    (sum, job) => sum + (Number(job.cost) || 0),
+    0,
+  );
 
   const today = dayjs();
   const horizon = today.add(RENEWAL_WINDOW_DAYS, "day");
@@ -158,20 +147,21 @@ const Dashboard = () => {
     })
     .sort((a, b) => new Date(a.endDate) - new Date(b.endDate));
 
-  const expiredPolicies = insuranceList.filter(
-    (policy) => policy.endDate && dayjs(policy.endDate).isBefore(today),
-  );
-
   const unfiledTax = taxList
     .filter((record) => !record.filingDate)
     .sort((a, b) => new Date(a.endDate || 0) - new Date(b.endDate || 0));
 
   const attentionCount = expiringPolicies.length + unfiledTax.length;
 
+  const recentJobs = [...maintenanceList]
+    .sort(newestFirst)
+    .slice(0, RECENT_ROWS);
+  const recentVehicles = [...fleetList].sort(newestFirst).slice(0, RECENT_ROWS);
+
   return (
     <>
       <PageHeader
-        title="Dashboard"
+        title="Summary"
         description={`Fleet health at a glance · ${formatDate(new Date())}`}
       />
 
@@ -179,52 +169,59 @@ const Dashboard = () => {
         <SimpleGrid cols={{ base: 1, xs: 2, lg: 4 }} spacing="md">
           <StatTile
             label="Vehicles"
-            value={(fleets.data?.meta?.totalCount ?? 0).toLocaleString()}
+            value={fleetList.length.toLocaleString()}
             hint="In your fleet"
             icon={IconCar}
-            color="brand"
             to="/fleets"
             loading={fleets.isLoading}
           />
 
           <StatTile
-            label="Maintenance jobs"
-            value={(maintenance.data?.meta?.totalCount ?? 0).toLocaleString()}
-            hint="Logged to date"
+            label="Fleet value"
+            value={formatAmountCompact(fleetValue)}
+            hint={`${formatAmount(fleetValue)} at purchase`}
+            icon={IconCash}
+            color="teal"
+            loading={fleets.isLoading}
+          />
+
+          <StatTile
+            label="Maintenance"
+            value={maintenanceList.length.toLocaleString()}
+            hint={`${openJobs.length} open · ${formatAmountCompact(maintenanceCost)} spent`}
             icon={IconTool}
-            color="cyan"
+            color="grape"
             to="/maintenance"
             loading={maintenance.isLoading}
           />
 
           <StatTile
-            label="Policies"
-            value={insuranceList.length.toLocaleString()}
-            hint={
-              expiredPolicies.length
-                ? `${expiredPolicies.length} expired`
-                : "All in date"
-            }
-            icon={IconShieldCheck}
-            color={expiredPolicies.length ? "orange" : "teal"}
-            to="/insurance"
-            loading={insurance.isLoading}
-          />
-
-          <StatTile
-            label="Tax challans"
-            value={taxList.length.toLocaleString()}
-            hint={
-              unfiledTax.length ? `${unfiledTax.length} not filed` : "All filed"
-            }
-            icon={IconReceiptTax}
-            color={unfiledTax.length ? "orange" : "teal"}
-            to="/tax"
-            loading={tax.isLoading}
+            label="Needs attention"
+            value={attentionCount.toLocaleString()}
+            hint={`${expiringPolicies.length} renewals · ${unfiledTax.length} unfiled tax`}
+            icon={IconAlertTriangle}
+            color={attentionCount ? "orange" : "teal"}
+            loading={insurance.isLoading || tax.isLoading}
           />
         </SimpleGrid>
 
-        <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
+        <SectionTitle
+          title="Fleet mix"
+          description="How your vehicles split by status, type, fuel and condition."
+        />
+
+        <FleetBreakdowns fleets={fleetList} isLoading={fleets.isLoading} />
+
+        <SectionTitle
+          title="Grouped breakdown"
+          description="Vehicle counts and purchase value, grouped two levels deep."
+        />
+
+        <FleetGroupSummary />
+
+        <SectionTitle title="Activity" />
+
+        <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
           <Panel
             title="Needs attention"
             icon={IconAlertTriangle}
@@ -237,9 +234,7 @@ const Dashboard = () => {
             }
           >
             {insurance.isLoading || tax.isLoading ? (
-              <Center h={120}>
-                <Loader size="sm" />
-              </Center>
+              <PanelLoader />
             ) : attentionCount === 0 ? (
               <EmptyRow>
                 Nothing expiring in the next {RENEWAL_WINDOW_DAYS} days.
@@ -292,35 +287,17 @@ const Dashboard = () => {
           </Panel>
 
           <Panel
-            title="Vehicle status"
-            icon={IconCar}
-            action={<PanelLink to="/fleets" />}
-          >
-            {fleets.isLoading ? (
-              <Center h={120}>
-                <Loader size="sm" />
-              </Center>
-            ) : (
-              <StatusMix fleets={fleetList} />
-            )}
-          </Panel>
-        </SimpleGrid>
-
-        <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
-          <Panel
             title="Recent maintenance"
             icon={IconTool}
             action={<PanelLink to="/maintenance" />}
           >
             {maintenance.isLoading ? (
-              <Center h={120}>
-                <Loader size="sm" />
-              </Center>
-            ) : !maintenanceList.length ? (
+              <PanelLoader />
+            ) : !recentJobs.length ? (
               <EmptyRow>No maintenance logged yet</EmptyRow>
             ) : (
               <Stack gap={0}>
-                {maintenanceList.map((job) => (
+                {recentJobs.map((job) => (
                   <Row
                     key={job._id}
                     to={`/maintenance/${job._id}`}
@@ -344,14 +321,12 @@ const Dashboard = () => {
             action={<PanelLink to="/fleets" />}
           >
             {fleets.isLoading ? (
-              <Center h={120}>
-                <Loader size="sm" />
-              </Center>
-            ) : !fleetList.length ? (
+              <PanelLoader />
+            ) : !recentVehicles.length ? (
               <EmptyRow>No vehicles yet</EmptyRow>
             ) : (
               <Stack gap={0}>
-                {fleetList.slice(0, 5).map((fleet) => (
+                {recentVehicles.map((fleet) => (
                   <Row
                     key={fleet._id}
                     to={`/fleets/${fleet._id}`}
@@ -381,4 +356,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default SummaryPage;

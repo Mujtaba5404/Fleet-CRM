@@ -1,15 +1,43 @@
-import { Grid, NumberInput, TextInput } from "@mantine/core";
+import {
+  Grid,
+  Group,
+  NumberInput,
+  Select,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import { DateInput, YearPickerInput } from "@mantine/dates";
-import { IconCar, IconCash, IconUserCheck } from "@tabler/icons-react";
+import {
+  IconBuilding,
+  IconCar,
+  IconCash,
+  IconLicense,
+  IconSteeringWheel,
+} from "@tabler/icons-react";
 import CurrencyInput from "../../components/CurrencyInput";
 import FormSection from "../../components/FormSection";
 import CompaniesSelect from "../companies/CompaniesSelect";
 import PicklistsSelect from "../picklists/components/PicklistsSelect";
 import UsersSelect from "../users/UsersSelect";
+import {
+  FLEET_STATUS_OPTIONS,
+  getFleetStatusOption,
+  isAssignedStatus,
+} from "./fleetStatus";
 
 const HALF = { base: 12, sm: 6 };
 const THIRD = { base: 12, sm: 4 };
 const CURRENT_YEAR = new Date().getFullYear();
+
+const StatusIcon = ({ status }) => {
+  const option = getFleetStatusOption(status);
+  if (!option) return null;
+
+  const Icon = option.icon;
+  return (
+    <Icon size={16} color={`var(--mantine-color-${option.color}-filled)`} />
+  );
+};
 
 /** Builders shared by both columns, so field wiring lives in one place. */
 const useFleetFields = (form) => {
@@ -101,7 +129,28 @@ export const FleetMainFields = ({ form }) => {
 
       {picklist("fuelType", "Fuel type", { withAsterisk: true })}
       {picklist("transmission", "Transmission", { withAsterisk: true })}
-      {picklist("status", "Status", { withAsterisk: true })}
+      {/* Status is an enum on the API, not a picklist. */}
+      <Grid.Col span={HALF}>
+        <Select
+          withAsterisk
+          label="Status"
+          placeholder="Select status"
+          searchable={false}
+          data={FLEET_STATUS_OPTIONS.map(({ value, label }) => ({
+            value,
+            label,
+          }))}
+          leftSection={<StatusIcon status={form.values.status} />}
+          renderOption={({ option }) => (
+            <Group gap="xs" wrap="nowrap">
+              <StatusIcon status={option.value} />
+              <Text fz="sm">{option.label}</Text>
+            </Group>
+          )}
+          {...form.getInputProps("status")}
+        />
+      </Grid.Col>
+
       {picklist("condition", "Condition", { withAsterisk: true })}
     </FormSection>
   );
@@ -167,11 +216,11 @@ export const FleetAsideFields = ({ form, showCurrentOdometer = false }) => {
       </FormSection>
 
       <FormSection
-        title="Ownership & assignment"
-        description="Who holds this vehicle today"
-        icon={IconUserCheck}
+        title="Ownership"
+        description="Which company owns it and who inspects it"
+        icon={IconBuilding}
       >
-        <Grid.Col span={THIRD}>
+        <Grid.Col span={HALF}>
           <CompaniesSelect
             selectProps={{
               label: "Company",
@@ -181,17 +230,7 @@ export const FleetAsideFields = ({ form, showCurrentOdometer = false }) => {
           />
         </Grid.Col>
 
-        <Grid.Col span={THIRD}>
-          <UsersSelect
-            selectProps={{
-              label: "Assigned to",
-              placeholder: "Select user",
-              ...form.getInputProps("assignedTo"),
-            }}
-          />
-        </Grid.Col>
-
-        <Grid.Col span={THIRD}>
+        <Grid.Col span={HALF}>
           <UsersSelect
             selectProps={{
               label: "Inspector",
@@ -200,9 +239,45 @@ export const FleetAsideFields = ({ form, showCurrentOdometer = false }) => {
             }}
           />
         </Grid.Col>
-
-        {date("assignedOn", "Assigned on", { span: 12 })}
       </FormSection>
+
+      {/* Driver details belong to an assigned vehicle only; an unassigned one
+          skips them entirely, and they are not sent. */}
+      {isAssignedStatus(form.values.status) && (
+        <FormSection
+          title="Driver details"
+          description="Who drives this vehicle and their license"
+          icon={IconSteeringWheel}
+        >
+          <Grid.Col span={HALF}>
+            <UsersSelect
+              selectProps={{
+                withAsterisk: true,
+                label: "Driver",
+                placeholder: "Select driver",
+                ...form.getInputProps("driverDetails.driver"),
+              }}
+            />
+          </Grid.Col>
+
+          <Grid.Col span={HALF}>
+            <TextInput
+              withAsterisk
+              label="License number"
+              placeholder="123456"
+              leftSection={<IconLicense size={16} />}
+              {...form.getInputProps("driverDetails.licenseNumber")}
+            />
+          </Grid.Col>
+
+          {date("driverDetails.licenseExpiry", "License expiry", {
+            withAsterisk: true,
+            minDate: new Date(),
+          })}
+
+          {date("assignedOn", "Assigned on", { maxDate: new Date() })}
+        </FormSection>
+      )}
     </>
   );
 };

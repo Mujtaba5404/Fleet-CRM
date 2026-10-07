@@ -116,8 +116,12 @@ export const maintenanceToFormValues = (job = {}) => ({
 /**
  * Form values plus newly picked photos → the multipart body the API expects.
  *
- * Checklist rows go over as `checklist[0].item` / `checklist[0].condition`,
- * and each photo is appended under its own field so the server can tell the
+ * Checklist rows go over in bracket notation, `checklist[0][item]` /
+ * `checklist[0][condition]`, which multipart parsers (multer's append-field,
+ * qs) rebuild into an array of objects. The dot form `checklist[0].item` is
+ * not parsed and the server saved `checklist: []` for it.
+ *
+ * Each photo is appended under its own field so the server can tell the
  * before shots from the after shots.
  */
 export const maintenanceToFormData = (
@@ -141,9 +145,9 @@ export const maintenanceToFormData = (
   checklist
     .filter((row) => row.item)
     .forEach((row, index) => {
-      formData.append(`checklist[${index}].item`, row.item);
+      formData.append(`checklist[${index}][item]`, row.item);
       if (row.condition)
-        formData.append(`checklist[${index}].condition`, row.condition);
+        formData.append(`checklist[${index}][condition]`, row.condition);
     });
 
   conditionBefore.forEach((file) => formData.append("conditionBefore", file));

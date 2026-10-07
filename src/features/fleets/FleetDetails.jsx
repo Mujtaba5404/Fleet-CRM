@@ -20,9 +20,11 @@ import {
   IconProgressCheck,
   IconRoad,
   IconSparkles,
+  IconSteeringWheel,
   IconUserCheck,
   IconX,
 } from "@tabler/icons-react";
+import dayjs from "dayjs";
 import { useParams } from "react-router-dom";
 import { useGetfleetByIdQuery } from "../../api/fleet";
 import DetailHero from "../../components/DetailHero";
@@ -36,12 +38,20 @@ import formatDate from "../../utils/formatDate";
 import getAbbreviation from "../../utils/getAbbreviation";
 import DeletefleetButton from "./DeletefleetButton";
 import EditfleetModalButton from "./EditfleetModalButton";
+import { getFleetStatusOption, toFleetStatus } from "./fleetStatus";
+import FleetStatusBadge from "./FleetStatusBadge";
 
 const SPEC_FIELDS = [
   { icon: IconCar, label: "Type", key: "type" },
   { icon: IconGasStation, label: "Fuel type", key: "fuelType" },
   { icon: IconEngine, label: "Transmission", key: "transmission" },
-  { icon: IconProgressCheck, label: "Status", key: "status" },
+  // Status is an enum, not a picklist, so it has its own badge.
+  {
+    icon: IconProgressCheck,
+    label: "Status",
+    key: "status",
+    Badge: FleetStatusBadge,
+  },
   { icon: IconSparkles, label: "Condition", key: "condition" },
 ];
 
@@ -89,6 +99,14 @@ const FleetDetails = () => {
   const distanceDriven =
     (data.currentOdometer ?? 0) - (data.initialOdometer ?? 0);
 
+  // Only an assigned vehicle carries driver details.
+  const driver = data.driverDetails?.driver ? data.driverDetails : null;
+  const driverName =
+    typeof driver?.driver === "object" ? driver.driver?.name : null;
+  const licenseExpired =
+    !!driver?.licenseExpiry &&
+    dayjs(driver.licenseExpiry).isBefore(dayjs(), "day");
+
   return (
     <>
       <PageHeader
@@ -111,7 +129,7 @@ const FleetDetails = () => {
 
       <Stack gap="md">
         <DetailHero
-          railColor={data.status?.color}
+          railColor={getFleetStatusOption(toFleetStatus(data.status))?.color}
           title={
             <Group gap="sm" wrap="nowrap">
               <Avatar
@@ -134,7 +152,9 @@ const FleetDetails = () => {
                 {data.licensePlate || "—"}
               </Badge>
 
-              <PicklistBadge item={data.status} size="md" />
+              {data.status && (
+                <FleetStatusBadge status={data.status} size="md" />
+              )}
               <PicklistBadge item={data.condition} size="md" />
             </>
           }
@@ -181,10 +201,12 @@ const FleetDetails = () => {
           />
 
           <StatTile
-            label="Assigned"
-            value={data.assignedOn ? formatDate(data.assignedOn) : "—"}
-            hint={data.assignedTo?.name || "Unassigned"}
-            icon={IconUserCheck}
+            label="Driver"
+            value={driverName || "—"}
+            hint={
+              driver ? `License ${driver.licenseNumber || "—"}` : "Unassigned"
+            }
+            icon={IconSteeringWheel}
             color="grape"
           />
         </SimpleGrid>
@@ -193,19 +215,25 @@ const FleetDetails = () => {
           <Grid.Col span={{ base: 12, md: 5, lg: 4 }}>
             <DetailPanel title="Specification" icon={IconCar} h="100%">
               <DetailPanel.FieldList>
-                {SPEC_FIELDS.map(({ icon: Icon, label, key }) => (
-                  <Group key={key} justify="space-between" wrap="nowrap">
-                    <Group gap={8} wrap="nowrap">
-                      <Icon size={16} color="var(--mantine-color-dimmed)" />
+                {SPEC_FIELDS.map(
+                  ({ icon: Icon, label, key, Badge: ValueBadge }) => (
+                    <Group key={key} justify="space-between" wrap="nowrap">
+                      <Group gap={8} wrap="nowrap">
+                        <Icon size={16} color="var(--mantine-color-dimmed)" />
 
-                      <Text fz="sm" c="dimmed">
-                        {label}
-                      </Text>
+                        <Text fz="sm" c="dimmed">
+                          {label}
+                        </Text>
+                      </Group>
+
+                      {ValueBadge && data[key] ? (
+                        <ValueBadge status={data[key]} />
+                      ) : (
+                        <PicklistBadge item={data[key]} />
+                      )}
                     </Group>
-
-                    <PicklistBadge item={data[key]} />
-                  </Group>
-                ))}
+                  ),
+                )}
 
                 <Group justify="space-between" wrap="nowrap">
                   <Group gap={8} wrap="nowrap">
@@ -258,11 +286,33 @@ const FleetDetails = () => {
                 </SimpleGrid>
               </DetailPanel>
 
-              <DetailPanel title="Assignment" icon={IconUserCheck}>
+              <DetailPanel title="Driver & assignment" icon={IconUserCheck}>
                 <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="md">
-                  <DetailPanel.Field label="Assigned to">
-                    {data.assignedTo?.name ||
-                      (data.assignedTo ? "Not populated" : "Unassigned")}
+                  <DetailPanel.Field label="Driver">
+                    {driverName ||
+                      (driver?.driver ? "Not populated" : "Unassigned")}
+                  </DetailPanel.Field>
+
+                  <DetailPanel.Field label="License number" numeric>
+                    {driver?.licenseNumber || "—"}
+                  </DetailPanel.Field>
+
+                  <DetailPanel.Field label="License expiry" numeric>
+                    {driver?.licenseExpiry ? (
+                      <Group gap={6} wrap="nowrap">
+                        <Text fz="sm" fw={500} className="numeric">
+                          {formatDate(driver.licenseExpiry)}
+                        </Text>
+
+                        {licenseExpired && (
+                          <Badge size="xs" color="red">
+                            Expired
+                          </Badge>
+                        )}
+                      </Group>
+                    ) : (
+                      "—"
+                    )}
                   </DetailPanel.Field>
 
                   <DetailPanel.Field label="Assigned on" numeric>

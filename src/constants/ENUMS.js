@@ -5,6 +5,13 @@ const ENUMS = {
       UPSALE: "upsale",
     },
   },
+  FLEET: {
+    STATUSES: {
+      ASSIGNED: "assigned",
+      IN_MAINTENANCE: "in_maintenance",
+      IN_HOUSE: "in_house",
+    },
+  },
   MAINTENANCE: {
     STATUSES: {
       INITIATED: "initiated",

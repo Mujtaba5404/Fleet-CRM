@@ -36,7 +36,6 @@ const GROUPS = [
       { value: "maintenance-status", label: "Status" },
       { value: "maintenance-priority", label: "Priority" },
       { value: "maintenance-provider", label: "Provider" },
-      { value: "maintenance-components", label: "Components" },
     ],
   },
   {

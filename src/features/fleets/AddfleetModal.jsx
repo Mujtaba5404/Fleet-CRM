@@ -3,10 +3,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCreatefleetMutation } from "../../api/fleet";
 import FormShell from "../../components/FormShell";
-import toFormData from "../../utils/toFormData";
 import AttachmentsUpload from "../attachments/AttachmentsUpload";
 import { FleetAsideFields, FleetMainFields } from "./FleetFormFields";
-import { FLEET_INITIAL_VALUES, FLEET_VALIDATION } from "./fleetForm";
+import {
+  FLEET_INITIAL_VALUES,
+  FLEET_VALIDATION,
+  fleetToFormData,
+} from "./fleetForm";
 
 const AddfleetModal = ({ isOpen = false, onClose = () => {} }) => {
   const createfleetMutation = useCreatefleetMutation();
@@ -32,7 +35,7 @@ const AddfleetModal = ({ isOpen = false, onClose = () => {} }) => {
   };
 
   const handleSubmit = (values) => {
-    createfleetMutation.mutate(toFormData(values, attachments), {
+    createfleetMutation.mutate(fleetToFormData(values, attachments), {
       onSuccess: ({ data }) => {
         form.reset();
         setAttachments([]);

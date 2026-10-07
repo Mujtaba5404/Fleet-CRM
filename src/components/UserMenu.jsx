@@ -16,7 +16,9 @@ import {
   IconSunHigh,
   IconUserCircle,
 } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { useLogoutMutation } from "../api/auth";
 import ChangePasswordModal from "../features/auth/ChangePasswordModal";
 
 const UserMenu = () => {
@@ -38,11 +40,21 @@ const UserMenu = () => {
     { open: openChangePasswordModal, close: closeChangePasswordModal },
   ] = useDisclosure(false);
 
-  const handleLogOut = () => {
-    removeAuth();
-    removeGlobalFilters();
+  const logoutMutation = useLogoutMutation();
+  const queryClient = useQueryClient();
 
-    navigate("login", { replace: true });
+  // Auth360 clears the session cookies; the stored profile is dropped either
+  // way, so a failed call can never strand someone in a signed-in shell.
+  const handleLogOut = () => {
+    logoutMutation.mutate(undefined, {
+      onSettled: () => {
+        removeAuth();
+        removeGlobalFilters();
+        queryClient.clear();
+
+        navigate("/login", { replace: true });
+      },
+    });
   };
 
   return (

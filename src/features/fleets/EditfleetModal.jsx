@@ -3,11 +3,14 @@ import { useForm } from "@mantine/form";
 import { useEffect, useState } from "react";
 import { useUpdatefleetMutation } from "../../api/fleet";
 import FormShell from "../../components/FormShell";
-import toFormData from "../../utils/toFormData";
 import AttachmentsUpload from "../attachments/AttachmentsUpload";
 import AttachmentThumbnail from "../attachments/AttachmentThumbnail";
 import { FleetAsideFields, FleetMainFields } from "./FleetFormFields";
-import { FLEET_VALIDATION, fleetToFormValues } from "./fleetForm";
+import {
+  FLEET_VALIDATION,
+  fleetToFormData,
+  fleetToFormValues,
+} from "./fleetForm";
 
 const EditfleetModal = ({ fleet, isOpen = false, onClose = () => {} }) => {
   const updatefleetMutation = useUpdatefleetMutation();
@@ -49,7 +52,7 @@ const EditfleetModal = ({ fleet, isOpen = false, onClose = () => {} }) => {
 
   const handleSubmit = (values) => {
     updatefleetMutation.mutate(
-      { fleetId: fleet._id, payload: toFormData(values, attachments) },
+      { fleetId: fleet._id, payload: fleetToFormData(values, attachments) },
       { onSuccess: () => onClose() },
     );
   };

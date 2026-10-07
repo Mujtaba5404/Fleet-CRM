@@ -275,7 +275,7 @@ export const MaintenanceAsideFields = ({ form }) => {
         <CurrencyInput
           label="Total cost"
           placeholder="150,500"
-          description="Parts plus labour"
+          description="Everything the job cost"
           {...form.getInputProps("cost")}
         />
       </FormSection>

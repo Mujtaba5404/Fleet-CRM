@@ -16,7 +16,7 @@ const MaintenancePage = () => (
   <>
     <PageHeader
       title="Maintenance"
-      description="Service jobs, parts, costs and inspection checklists."
+      description="Service jobs, costs, inspection checklists and condition photos."
       breadcrumbs={[{ label: "Fleet" }, { label: "Maintenance" }]}
       actions={
         <>

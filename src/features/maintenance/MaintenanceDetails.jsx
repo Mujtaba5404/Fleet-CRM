@@ -1,14 +1,11 @@
 import {
   Badge,
-  Box,
   Center,
   Grid,
   Group,
   Loader,
-  Progress,
   SimpleGrid,
   Stack,
-  Table,
   Text,
   ThemeIcon,
   Timeline,
@@ -19,7 +16,6 @@ import {
   IconCamera,
   IconCalendarCheck,
   IconCalendarEvent,
-  IconCash,
   IconChecklist,
   IconClipboardText,
   IconFileDescription,
@@ -27,7 +23,6 @@ import {
   IconGauge,
   IconLicense,
   IconPlayerPlay,
-  IconTool,
   IconUserCheck,
   IconX,
 } from "@tabler/icons-react";
@@ -92,15 +87,8 @@ const MaintenanceDetails = () => {
 
   const data = maintenance.data;
   const fleet = data.fleet;
-  const components = data.components || [];
   const checklist = data.checklist || [];
 
-  const partsTotal = components.reduce(
-    (sum, row) => sum + (Number(row.totalCost) || 0),
-    0,
-  );
-  const labour = (Number(data.cost) || 0) - partsTotal;
-  const partsShare = data.cost ? Math.round((partsTotal / data.cost) * 100) : 0;
   const duration = daysBetween(data.startDate, data.endDate);
   const completed = isCompleted(data.status);
   const photosBefore = data.conditionBefore || [];
@@ -209,18 +197,18 @@ const MaintenanceDetails = () => {
 
         <SimpleGrid cols={{ base: 2, lg: 4 }} spacing="md">
           <StatTile
-            icon={IconTool}
-            label="Parts"
-            value={formatAmount(partsTotal)}
-            hint={`${components.length} ${components.length === 1 ? "component" : "components"}`}
+            icon={IconChecklist}
+            label="Checks"
+            value={checklist.length}
+            hint={checklist.length ? "Inspected items" : "Nothing inspected"}
             color="grape"
           />
 
           <StatTile
-            icon={IconCash}
-            label="Labour & other"
-            value={formatAmount(labour > 0 ? labour : 0)}
-            hint={`${100 - partsShare}% of total`}
+            icon={IconCamera}
+            label="Photos"
+            value={photosBefore.length + photosAfter.length}
+            hint={`${photosBefore.length} before · ${photosAfter.length} after`}
             color="teal"
           />
 
@@ -249,7 +237,7 @@ const MaintenanceDetails = () => {
         </SimpleGrid>
 
         <Grid>
-          {/* left: timeline + parts + checklist */}
+          {/* left: timeline + photos + checklist */}
           <Grid.Col span={{ base: 12, lg: 8 }}>
             <Stack gap="md">
               <DetailPanel
@@ -302,75 +290,6 @@ const MaintenanceDetails = () => {
                   after={photosAfter}
                   completed={completed}
                 />
-              </DetailPanel>
-
-              <DetailPanel
-                title="Parts & components"
-                icon={IconTool}
-                action={
-                  <Badge size="lg" className="numeric">
-                    {formatAmount(partsTotal)}
-                  </Badge>
-                }
-              >
-                {components.length ? (
-                  <>
-                    <Table.ScrollContainer minWidth={420}>
-                      <Table highlightOnHover verticalSpacing="xs">
-                        <Table.Thead>
-                          <Table.Tr>
-                            <Table.Th>Component</Table.Th>
-                            <Table.Th ta="center">Qty</Table.Th>
-                            <Table.Th ta="right">Unit</Table.Th>
-                            <Table.Th ta="right">Total</Table.Th>
-                          </Table.Tr>
-                        </Table.Thead>
-
-                        <Table.Tbody>
-                          {components.map((row, index) => (
-                            <Table.Tr key={index}>
-                              <Table.Td>
-                                <PicklistBadge item={row.component} />
-                              </Table.Td>
-
-                              <Table.Td ta="center">
-                                {row.quantity ?? "—"}
-                              </Table.Td>
-
-                              <Table.Td ta="right">
-                                {formatAmount(row.unitCost || 0)}
-                              </Table.Td>
-
-                              <Table.Td ta="right">
-                                <Text size="sm" fw={600}>
-                                  {formatAmount(row.totalCost || 0)}
-                                </Text>
-                              </Table.Td>
-                            </Table.Tr>
-                          ))}
-                        </Table.Tbody>
-                      </Table>
-                    </Table.ScrollContainer>
-
-                    <Box mt="md">
-                      <Group justify="space-between" mb={4}>
-                        <Text size="xs" c="dimmed">
-                          Parts share of total cost
-                        </Text>
-
-                        <Text size="xs" fw={600}>
-                          {partsShare}%
-                        </Text>
-                      </Group>
-
-                      <Progress value={partsShare} size="sm" radius="xl" />
-                    </Box>
-                  </>
-                ) : (
-                  <Text size="sm" c="dimmed">
-                    No parts recorded
-                  </Text>
-                )}
               </DetailPanel>
 
               <DetailPanel

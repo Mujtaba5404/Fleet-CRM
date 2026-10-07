@@ -42,4 +42,8 @@ const formatAmount = (amount = 0, options = {}) => {
   return formatter.format(amount);
 };
 
+/** Short form for stat tiles and axis labels: Rs 4.21M rather than Rs 4,214,908. */
+export const formatAmountCompact = (amount = 0) =>
+  formatAmount(Number(amount) || 0, { notation: "compact" });
+
 export default formatAmount;

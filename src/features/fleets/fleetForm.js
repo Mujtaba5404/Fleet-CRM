@@ -4,6 +4,16 @@
  * Both drawers previously duplicated the field list and neither validated
  * anything — `required` was decoration, so an empty form still hit the API.
  */
+import dayjs from "dayjs";
+import ENUMS from "../../constants/ENUMS";
+import toFormData from "../../utils/toFormData";
+import { isAssignedStatus, toFleetStatus } from "./fleetStatus";
+
+export const EMPTY_DRIVER_DETAILS = {
+  driver: null,
+  licenseNumber: "",
+  licenseExpiry: null,
+};
 
 export const FLEET_INITIAL_VALUES = {
   make: null,
@@ -19,16 +29,22 @@ export const FLEET_INITIAL_VALUES = {
   rent: "",
   initialOdometer: "",
   currentOdometer: "",
-  status: null,
+  // An enum on the API; a newly registered vehicle starts in house.
+  status: ENUMS.FLEET.STATUSES.IN_HOUSE,
   condition: null,
   company: null,
-  assignedTo: null,
+  // Only used, shown and sent while the status is "assigned".
+  driverDetails: { ...EMPTY_DRIVER_DETAILS },
   assignedOn: null,
   inspector: null,
 };
 
 const required = (message) => (value) =>
   value === null || value === undefined || value === "" ? message : null;
+
+/** Driver details are only checked for an assigned vehicle. */
+const whenAssigned = (rule) => (value, values) =>
+  isAssignedStatus(values.status) ? rule(value, values) : null;
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -63,6 +79,19 @@ export const FLEET_VALIDATION = {
       ? "Cannot be lower than the initial reading"
       : null;
   },
+  driverDetails: {
+    driver: whenAssigned(required("Pick the driver")),
+    licenseNumber: whenAssigned((value) =>
+      value?.trim() ? null : "License number is required",
+    ),
+    licenseExpiry: whenAssigned((value) => {
+      if (!value) return "License expiry is required";
+
+      return dayjs(value).isBefore(dayjs(), "day")
+        ? "This license has expired"
+        : null;
+    }),
+  },
 };
 
 const toId = (value) => value?._id ?? value ?? null;
@@ -83,10 +112,47 @@ export const fleetToFormValues = (fleet = {}) => ({
   rent: fleet.rent ?? "",
   initialOdometer: fleet.initialOdometer ?? "",
   currentOdometer: fleet.currentOdometer ?? "",
-  status: toId(fleet.status),
+  status: toFleetStatus(fleet.status),
   condition: toId(fleet.condition),
   company: toId(fleet.company) || null,
-  assignedTo: toId(fleet.assignedTo) || null,
+  driverDetails: {
+    driver: toId(fleet.driverDetails?.driver) || null,
+    licenseNumber: fleet.driverDetails?.licenseNumber || "",
+    licenseExpiry: fleet.driverDetails?.licenseExpiry
+      ? dayjs(fleet.driverDetails.licenseExpiry).format("YYYY-MM-DD")
+      : null,
+  },
   assignedOn: toDate(fleet.assignedOn),
   inspector: toId(fleet.inspector) || null,
 });
+
+/**
+ * Form values plus picked files → the multipart body.
+ *
+ * Driver details go over in bracket notation (`driverDetails[driver]`), which
+ * the server's multipart parser rebuilds into an object, and only for an
+ * assigned vehicle; the expiry is a plain date ("2029-01-18").
+ */
+export const fleetToFormData = (values, attachments) => {
+  const { driverDetails, ...rest } = values;
+  const assigned = isAssignedStatus(values.status);
+
+  const formData = toFormData(
+    assigned ? rest : { ...rest, assignedOn: undefined },
+    attachments,
+  );
+
+  if (assigned) {
+    formData.append("driverDetails[driver]", driverDetails.driver);
+    formData.append(
+      "driverDetails[licenseNumber]",
+      driverDetails.licenseNumber.trim(),
+    );
+    formData.append(
+      "driverDetails[licenseExpiry]",
+      dayjs(driverDetails.licenseExpiry).format("YYYY-MM-DD"),
+    );
+  }
+
+  return formData;
+};

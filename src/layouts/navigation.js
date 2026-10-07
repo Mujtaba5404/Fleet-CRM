@@ -1,7 +1,6 @@
 import {
   IconCar,
-  IconChartPie,
-  IconLayoutDashboard,
+  IconChartHistogram,
   IconListDetails,
   IconReceiptTax,
   IconShieldCheck,
@@ -14,17 +13,10 @@ export const NAV_SECTIONS = [
     label: "Overview",
     links: [
       {
-        title: "Dashboard",
-        path: "/dashboard",
-        icon: IconLayoutDashboard,
-        description: "Fleet health at a glance",
-      },
-      {
         title: "Summary",
-        path: "/fleets/summary",
-        icon: IconChartPie,
-        description: "Counts and value, grouped",
-        resource: "fleet",
+        path: "/summary",
+        icon: IconChartHistogram,
+        description: "Fleet health, mix and summary charts",
       },
     ],
   },
@@ -36,13 +28,13 @@ export const NAV_SECTIONS = [
         path: "/fleets",
         icon: IconCar,
         description: "Every vehicle in your fleet",
-        resource: "fleet",
+        resource: "vehicle",
       },
       {
         title: "Maintenance",
         path: "/maintenance",
         icon: IconTool,
-        description: "Service jobs, parts and checklists",
+        description: "Service jobs, checklists and photos",
         resource: "maintenance",
       },
       {
@@ -84,7 +76,7 @@ export const NAV_SECTIONS = [
 
 export const ALL_NAV_LINKS = NAV_SECTIONS.flatMap((section) => section.links);
 
-export const HOME_PATH = "/dashboard";
+export const HOME_PATH = "/summary";
 
 /** Longest matching nav link for a pathname, so `/fleets/123` still resolves to Vehicles. */
 export const findNavLink = (pathname) =>

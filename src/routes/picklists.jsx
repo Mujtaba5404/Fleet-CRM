@@ -12,7 +12,6 @@ import MaintenanceType from "../features/picklists/features/MaintenanceType";
 import MaintenanceStatus from "../features/picklists/features/MaintenanceStatus";
 import MaintenancePriority from "../features/picklists/features/MaintenancePriority";
 import MaintenanceProvider from "../features/picklists/features/MaintenanceProvider";
-import MaintenanceComponents from "../features/picklists/features/MaintenanceComponents";
 import MaintenanceChecklistItem from "../features/picklists/features/MaintenanceChecklistItem";
 import MaintenanceChecklistStatus from "../features/picklists/features/MaintenanceChecklistStatus";
 import MaintenanceChecklistCondition from "../features/picklists/features/MaintenanceChecklistCondition";
@@ -38,7 +37,6 @@ export const picklistRoutes = (
     <Route path="maintenance-status" element={<MaintenanceStatus />} />
     <Route path="maintenance-priority" element={<MaintenancePriority />} />
     <Route path="maintenance-provider" element={<MaintenanceProvider />} />
-    <Route path="maintenance-components" element={<MaintenanceComponents />} />
     <Route path="checklist-item" element={<MaintenanceChecklistItem />} />
     <Route path="checklist-status" element={<MaintenanceChecklistStatus />} />
     <Route

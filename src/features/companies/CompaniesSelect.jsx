@@ -1,22 +1,22 @@
-import { Loader } from "@mantine/core";
-import { useGetAllCompaniesQuery } from "../../api/company";
 import Select from "../../components/Select";
+import useAuthCompanies from "./useAuthCompanies";
 
-const CompaniesSelect = ({ selectProps = {}, queryObject = {} }) => {
-  const companies = useGetAllCompaniesQuery({ query: queryObject });
+/** Company picker fed by the companies in the signed-in user's session. */
+const CompaniesSelect = ({ selectProps = {} }) => {
+  const companies = useAuthCompanies();
 
   return (
     <Select
-      data={companies.data}
+      data={companies}
       selectLabel="title"
       selectValue="_id"
       searchable
       clearable
-      rightSection={companies.isLoading && <Loader size={18} />}
+      nothingFoundMessage="No companies found"
       {...selectProps}
-      {...(companies.isError && {
+      {...(!companies.length && {
         disabled: true,
-        placeholder: "Error loading companies",
+        placeholder: "No companies on your account",
       })}
     />
   );

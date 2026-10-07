@@ -21,14 +21,16 @@ import {
 } from "@tabler/icons-react";
 import { memo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLoginMutation } from "../../api/auth";
 import Logo from "../../components/Logo";
+import { HOME_PATH } from "../../layouts/navigation";
 import classes from "./Login.module.css";
 import LoginBackdrop from "./LoginBackdrop";
 
 /** What the product actually does, rather than generic CRM copy. */
 const HIGHLIGHTS = [
   { icon: IconTruck, label: "Vehicles", note: "Specs, status and odometer" },
-  { icon: IconTool, label: "Maintenance", note: "Jobs, parts and checklists" },
+  { icon: IconTool, label: "Maintenance", note: "Jobs, checklists and photos" },
   { icon: IconShieldCheck, label: "Insurance", note: "Policies and renewals" },
   { icon: IconReceiptTax, label: "Tax", note: "Challans and filing dates" },
 ];
@@ -84,7 +86,7 @@ const Login = () => {
     getInitialValueInEffect: false,
   });
   const navigate = useNavigate();
-  // const loginMutation = useLoginMutation();
+  const loginMutation = useLoginMutation();
 
   const form = useForm({
     mode: "uncontrolled",
@@ -96,18 +98,17 @@ const Login = () => {
     },
   });
 
-  // const handleSubmit = (values) => {
-  //   loginMutation.mutate(values, {
-  //     onSuccess: ({ data }) => {
-  //       setAuth(data);
-  //       navigate(data?.indexPath || "/dashboard", { replace: true });
-  //     },
-  //   });
-  // };
+  // The response is the whole session: profile, token, permissions and the
+  // companies this user belongs to (which feed every company select).
   const handleSubmit = (values) => {
-    // TODO: swap back to loginMutation.mutate(...) once the API is wired up.
-    setAuth({ name: "Super Admin", email: values.email });
-    navigate("/dashboard", { replace: true });
+    loginMutation.mutate(values, {
+      onSuccess: ({ data }) => {
+        setAuth(data);
+
+        // The role's landing page; "/" itself redirects to HOME_PATH.
+        navigate(data?.indexPath || HOME_PATH, { replace: true });
+      },
+    });
   };
 
   return (
@@ -167,7 +168,12 @@ const Login = () => {
                 {...form.getInputProps("password")}
               />
 
-              <Button type="submit" mt="sm" fullWidth>
+              <Button
+                type="submit"
+                mt="sm"
+                fullWidth
+                loading={loginMutation.isPending}
+              >
                 Sign in
               </Button>
             </Stack>
