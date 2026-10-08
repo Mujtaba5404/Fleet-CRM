@@ -3,25 +3,81 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { showNotification } from "../notifications/showNotification";
 import api from "./index";
 
+/*
+ * The API sends a policy's provider as a bare picklist id. Records are given
+ * the full picklist ({ _id, title, color }) here, so every screen can show
+ * the provider's name. The query key matches the provider dropdown's, so both
+ * share one cached request.
+ */
+const PROVIDER_PARAMS = { query: { resource: "Insurance", field: "provider" } };
+
+const fetchProviders = (queryClient) =>
+  queryClient
+    .fetchQuery({
+      queryKey: ["picklists", "all", PROVIDER_PARAMS],
+      queryFn: () =>
+        api
+          .get("picklists/all", { params: PROVIDER_PARAMS })
+          .then(({ data }) => data),
+      staleTime: 60_000,
+    })
+    // Without provider names the policies are still worth showing.
+    .catch(() => []);
+
+const withProvider = (providers) => (record) =>
+  record && typeof record.provider === "string"
+    ? {
+        ...record,
+        provider:
+          providers.find((item) => item._id === record.provider) ??
+          record.provider,
+      }
+    : record;
+
+/** Bare arrays (`/all`) and paginated `{ data, meta }` responses alike. */
+const withProviders = async (queryClient, data) => {
+  const attach = withProvider(await fetchProviders(queryClient));
+
+  return Array.isArray(data)
+    ? data.map(attach)
+    : { ...data, data: (data?.data ?? []).map(attach) };
+};
+
 export const useGetAllInsuranceQuery = (params) => {
+  const queryClient = useQueryClient();
+
   return useQuery({
     queryKey: ["insurance", "all", params],
     queryFn: () =>
-      api.get("insurance/all", { params }).then(({ data }) => data),
+      api
+        .get("insurance/all", { params })
+        .then(({ data }) => withProviders(queryClient, data)),
   });
 };
 
 export const useGetInsuranceWithPaginationQuery = (params) => {
+  const queryClient = useQueryClient();
+
   return useQuery({
     queryKey: ["insurance", params],
-    queryFn: () => api.get("insurance", { params }).then(({ data }) => data),
+    queryFn: () =>
+      api
+        .get("insurance", { params })
+        .then(({ data }) => withProviders(queryClient, data)),
   });
 };
 
 export const useGetInsuranceByIdQuery = (insuranceId) => {
+  const queryClient = useQueryClient();
+
   return useQuery({
     queryKey: ["insurance", insuranceId],
-    queryFn: () => api.get(`insurance/${insuranceId}`).then(({ data }) => data),
+    queryFn: () =>
+      api
+        .get(`insurance/${insuranceId}`)
+        .then(async ({ data }) =>
+          withProvider(await fetchProviders(queryClient))(data),
+        ),
   });
 };
 

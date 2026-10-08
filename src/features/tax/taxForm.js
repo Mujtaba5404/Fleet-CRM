@@ -22,7 +22,7 @@ export const TAX_VALIDATION = {
   challanNumber: (value) =>
     !value?.trim() ? "Challan number is required" : null,
   fleet: required("Vehicle is required"),
-  company: required("Company is required"),
+  // No company field on the form: the company comes from the vehicle.
   jurisdiction: required("Pick a jurisdiction"),
   status: required("Pick a status"),
   startDate: required("Period start is required"),
@@ -36,6 +36,12 @@ export const TAX_VALIDATION = {
       : null;
   },
 };
+
+/** The add form has no status field, so it must not require one. */
+// eslint-disable-next-line no-unused-vars
+const { status: _status, ...TAX_CREATE_VALIDATION } = TAX_VALIDATION;
+
+export { TAX_CREATE_VALIDATION };
 
 const toId = (value) => value?._id ?? value ?? null;
 const toDate = (value) => (value ? new Date(value) : null);

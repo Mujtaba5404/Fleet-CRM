@@ -1,56 +1,62 @@
 import {
-  Badge,
+  Alert,
   Center,
-  Grid,
+  Divider,
   Group,
   Loader,
   Progress,
-  SimpleGrid,
   Stack,
   Table,
   Text,
-  ThemeIcon,
-  Timeline,
-  Tooltip,
 } from "@mantine/core";
 import {
   IconAlertTriangle,
   IconBan,
-  IconBuildingBank,
-  IconCalendarEvent,
-  IconCalendarOff,
-  IconCash,
-  IconFileDescription,
-  IconLicense,
-  IconPlayerPlay,
-  IconShieldCheck,
-  IconShieldHalf,
-  IconUmbrella,
+  IconClock,
   IconX,
 } from "@tabler/icons-react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useGetInsuranceByIdQuery } from "../../api/insurance";
-import DetailHero from "../../components/DetailHero";
+import DetailLayout from "../../components/DetailLayout";
 import DetailPanel from "../../components/DetailPanel";
-import PageHeader from "../../components/PageHeader";
-import PicklistBadge from "../../components/PicklistBadge";
+import KeyFacts from "../../components/KeyFacts";
 import Placeholder from "../../components/Placeholder";
-import StatTile from "../../components/StatTile";
+import PropertyCard from "../../components/PropertyCard";
+import RecordHeader from "../../components/RecordHeader";
+import RecordMeta from "../../components/RecordMeta";
+import daysBetween from "../../utils/daysBetween";
 import formatAmount from "../../utils/formatAmount";
 import formatDate from "../../utils/formatDate";
+import formatDuration from "../../utils/formatDuration";
+import picklistTitle from "../../utils/picklistTitle";
+import VehicleLink from "../fleets/VehicleLink";
 import DeleteInsuranceButton from "./DeleteInsuranceButton";
 import EditInsuranceModalButton from "./EditInsuranceModalButton";
+import InsuranceStatusBadge from "./InsuranceStatusBadge";
 
-const Field = DetailPanel.Field;
+const BREADCRUMBS = [
+  { label: "Fleet" },
+  { label: "Insurance", to: "/insurance" },
+];
 
-const title = (value) =>
-  typeof value === "object" && value?.title ? value.title : null;
+/** Cover ending within this many days gets a heads-up. */
+const EXPIRY_WARNING_DAYS = 30;
 
-const daysBetween = (from, to) => {
-  if (!from || !to) return null;
+const SummaryRow = ({ label, value, strong = false }) => (
+  <Group justify="space-between" wrap="nowrap">
+    <Text
+      fz="sm"
+      c={strong ? undefined : "dimmed"}
+      fw={strong ? 600 : undefined}
+    >
+      {label}
+    </Text>
 
-  return Math.max(0, Math.round((new Date(to) - new Date(from)) / 86400000));
-};
+    <Text fz={strong ? "md" : "sm"} fw={strong ? 700 : 500} className="numeric">
+      {value}
+    </Text>
+  </Group>
+);
 
 const InsuranceDetails = () => {
   const { id } = useParams();
@@ -67,14 +73,7 @@ const InsuranceDetails = () => {
   if (insurance.isError)
     return (
       <>
-        <PageHeader
-          back
-          title="Policy"
-          breadcrumbs={[
-            { label: "Fleet" },
-            { label: "Insurance", to: "/insurance" },
-          ]}
-        />
+        <RecordHeader title="Policy" breadcrumbs={BREADCRUMBS} />
 
         <Placeholder
           title={
@@ -89,7 +88,6 @@ const InsuranceDetails = () => {
     );
 
   const data = insurance.data;
-  const fleet = data?.fleet;
   const coverages = data.coverages || [];
 
   const premium = data.totalPremium ?? data.premium ?? 0;
@@ -105,54 +103,28 @@ const InsuranceDetails = () => {
   const elapsedShare = termDays
     ? Math.min(100, Math.round(((termDays - (daysLeft ?? 0)) / termDays) * 100))
     : 0;
+  const expiringSoon =
+    !isCancelled &&
+    !isExpired &&
+    daysLeft != null &&
+    daysLeft <= EXPIRY_WARNING_DAYS;
 
-  const timelineItems = [
-    {
-      key: "created",
-      label: "Policy logged",
-      date: data.createdAt,
-      icon: <IconFileDescription size={12} />,
-    },
-    {
-      key: "start",
-      label: "Cover starts",
-      date: data.startDate,
-      icon: <IconPlayerPlay size={12} />,
-    },
-    {
-      key: "end",
-      label: "Cover ends",
-      date: data.endDate,
-      icon: <IconCalendarOff size={12} />,
-    },
-    {
-      key: "cancelled",
-      label: "Cancelled",
-      date: data.cancellationDate,
-      icon: <IconBan size={12} />,
-    },
-  ]
-    .filter((item) => item.date)
-    .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-  // The rail reflects the strongest signal: cancelled beats expired beats status.
-  const railColor = isCancelled
-    ? "red"
+  const coverValue = isCancelled
+    ? "Cancelled"
     : isExpired
-      ? "orange"
-      : data.status?.color;
+      ? "Expired"
+      : daysLeft != null
+        ? `${formatDuration(daysLeft)} left`
+        : "Open";
 
   return (
     <>
-      <PageHeader
-        back
+      <RecordHeader
         title={data.policyNumber || "Policy"}
-        description={`Logged ${formatDate(data.createdAt)}`}
-        breadcrumbs={[
-          { label: "Fleet" },
-          { label: "Insurance", to: "/insurance" },
-          { label: data.policyNumber || "Policy" },
-        ]}
+        titleTransform="uppercase"
+        breadcrumbs={[...BREADCRUMBS, { label: data.policyNumber || "Policy" }]}
+        badges={<InsuranceStatusBadge insurance={data} size="md" />}
+        meta={<VehicleLink fleet={data.fleet} />}
         actions={
           <>
             <EditInsuranceModalButton insurance={data} variant="button" />
@@ -166,330 +138,214 @@ const InsuranceDetails = () => {
         }
       />
 
-      <Stack gap="md">
-        <DetailHero
-          railColor={railColor}
-          title={
-            <Text fz="xl" fw={700} tt="uppercase">
-              {data.policyNumber || "Policy"}
-            </Text>
-          }
-          badges={
-            <>
-              <PicklistBadge item={data.status} size="md" />
+      {isCancelled ? (
+        <Alert
+          color="red"
+          icon={<IconBan size={18} />}
+          title={`Cancelled on ${formatDate(data.cancellationDate)}`}
+          mb="md"
+        >
+          {data.cancellationReason || "No reason recorded."}
+        </Alert>
+      ) : isExpired ? (
+        <Alert
+          color="orange"
+          icon={<IconAlertTriangle size={18} />}
+          title="Cover has ended"
+          mb="md"
+        >
+          This policy stopped covering the vehicle on {formatDate(data.endDate)}
+          .
+        </Alert>
+      ) : (
+        expiringSoon && (
+          <Alert
+            color="yellow"
+            icon={<IconClock size={18} />}
+            title={`Cover ends in ${daysLeft} ${daysLeft === 1 ? "day" : "days"}`}
+            mb="md"
+          >
+            Renew before {formatDate(data.endDate)} to keep the vehicle covered.
+          </Alert>
+        )
+      )}
 
-              {isCancelled ? (
-                <Badge
-                  color="red"
-                  size="md"
-                  leftSection={<IconBan size={12} />}
-                >
-                  Cancelled
-                </Badge>
-              ) : (
-                isExpired && (
-                  <Tooltip label="Cover period has ended" withArrow>
-                    <Badge
-                      variant="outline"
-                      color="orange"
-                      size="md"
-                      leftSection={<IconAlertTriangle size={12} />}
-                    >
-                      Expired
-                    </Badge>
-                  </Tooltip>
-                )
-              )}
-            </>
-          }
-          subtitle={
-            fleet && (
-              <Group
-                gap={8}
-                component={Link}
-                to={`/fleets/${fleet._id}`}
-                style={{ textDecoration: "none" }}
-              >
-                <ThemeIcon variant="light" size={22} radius="sm">
-                  <IconLicense size={14} />
-                </ThemeIcon>
+      <KeyFacts
+        items={[
+          {
+            label: "Total payable",
+            value: formatAmount(payable),
+            hint:
+              data.taxAmount || data.discountAmount
+                ? "After tax and discount"
+                : "Premium",
+          },
+          {
+            label: "Coverage limit",
+            value: formatAmount(coverageLimit),
+            hint: coverages.length
+              ? `${coverages.length} coverage ${coverages.length === 1 ? "line" : "lines"}`
+              : "Single limit",
+          },
+          {
+            label: "Provider",
+            value: picklistTitle(data.provider) || "—",
+            tt: "capitalize",
+            hint: "Insurer",
+          },
+          {
+            label: "Cover",
+            value: coverValue,
+            hint:
+              termDays != null
+                ? `${formatDuration(termDays)} term`
+                : "No end date",
+            footer: termDays != null && !isCancelled && (
+              <Progress
+                value={elapsedShare}
+                size="sm"
+                radius="xl"
+                mt={4}
+                color={isExpired ? "orange" : expiringSoon ? "yellow" : "brand"}
+                aria-label="Term elapsed"
+              />
+            ),
+          },
+        ]}
+      />
 
-                <Text size="sm" fw={600} tt="uppercase">
-                  {fleet.licensePlate || "—"}
-                </Text>
-
-                <Text size="sm" c="dimmed" tt="capitalize">
-                  {[fleet.year, fleet.color].filter(Boolean).join(" · ")}
-                </Text>
-              </Group>
-            )
-          }
-          figureLabel="Payable"
-          figure={formatAmount(payable)}
-          figureHint={`Logged ${formatDate(data.createdAt)}`}
-        />
-
-        <SimpleGrid cols={{ base: 2, lg: 4 }} spacing="md">
-          <StatTile
-            icon={IconUmbrella}
-            label="Coverage"
-            value={formatAmount(coverageLimit)}
-            hint={
-              coverages.length
-                ? `${coverages.length} coverages`
-                : "Single limit"
-            }
-            color="grape"
-          />
-
-          <StatTile
-            icon={IconCash}
-            label="Premium"
-            value={formatAmount(premium)}
-            hint={
-              data.taxAmount
-                ? `+ tax ${formatAmount(data.taxAmount)}`
-                : "Before tax"
-            }
-            color="teal"
-          />
-
-          <StatTile
-            icon={IconShieldHalf}
-            label="Deductible"
-            value={
-              data.deductible != null ? formatAmount(data.deductible) : "—"
-            }
-            hint="Paid per claim"
-          />
-
-          <StatTile
-            icon={IconCalendarEvent}
-            label={isCancelled ? "Status" : "Days left"}
-            value={
-              isCancelled
-                ? "Cancelled"
-                : daysLeft != null
-                  ? `${daysLeft} ${daysLeft === 1 ? "day" : "days"}`
-                  : "—"
-            }
-            hint={
-              data.endDate ? `Ends ${formatDate(data.endDate)}` : "No end date"
-            }
-            color={isCancelled || isExpired ? "red" : "orange"}
-          />
-        </SimpleGrid>
-
-        <Grid>
-          {/* left: term, coverages, money, timeline */}
-          <Grid.Col span={{ base: 12, lg: 8 }}>
+      <DetailLayout
+        main={
+          <DetailPanel title="Coverage & premium">
             <Stack gap="md">
-              <DetailPanel
-                title="Policy term"
-                icon={IconShieldCheck}
-                action={
-                  <Text size="xs" c="dimmed">
-                    {termDays != null ? `${termDays} day term` : "Open term"}
-                  </Text>
-                }
-              >
-                <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="md" mb="md">
-                  <Field label="Starts" numeric>
-                    {data.startDate ? formatDate(data.startDate) : "—"}
-                  </Field>
+              {coverages.length ? (
+                <Table.ScrollContainer minWidth={460}>
+                  <Table verticalSpacing="xs" highlightOnHover>
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th>Coverage</Table.Th>
+                        <Table.Th ta="right">Limit</Table.Th>
+                        <Table.Th ta="right">Deductible</Table.Th>
+                        <Table.Th ta="right">Premium</Table.Th>
+                      </Table.Tr>
+                    </Table.Thead>
 
-                  <Field label="Ends" numeric>
-                    {data.endDate ? formatDate(data.endDate) : "—"}
-                  </Field>
-
-                  <Field label="Provider">
-                    <PicklistBadge item={data.provider} />
-                  </Field>
-                </SimpleGrid>
-
-                <Group justify="space-between" mb={4}>
-                  <Text size="xs" c="dimmed">
-                    Term elapsed
-                  </Text>
-
-                  <Text size="xs" fw={600}>
-                    {elapsedShare}%
-                  </Text>
-                </Group>
-
-                <Progress
-                  value={elapsedShare}
-                  size="sm"
-                  radius="xl"
-                  color={isExpired || isCancelled ? "red" : "brand"}
-                />
-              </DetailPanel>
-
-              <DetailPanel
-                title="Coverage"
-                icon={IconUmbrella}
-                action={
-                  <Badge size="lg" className="numeric">
-                    {formatAmount(coverageLimit)}
-                  </Badge>
-                }
-              >
-                {coverages.length ? (
-                  <Table.ScrollContainer minWidth={460}>
-                    <Table highlightOnHover verticalSpacing="xs">
-                      <Table.Thead>
-                        <Table.Tr>
-                          <Table.Th>Type</Table.Th>
-                          <Table.Th ta="right">Limit</Table.Th>
-                          <Table.Th ta="right">Deductible</Table.Th>
-                          <Table.Th ta="right">Premium</Table.Th>
-                        </Table.Tr>
-                      </Table.Thead>
-
-                      <Table.Tbody>
-                        {coverages.map((row, index) => (
-                          <Table.Tr key={index}>
-                            <Table.Td>
-                              <PicklistBadge item={row.type} />
-                            </Table.Td>
-
-                            <Table.Td ta="right">
-                              {formatAmount(row.limit || 0)}
-                            </Table.Td>
-
-                            <Table.Td ta="right">
-                              {formatAmount(row.deductible || 0)}
-                            </Table.Td>
-
-                            <Table.Td ta="right">
-                              <Text size="sm" fw={600}>
-                                {formatAmount(row.premium || 0)}
-                              </Text>
-                            </Table.Td>
-                          </Table.Tr>
-                        ))}
-                      </Table.Tbody>
-                    </Table>
-                  </Table.ScrollContainer>
-                ) : (
-                  <SimpleGrid cols={2} spacing="md">
-                    <Field label="Coverage limit" numeric>
-                      {formatAmount(data.coverage || 0)}
-                    </Field>
-
-                    <Field label="Breakdown">
-                      <Text size="sm" c="dimmed">
-                        No coverage lines
-                      </Text>
-                    </Field>
-                  </SimpleGrid>
-                )}
-              </DetailPanel>
-
-              <DetailPanel title="Amounts" icon={IconCash}>
-                <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
-                  <Field label="Premium" numeric>
-                    {formatAmount(premium)}
-                  </Field>
-
-                  <Field label="Tax" numeric>
-                    {data.taxAmount != null
-                      ? formatAmount(data.taxAmount)
-                      : "—"}
-                  </Field>
-
-                  <Field label="Discount" numeric>
-                    {data.discountAmount != null
-                      ? `− ${formatAmount(data.discountAmount)}`
-                      : "—"}
-                  </Field>
-
-                  <Field label="Total payable">
-                    <Text size="sm" fw={700} className="numeric">
-                      {formatAmount(payable)}
-                    </Text>
-                  </Field>
-                </SimpleGrid>
-              </DetailPanel>
-
-              <DetailPanel title="Policy timeline" icon={IconCalendarEvent}>
-                {timelineItems.length ? (
-                  <Timeline
-                    active={timelineItems.length - 1}
-                    bulletSize={22}
-                    lineWidth={2}
-                  >
-                    {timelineItems.map((item) => (
-                      <Timeline.Item
-                        key={item.key}
-                        bullet={item.icon}
-                        title={item.label}
-                      >
-                        <Text size="xs" c="dimmed">
-                          {formatDate(item.date)}
-                        </Text>
-
-                        {item.key === "cancelled" &&
-                          data.cancellationReason && (
-                            <Text size="xs" c="red" mt={2}>
-                              {data.cancellationReason}
+                    <Table.Tbody>
+                      {coverages.map((row, index) => (
+                        <Table.Tr key={index}>
+                          <Table.Td>
+                            <Text fz="sm" fw={500} tt="capitalize">
+                              {picklistTitle(row.type) || "—"}
                             </Text>
-                          )}
-                      </Timeline.Item>
-                    ))}
-                  </Timeline>
-                ) : (
-                  <Text size="sm" c="dimmed">
-                    No dates recorded
-                  </Text>
+                          </Table.Td>
+
+                          <Table.Td ta="right" className="numeric">
+                            {formatAmount(row.limit || 0)}
+                          </Table.Td>
+
+                          <Table.Td ta="right" className="numeric">
+                            {formatAmount(row.deductible || 0)}
+                          </Table.Td>
+
+                          <Table.Td ta="right" className="numeric">
+                            {formatAmount(row.premium || 0)}
+                          </Table.Td>
+                        </Table.Tr>
+                      ))}
+                    </Table.Tbody>
+                  </Table>
+                </Table.ScrollContainer>
+              ) : (
+                <Text fz="sm" c="dimmed">
+                  No coverage breakdown recorded for this policy.
+                </Text>
+              )}
+
+              {/* Invoice-style total, aligned under the premium column. */}
+              <Stack gap={6} ml="auto" w="100%" maw={320}>
+                <SummaryRow label="Premium" value={formatAmount(premium)} />
+
+                {data.taxAmount != null && (
+                  <SummaryRow
+                    label="Tax"
+                    value={`+ ${formatAmount(data.taxAmount)}`}
+                  />
                 )}
-              </DetailPanel>
+
+                {data.discountAmount != null && (
+                  <SummaryRow
+                    label="Discount"
+                    value={`− ${formatAmount(data.discountAmount)}`}
+                  />
+                )}
+
+                <Divider />
+
+                <SummaryRow
+                  label="Total payable"
+                  value={formatAmount(payable)}
+                  strong
+                />
+              </Stack>
             </Stack>
-          </Grid.Col>
-
-          {/* right: parties, notes, record */}
-          <Grid.Col span={{ base: 12, lg: 4 }}>
-            <Stack gap="md">
-              <DetailPanel title="Parties" icon={IconBuildingBank}>
-                <DetailPanel.FieldList>
-                  <Field label="Provider">
-                    <PicklistBadge item={data.provider} />
-                  </Field>
-
-                  <Field label="Broker">
-                    <PicklistBadge item={data.broker} fallback="No broker" />
-                  </Field>
-
-                  <Field label="Policy type">
-                    <PicklistBadge item={data.type} />
-                  </Field>
-
-                  <Field label="Company">
-                    {title(data.company) ||
-                      (data.company ? "Not populated" : "—")}
-                  </Field>
-                </DetailPanel.FieldList>
-              </DetailPanel>
-
-              <DetailPanel title="Notes" icon={IconFileDescription}>
-                <Text size="sm">{data.notes || "No additional notes"}</Text>
-              </DetailPanel>
-
-              <DetailPanel title="Record" icon={IconCalendarEvent}>
-                <DetailPanel.FieldList>
-                  <Field label="Created on" numeric>
-                    {formatDate(data.createdAt)}
-                  </Field>
-
-                  <Field label="Last updated" numeric>
-                    {formatDate(data.updatedAt)}
-                  </Field>
-                </DetailPanel.FieldList>
-              </DetailPanel>
-            </Stack>
-          </Grid.Col>
-        </Grid>
-      </Stack>
+          </DetailPanel>
+        }
+        aside={
+          <PropertyCard
+            sections={[
+              {
+                title: "Policy",
+                items: [
+                  {
+                    label: "Broker",
+                    value: picklistTitle(data.broker),
+                    tt: "capitalize",
+                  },
+                  {
+                    label: "Policy type",
+                    value: picklistTitle(data.type),
+                    tt: "capitalize",
+                  },
+                ],
+              },
+              {
+                title: "Term",
+                items: [
+                  {
+                    label: "Starts",
+                    value: data.startDate && formatDate(data.startDate),
+                    numeric: true,
+                  },
+                  {
+                    label: "Ends",
+                    value: data.endDate && formatDate(data.endDate),
+                    numeric: true,
+                  },
+                ],
+              },
+              {
+                title: "Notes",
+                content: (
+                  <Text
+                    fz="sm"
+                    c={data.notes ? undefined : "dimmed"}
+                    style={{ whiteSpace: "pre-wrap" }}
+                  >
+                    {data.notes || "No notes added."}
+                  </Text>
+                ),
+              },
+            ]}
+            footer={
+              <RecordMeta
+                company={data.company}
+                createdAt={data.createdAt}
+                updatedAt={data.updatedAt}
+              />
+            }
+          />
+        }
+      />
     </>
   );
 };

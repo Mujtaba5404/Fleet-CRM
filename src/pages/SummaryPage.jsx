@@ -112,8 +112,8 @@ const SectionTitle = ({ title, description }) => (
 
 /**
  * The home screen (formerly "Dashboard"): headline numbers, the fleet's mix as
- * progress bars, the two-level grouped breakdown with charts, and what needs
- * attention or happened recently.
+ * progress bars, the two-level grouped breakdown with charts, what needs
+ * attention or happened recently, and the grouped table.
  */
 const SummaryPage = () => {
   const fleets = useGetAllfleetsQuery();
@@ -157,6 +157,141 @@ const SummaryPage = () => {
     .sort(newestFirst)
     .slice(0, RECENT_ROWS);
   const recentVehicles = [...fleetList].sort(newestFirst).slice(0, RECENT_ROWS);
+
+  // Sits right under the grouped charts, above their table.
+  const activity = (
+    <>
+      <SectionTitle title="Activity" />
+
+      <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
+        <Panel
+          title="Needs attention"
+          icon={IconAlertTriangle}
+          action={
+            attentionCount > 0 ? (
+              <Badge color="orange" size="sm">
+                {attentionCount}
+              </Badge>
+            ) : null
+          }
+        >
+          {insurance.isLoading || tax.isLoading ? (
+            <PanelLoader />
+          ) : attentionCount === 0 ? (
+            <EmptyRow>
+              Nothing expiring in the next {RENEWAL_WINDOW_DAYS} days.
+            </EmptyRow>
+          ) : (
+            <Stack gap={0}>
+              {expiringPolicies.slice(0, 4).map((policy) => (
+                <Row
+                  key={policy._id}
+                  to={`/insurance/${policy._id}`}
+                  title={policy.policyNumber || "Policy"}
+                  subtitle={
+                    policy.fleet?.licensePlate || policy.provider?.title || "—"
+                  }
+                  right={
+                    <Badge size="sm" color="orange">
+                      {dayjs(policy.endDate).diff(today, "day")}d left
+                    </Badge>
+                  }
+                  rightSub={formatDate(policy.endDate)}
+                />
+              ))}
+
+              {unfiledTax.slice(0, 4).map((record) => (
+                <Row
+                  key={record._id}
+                  to={`/tax/${record._id}`}
+                  title={record.challanNumber || "Challan"}
+                  subtitle={
+                    record.fleet?.licensePlate ||
+                    record.jurisdiction?.title ||
+                    "—"
+                  }
+                  right={
+                    <Badge size="sm" color="red">
+                      Not filed
+                    </Badge>
+                  }
+                  rightSub={
+                    record.taxAmount != null
+                      ? formatAmount(record.taxAmount)
+                      : undefined
+                  }
+                />
+              ))}
+            </Stack>
+          )}
+        </Panel>
+
+        <Panel
+          title="Recent maintenance"
+          icon={IconTool}
+          action={<PanelLink to="/maintenance" />}
+        >
+          {maintenance.isLoading ? (
+            <PanelLoader />
+          ) : !recentJobs.length ? (
+            <EmptyRow>No maintenance logged yet</EmptyRow>
+          ) : (
+            <Stack gap={0}>
+              {recentJobs.map((job) => (
+                <Row
+                  key={job._id}
+                  to={`/maintenance/${job._id}`}
+                  title={job.type?.title || "Maintenance"}
+                  subtitle={`${job.fleet?.licensePlate || "—"} · ${job.vendor?.title || "No vendor"}`}
+                  right={
+                    job.status ? (
+                      <MaintenanceStatusBadge status={job.status} />
+                    ) : null
+                  }
+                  rightSub={formatAmount(job.cost || 0)}
+                />
+              ))}
+            </Stack>
+          )}
+        </Panel>
+
+        <Panel
+          title="Recently added vehicles"
+          icon={IconFileText}
+          action={<PanelLink to="/fleets" />}
+        >
+          {fleets.isLoading ? (
+            <PanelLoader />
+          ) : !recentVehicles.length ? (
+            <EmptyRow>No vehicles yet</EmptyRow>
+          ) : (
+            <Stack gap={0}>
+              {recentVehicles.map((fleet) => (
+                <Row
+                  key={fleet._id}
+                  to={`/fleets/${fleet._id}`}
+                  title={
+                    [fleet.make?.title, fleet.model?.title]
+                      .filter(Boolean)
+                      .join(" ") || "Vehicle"
+                  }
+                  subtitle={
+                    [fleet.year, fleet.color].filter(Boolean).join(" · ") || "—"
+                  }
+                  right={
+                    <Badge size="sm" tt="uppercase">
+                      {fleet.licensePlate || "—"}
+                    </Badge>
+                  }
+                  rightSub={formatDate(fleet.createdAt)}
+                />
+              ))}
+            </Stack>
+          )}
+        </Panel>
+      </SimpleGrid>
+    </>
+  );
 
   return (
     <>
@@ -217,140 +352,7 @@ const SummaryPage = () => {
           description="Vehicle counts and purchase value, grouped two levels deep."
         />
 
-        <FleetGroupSummary />
-
-        <SectionTitle title="Activity" />
-
-        <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
-          <Panel
-            title="Needs attention"
-            icon={IconAlertTriangle}
-            action={
-              attentionCount > 0 ? (
-                <Badge color="orange" size="sm">
-                  {attentionCount}
-                </Badge>
-              ) : null
-            }
-          >
-            {insurance.isLoading || tax.isLoading ? (
-              <PanelLoader />
-            ) : attentionCount === 0 ? (
-              <EmptyRow>
-                Nothing expiring in the next {RENEWAL_WINDOW_DAYS} days.
-              </EmptyRow>
-            ) : (
-              <Stack gap={0}>
-                {expiringPolicies.slice(0, 4).map((policy) => (
-                  <Row
-                    key={policy._id}
-                    to={`/insurance/${policy._id}`}
-                    title={policy.policyNumber || "Policy"}
-                    subtitle={
-                      policy.fleet?.licensePlate ||
-                      policy.provider?.title ||
-                      "—"
-                    }
-                    right={
-                      <Badge size="sm" color="orange">
-                        {dayjs(policy.endDate).diff(today, "day")}d left
-                      </Badge>
-                    }
-                    rightSub={formatDate(policy.endDate)}
-                  />
-                ))}
-
-                {unfiledTax.slice(0, 4).map((record) => (
-                  <Row
-                    key={record._id}
-                    to={`/tax/${record._id}`}
-                    title={record.challanNumber || "Challan"}
-                    subtitle={
-                      record.fleet?.licensePlate ||
-                      record.jurisdiction?.title ||
-                      "—"
-                    }
-                    right={
-                      <Badge size="sm" color="red">
-                        Not filed
-                      </Badge>
-                    }
-                    rightSub={
-                      record.taxAmount != null
-                        ? formatAmount(record.taxAmount)
-                        : undefined
-                    }
-                  />
-                ))}
-              </Stack>
-            )}
-          </Panel>
-
-          <Panel
-            title="Recent maintenance"
-            icon={IconTool}
-            action={<PanelLink to="/maintenance" />}
-          >
-            {maintenance.isLoading ? (
-              <PanelLoader />
-            ) : !recentJobs.length ? (
-              <EmptyRow>No maintenance logged yet</EmptyRow>
-            ) : (
-              <Stack gap={0}>
-                {recentJobs.map((job) => (
-                  <Row
-                    key={job._id}
-                    to={`/maintenance/${job._id}`}
-                    title={job.type?.title || "Maintenance"}
-                    subtitle={`${job.fleet?.licensePlate || "—"} · ${job.vendor?.title || "No vendor"}`}
-                    right={
-                      job.status ? (
-                        <MaintenanceStatusBadge status={job.status} />
-                      ) : null
-                    }
-                    rightSub={formatAmount(job.cost || 0)}
-                  />
-                ))}
-              </Stack>
-            )}
-          </Panel>
-
-          <Panel
-            title="Recently added vehicles"
-            icon={IconFileText}
-            action={<PanelLink to="/fleets" />}
-          >
-            {fleets.isLoading ? (
-              <PanelLoader />
-            ) : !recentVehicles.length ? (
-              <EmptyRow>No vehicles yet</EmptyRow>
-            ) : (
-              <Stack gap={0}>
-                {recentVehicles.map((fleet) => (
-                  <Row
-                    key={fleet._id}
-                    to={`/fleets/${fleet._id}`}
-                    title={
-                      [fleet.make?.title, fleet.model?.title]
-                        .filter(Boolean)
-                        .join(" ") || "Vehicle"
-                    }
-                    subtitle={
-                      [fleet.year, fleet.color].filter(Boolean).join(" · ") ||
-                      "—"
-                    }
-                    right={
-                      <Badge size="sm" tt="uppercase">
-                        {fleet.licensePlate || "—"}
-                      </Badge>
-                    }
-                    rightSub={formatDate(fleet.createdAt)}
-                  />
-                ))}
-              </Stack>
-            )}
-          </Panel>
-        </SimpleGrid>
+        <FleetGroupSummary afterCharts={activity} />
       </Stack>
     </>
   );

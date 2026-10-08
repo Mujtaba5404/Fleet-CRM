@@ -15,6 +15,8 @@ import MaintenanceProvider from "../features/picklists/features/MaintenanceProvi
 import MaintenanceChecklistItem from "../features/picklists/features/MaintenanceChecklistItem";
 import MaintenanceChecklistStatus from "../features/picklists/features/MaintenanceChecklistStatus";
 import MaintenanceChecklistCondition from "../features/picklists/features/MaintenanceChecklistCondition";
+import TaxJurisdiction from "../features/picklists/features/TaxJurisdiction";
+import TaxStatus from "../features/picklists/features/TaxStatus";
 
 export const picklistRoutes = (
   <Route
@@ -43,5 +45,7 @@ export const picklistRoutes = (
       path="checklist-condition"
       element={<MaintenanceChecklistCondition />}
     />
+    <Route path="tax-jurisdiction" element={<TaxJurisdiction />} />
+    <Route path="tax-status" element={<TaxStatus />} />
   </Route>
 );

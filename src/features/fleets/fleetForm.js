@@ -10,7 +10,7 @@ import toFormData from "../../utils/toFormData";
 import { isAssignedStatus, toFleetStatus } from "./fleetStatus";
 
 export const EMPTY_DRIVER_DETAILS = {
-  driver: null,
+  user: null,
   licenseNumber: "",
   licenseExpiry: null,
 };
@@ -80,7 +80,7 @@ export const FLEET_VALIDATION = {
       : null;
   },
   driverDetails: {
-    driver: whenAssigned(required("Pick the driver")),
+    user: whenAssigned(required("Pick the user")),
     licenseNumber: whenAssigned((value) =>
       value?.trim() ? null : "License number is required",
     ),
@@ -116,7 +116,9 @@ export const fleetToFormValues = (fleet = {}) => ({
   condition: toId(fleet.condition),
   company: toId(fleet.company) || null,
   driverDetails: {
-    driver: toId(fleet.driverDetails?.driver) || null,
+    // Older records stored the person under `driver`.
+    user:
+      toId(fleet.driverDetails?.user ?? fleet.driverDetails?.driver) || null,
     licenseNumber: fleet.driverDetails?.licenseNumber || "",
     licenseExpiry: fleet.driverDetails?.licenseExpiry
       ? dayjs(fleet.driverDetails.licenseExpiry).format("YYYY-MM-DD")
@@ -126,33 +128,73 @@ export const fleetToFormValues = (fleet = {}) => ({
   inspector: toId(fleet.inspector) || null,
 });
 
+/** Fields the API computes with, so they must arrive as numbers. */
+const NUMBER_FIELDS = [
+  "year",
+  "purchaseAmount",
+  "rent",
+  "initialOdometer",
+  "currentOdometer",
+];
+
+const DATE_FIELDS = ["purchaseDate", "assignedOn"];
+
+const isEmpty = (value) =>
+  value === undefined || value === null || value === "";
+
+const toDay = (value) => dayjs(value).format("YYYY-MM-DD");
+
 /**
- * Form values plus picked files → the multipart body.
- *
- * Driver details go over in bracket notation (`driverDetails[driver]`), which
- * the server's multipart parser rebuilds into an object, and only for an
- * assigned vehicle; the expiry is a plain date ("2029-01-18").
+ * Form values → the vehicle as the API should receive it: numbers as
+ * numbers, dates as "YYYY-MM-DD", and empty optionals (an unpicked inspector,
+ * no rent) left out entirely, so the server sees `undefined` rather than "".
+ * Driver details are included only for an assigned vehicle.
  */
-export const fleetToFormData = (values, attachments) => {
+const toFleetBody = (values) => {
   const { driverDetails, ...rest } = values;
   const assigned = isAssignedStatus(values.status);
+  const body = {};
 
-  const formData = toFormData(
-    assigned ? rest : { ...rest, assignedOn: undefined },
-    attachments,
-  );
+  Object.entries(rest).forEach(([key, value]) => {
+    if (isEmpty(value)) return;
+    if (key === "assignedOn" && !assigned) return;
+
+    if (NUMBER_FIELDS.includes(key)) body[key] = Number(value);
+    else if (DATE_FIELDS.includes(key)) body[key] = toDay(value);
+    else body[key] = value;
+  });
 
   if (assigned) {
-    formData.append("driverDetails[driver]", driverDetails.driver);
-    formData.append(
-      "driverDetails[licenseNumber]",
-      driverDetails.licenseNumber.trim(),
-    );
-    formData.append(
-      "driverDetails[licenseExpiry]",
-      dayjs(driverDetails.licenseExpiry).format("YYYY-MM-DD"),
-    );
+    body.driverDetails = {
+      user: driverDetails.user,
+      licenseNumber: driverDetails.licenseNumber.trim(),
+      licenseExpiry: toDay(driverDetails.licenseExpiry),
+    };
   }
+
+  return body;
+};
+
+/**
+ * The request body for create / update.
+ *
+ * Without new files it is plain JSON, which is the only way numbers reach the
+ * server as numbers. With files it has to be multipart, where every value is a
+ * string by definition; there the server's validator must coerce them.
+ * Nested driver details then go in bracket notation (`driverDetails[user]`),
+ * which multipart parsers rebuild into an object.
+ */
+export const fleetToPayload = (values, attachments = []) => {
+  const body = toFleetBody(values);
+
+  if (!attachments.length) return body;
+
+  const { driverDetails, ...flat } = body;
+  const formData = toFormData(flat, attachments);
+
+  Object.entries(driverDetails ?? {}).forEach(([key, value]) =>
+    formData.append(`driverDetails[${key}]`, value),
+  );
 
   return formData;
 };

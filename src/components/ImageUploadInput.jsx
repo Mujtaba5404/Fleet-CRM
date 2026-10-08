@@ -25,7 +25,8 @@ const ImageUploadInput = ({
   useEffect(
     () => () =>
       previews.forEach((url) => {
-        if (typeof url === "string" && url.startsWith("blob:")) URL.revokeObjectURL(url);
+        if (typeof url === "string" && url.startsWith("blob:"))
+          URL.revokeObjectURL(url);
       }),
     [previews],
   );
@@ -84,8 +85,21 @@ const ImageUploadInput = ({
       {previews.length > 0 && (
         <Box className={classes.thumbs}>
           {previews.map((url, index) => (
-            <Box key={url} className={classes.thumb} pos="relative" w={THUMB} h={THUMB}>
-              <Image src={url} alt="" w={THUMB} h={THUMB} fit="cover" radius="md" />
+            <Box
+              key={url}
+              className={classes.thumb}
+              pos="relative"
+              w={THUMB}
+              h={THUMB}
+            >
+              <Image
+                src={url}
+                alt=""
+                w={THUMB}
+                h={THUMB}
+                fit="cover"
+                radius="md"
+              />
 
               <ActionIcon
                 className={classes.remove}

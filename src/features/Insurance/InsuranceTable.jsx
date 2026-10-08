@@ -3,6 +3,7 @@ import {
   Button,
   Divider,
   Group,
+  MultiSelect,
   SimpleGrid,
   Stack,
   Text,
@@ -20,6 +21,8 @@ import useFilters from "../../hooks/useFilters";
 import formatAmount from "../../utils/formatAmount";
 import formatDate from "../../utils/formatDate";
 import PicklistsMultiSelect from "../picklists/components/PicklistsMultiSelect";
+import { INSURANCE_STATUS_OPTIONS } from "./insuranceStatus";
+import InsuranceStatusBadge from "./InsuranceStatusBadge";
 import InsuranceTableRowMenu from "./InsuranceTableRowMenu";
 
 const TwoLine = ({ top, bottom }) => (
@@ -60,7 +63,7 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
   {
     accessor: "createdAt",
     title: "Logged",
-    width: 110,
+    width: 150,
     textAlign: "center",
     sortable: true,
     filter: ({ close }) => (
@@ -144,56 +147,50 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
   },
   {
     accessor: "status",
-    width: 120,
+    width: 130,
     textAlign: "center",
-    ...picklistFilter("status", filters, setFilters),
-    render: (row) => (
-      <Badge variant="light" color={color(row.status)} tt="capitalize">
-        {title(row.status) || "-"}
-      </Badge>
+    filter: (
+      <MultiSelect
+        size="xs"
+        placeholder="Select status"
+        data={INSURANCE_STATUS_OPTIONS.map(({ value, label }) => ({
+          value,
+          label,
+        }))}
+        value={filters.status || []}
+        onChange={(value) => setFilters({ status: value })}
+        comboboxProps={{ withinPortal: false }}
+      />
     ),
+    filtering: filters.status?.length,
+    render: (row) => <InsuranceStatusBadge insurance={row} />,
   },
   {
     accessor: "provider",
     width: 150,
     ...picklistFilter("provider", filters, setFilters),
-    render: (row) => (
-      <TwoLine
-        top={title(row.provider)}
-        bottom={
-          title(row.broker) ? `Broker: ${title(row.broker)}` : "No broker"
-        }
-      />
-    ),
+    render: (row) =>
+      title(row.provider) ? (
+        <Badge variant="light" color={color(row.provider)} tt="capitalize">
+          {title(row.provider)}
+        </Badge>
+      ) : (
+        <Text size="sm" c="dimmed">
+          -
+        </Text>
+      ),
   },
   {
     accessor: "startDate",
     title: "Cover period",
     width: 160,
     sortable: true,
-    render: (row) => {
-      const expired = row.endDate && new Date(row.endDate) < new Date();
-
-      return (
-        <Stack gap={0}>
-          <Text size="sm">
-            {row.startDate ? formatDate(row.startDate) : "-"}
-          </Text>
-
-          <Group gap={6}>
-            <Text size="xs" c="dimmed">
-              {row.endDate ? formatDate(row.endDate) : "Open"}
-            </Text>
-
-            {expired && (
-              <Badge size="xs" variant="light" color="red">
-                Expired
-              </Badge>
-            )}
-          </Group>
-        </Stack>
-      );
-    },
+    render: (row) => (
+      <TwoLine
+        top={row.startDate ? formatDate(row.startDate) : "-"}
+        bottom={row.endDate ? formatDate(row.endDate) : "Open"}
+      />
+    ),
   },
   {
     accessor: "totalAmount",
@@ -213,16 +210,10 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     ),
   },
   {
-    accessor: "deductible",
-    width: 120,
-    sortable: true,
-    render: (row) =>
-      row.deductible != null ? formatAmount(row.deductible) : "-",
-  },
-  {
-    accessor: "coverages",
+    accessor: "coverage",
     title: "Coverage",
-    width: 200,
+    width: 160,
+    sortable: true,
     render: (row) => {
       if (row.coverages?.length)
         return (
@@ -245,7 +236,12 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
           </Group>
         );
 
-      // if (row.coverage) return <Text size="sm">{formatAmount(row.coverage)}</Text>;
+      if (row.coverage != null)
+        return (
+          <Text size="sm" className="numeric">
+            {formatAmount(row.coverage)}
+          </Text>
+        );
 
       return (
         <Text size="sm" c="dimmed">
@@ -292,8 +288,6 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
 
 /** Compact card shown instead of a table row on phones. */
 const InsuranceCard = (row) => {
-  const expired = row.endDate && new Date(row.endDate) < new Date();
-
   return (
     <Stack gap="sm">
       <Group justify="space-between" wrap="nowrap" align="flex-start">
@@ -323,21 +317,11 @@ const InsuranceCard = (row) => {
       </Group>
 
       <Group gap={6}>
-        {title(row.status) && (
-          <Badge size="sm" color={color(row.status)} tt="capitalize">
-            {title(row.status)}
-          </Badge>
-        )}
+        <InsuranceStatusBadge insurance={row} />
 
         {title(row.type) && (
           <Badge size="sm" color="gray" tt="capitalize">
             {title(row.type)}
-          </Badge>
-        )}
-
-        {expired && (
-          <Badge size="sm" color="red">
-            Expired
           </Badge>
         )}
       </Group>
@@ -347,8 +331,8 @@ const InsuranceCard = (row) => {
       <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs">
         <TwoLine top={formatAmount(payable(row))} bottom="Payable" />
         <TwoLine
-          top={row.deductible != null ? formatAmount(row.deductible) : "-"}
-          bottom="Deductible"
+          top={row.coverage != null ? formatAmount(row.coverage) : "-"}
+          bottom="Coverage"
         />
         <TwoLine
           top={row.startDate ? formatDate(row.startDate) : "-"}
@@ -363,7 +347,16 @@ const InsuranceCard = (row) => {
   );
 };
 
-const InsuranceTable = ({ query, hideColumns = [], toolbar }) => {
+/**
+ * `queryHook` swaps the data source (e.g. one vehicle's policies on its
+ * detail screen) while keeping the same columns, filters and row menu.
+ */
+const InsuranceTable = ({
+  query,
+  hideColumns = [],
+  toolbar,
+  queryHook = useGetInsuranceWithPaginationQuery,
+}) => {
   const [globalFilters] = useLocalStorage({
     key: "globalFilters",
     getInitialValueInEffect: false,
@@ -372,7 +365,7 @@ const InsuranceTable = ({ query, hideColumns = [], toolbar }) => {
 
   return (
     <PaginatedTable
-      queryHook={useGetInsuranceWithPaginationQuery}
+      queryHook={queryHook}
       columns={DEFAULT_COLUMNS(filters, setFilters)}
       queryParams={{ ...globalFilters, ...filters, ...query }}
       hideColumns={hideColumns}

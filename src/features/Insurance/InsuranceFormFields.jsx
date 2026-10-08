@@ -1,4 +1,4 @@
-import { Grid, Textarea, TextInput } from "@mantine/core";
+import { Grid, Select, Textarea, TextInput } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import {
   IconBan,
@@ -11,6 +11,7 @@ import CurrencyInput from "../../components/CurrencyInput";
 import FormSection from "../../components/FormSection";
 import FleetsSelect from "../fleets/FleetsSelect";
 import PicklistsSelect from "../picklists/components/PicklistsSelect";
+import { INSURANCE_STATUS_OPTIONS } from "./insuranceStatus";
 
 const HALF = { base: 12, sm: 6 };
 const THIRD = { base: 12, sm: 4 };
@@ -67,7 +68,21 @@ export const InsuranceMainFields = ({ form }) => {
           />
         </Grid.Col>
 
-        {picklist("status", "Status", { withAsterisk: true })}
+        <Grid.Col span={HALF}>
+          <Select
+            label="Status"
+            placeholder="Active"
+            data={INSURANCE_STATUS_OPTIONS.map(({ value, label }) => ({
+              value,
+              label,
+            }))}
+            searchable={false}
+            clearable
+            allowDeselect
+            {...form.getInputProps("status")}
+          />
+        </Grid.Col>
+
         {picklist("provider", "Provider", { withAsterisk: true })}
 
         <Grid.Col span={12}>

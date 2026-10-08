@@ -6,7 +6,11 @@ import {
   InsuranceAsideFields,
   InsuranceMainFields,
 } from "./InsuranceFormFields";
-import { INSURANCE_VALIDATION, insuranceToFormValues } from "./insuranceForm";
+import {
+  INSURANCE_VALIDATION,
+  insuranceToFormValues,
+  insuranceToPayload,
+} from "./insuranceForm";
 
 const EditInsuranceModal = ({
   insurance,
@@ -33,7 +37,10 @@ const EditInsuranceModal = ({
 
   const handleSubmit = (values) => {
     updateInsuranceMutation.mutate(
-      { insuranceId: insurance._id, payload: values },
+      {
+        insuranceId: insurance._id,
+        payload: insuranceToPayload(values, insurance),
+      },
       { onSuccess: () => onClose() },
     );
   };

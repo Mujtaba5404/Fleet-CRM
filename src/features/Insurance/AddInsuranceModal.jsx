@@ -9,6 +9,7 @@ import {
 import {
   INSURANCE_INITIAL_VALUES,
   INSURANCE_VALIDATION,
+  insuranceToPayload,
 } from "./insuranceForm";
 
 const AddInsuranceModal = ({ isOpen = false, onClose = () => {} }) => {
@@ -26,7 +27,7 @@ const AddInsuranceModal = ({ isOpen = false, onClose = () => {} }) => {
   };
 
   const handleSubmit = (values) => {
-    createInsuranceMutation.mutate(values, {
+    createInsuranceMutation.mutate(insuranceToPayload(values), {
       onSuccess: ({ data }) => {
         form.reset();
         onClose();

@@ -1,0 +1,41 @@
+.track {
+  position: relative;
+  height: 34px;
+}
+
+.track[data-with-below] {
+  height: 58px;
+}
+
+.bar {
+  position: absolute;
+  inset-inline: 0;
+  top: 24px;
+}
+
+/* Labels slide inward near the edges so they never overflow the track. */
+.label {
+  position: absolute;
+  white-space: nowrap;
+  transform: translateX(calc(var(--at) * -1));
+  left: var(--at);
+}
+
+.label[data-place="above"] {
+  top: 0;
+}
+
+.label[data-place="below"] {
+  top: 40px;
+}
+
+.tick {
+  position: absolute;
+  left: var(--at);
+  top: 18px;
+  width: 2px;
+  height: 22px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--tick, var(--mantine-color-text));
+}

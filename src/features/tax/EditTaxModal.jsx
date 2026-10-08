@@ -2,6 +2,7 @@ import { useForm } from "@mantine/form";
 import { useEffect } from "react";
 import { useUpdateTaxMutation } from "../../api/tax";
 import FormShell from "../../components/FormShell";
+import { showNotification } from "../../notifications/showNotification";
 import { TaxAsideFields, TaxMainFields } from "./TaxFormFields";
 import { TAX_VALIDATION, taxToFormValues } from "./taxForm";
 
@@ -38,7 +39,13 @@ const EditTaxModal = ({ tax, isOpen = false, onClose = () => {} }) => {
       title="Edit challan"
       description={tax?.challanNumber || "Update this tax record"}
       submitLabel="Save changes"
-      onSubmit={form.onSubmit(handleSubmit)}
+      onSubmit={form.onSubmit(handleSubmit, (errors) =>
+        showNotification({
+          title: "Please check the form",
+          message: Object.values(errors).filter(Boolean).join(" · "),
+          type: "error",
+        }),
+      )}
       isSubmitting={updateTaxMutation.isPending}
       error={updateTaxMutation.error}
       aside={<TaxAsideFields form={form} />}

@@ -311,7 +311,16 @@ const MaintenanceCard = (row) => (
   </Stack>
 );
 
-const MaintenanceTable = ({ query, hideColumns = [], toolbar }) => {
+/**
+ * `queryHook` swaps the data source (e.g. one vehicle's jobs on its detail
+ * screen) while keeping the same columns, filters and row menu.
+ */
+const MaintenanceTable = ({
+  query,
+  hideColumns = [],
+  toolbar,
+  queryHook = useGetMaintenanceWithPaginationQuery,
+}) => {
   const [globalFilters] = useLocalStorage({
     key: "globalFilters",
     getInitialValueInEffect: false,
@@ -320,7 +329,7 @@ const MaintenanceTable = ({ query, hideColumns = [], toolbar }) => {
 
   return (
     <PaginatedTable
-      queryHook={useGetMaintenanceWithPaginationQuery}
+      queryHook={queryHook}
       columns={DEFAULT_COLUMNS(filters, setFilters)}
       queryParams={{ ...globalFilters, ...filters, ...query }}
       hideColumns={hideColumns}

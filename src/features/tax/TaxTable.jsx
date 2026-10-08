@@ -38,7 +38,7 @@ const color = (value) => (typeof value === "object" ? value?.color : undefined);
 const picklistFilter = (field, filters, setFilters) => ({
   filter: (
     <PicklistsMultiSelect
-      queryObject={{ resource: "Tax", field }}
+      queryObject={{ resource: "Taxation", field }}
       multiSelectProps={{
         size: "xs",
         placeholder: `Select ${field}`,
@@ -138,17 +138,6 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
       ),
   },
   {
-    accessor: "status",
-    width: 120,
-    textAlign: "center",
-    ...picklistFilter("status", filters, setFilters),
-    render: (row) => (
-      <Badge variant="light" color={color(row.status)} tt="capitalize">
-        {title(row.status) || "-"}
-      </Badge>
-    ),
-  },
-  {
     accessor: "jurisdiction",
     width: 140,
     textAlign: "center",
@@ -204,7 +193,8 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
       ),
   },
   {
-    accessor: "taxAmount",
+    // The API field, so server-side sorting works; rows also carry `taxAmount`.
+    accessor: "amount",
     title: "Amount",
     width: 130,
     sortable: true,
@@ -295,7 +285,16 @@ const TaxCard = (row) => {
   );
 };
 
-const TaxTable = ({ query, hideColumns = [], toolbar }) => {
+/**
+ * `queryHook` swaps the data source (e.g. one vehicle's challans on its
+ * detail screen) while keeping the same columns, filters and row menu.
+ */
+const TaxTable = ({
+  query,
+  hideColumns = [],
+  toolbar,
+  queryHook = useGetTaxWithPaginationQuery,
+}) => {
   const [globalFilters] = useLocalStorage({
     key: "globalFilters",
     getInitialValueInEffect: false,
@@ -304,7 +303,7 @@ const TaxTable = ({ query, hideColumns = [], toolbar }) => {
 
   return (
     <PaginatedTable
-      queryHook={useGetTaxWithPaginationQuery}
+      queryHook={queryHook}
       columns={DEFAULT_COLUMNS(filters, setFilters)}
       queryParams={{ ...globalFilters, ...filters, ...query }}
       hideColumns={hideColumns}

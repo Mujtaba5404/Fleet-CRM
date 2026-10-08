@@ -46,6 +46,13 @@ const GROUPS = [
       { value: "checklist-condition", label: "Condition" },
     ],
   },
+  {
+    label: "Tax",
+    items: [
+      { value: "tax-jurisdiction", label: "Jurisdiction" },
+      { value: "tax-status", label: "Status" },
+    ],
+  },
 ];
 
 const ALL_ITEMS = GROUPS.flatMap((group) =>
@@ -67,7 +74,7 @@ const Picklists = () => {
     <>
       <PageHeader
         title="Picklists"
-        description="The dropdown values used across vehicles, maintenance and inspections."
+        description="The dropdown values used across vehicles, maintenance, inspections and tax."
         breadcrumbs={[
           { label: "Configuration" },
           { label: "Picklists", to: BASE },

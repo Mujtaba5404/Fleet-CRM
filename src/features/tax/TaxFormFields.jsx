@@ -18,7 +18,7 @@ const useTaxFields = (form) => {
   const picklist = (path, label, { span = HALF, field, ...props } = {}) => (
     <Grid.Col span={span}>
       <PicklistsSelect
-        queryObject={{ resource: "Tax", field: field || path }}
+        queryObject={{ resource: "Taxation", field: field || path }}
         selectProps={{
           label,
           placeholder: `Select ${label.toLowerCase()}`,
@@ -44,7 +44,11 @@ const useTaxFields = (form) => {
 
   // Tax is paid yearly, so the period is picked by year. The end of the
   // period is stored as 31 Dec of the picked year.
-  const year = (path, label, { span = HALF, endOfYear = false, ...props } = {}) => {
+  const year = (
+    path,
+    label,
+    { span = HALF, endOfYear = false, ...props } = {},
+  ) => {
     const input = form.getInputProps(path);
 
     return (
@@ -71,8 +75,8 @@ const useTaxFields = (form) => {
   return { picklist, date, year };
 };
 
-
-export const TaxMainFields = ({ form }) => {
+/** `withStatus={false}` leaves status out (the add form does not ask for it). */
+export const TaxMainFields = ({ form, withStatus = true }) => {
   const { picklist, date, year } = useTaxFields(form);
 
   return (
@@ -91,8 +95,10 @@ export const TaxMainFields = ({ form }) => {
           />
         </Grid.Col>
 
-        {picklist("status", "Status")}
-        {picklist("jurisdiction", "Jurisdiction")}
+        {withStatus && picklist("status", "Status")}
+        {picklist("jurisdiction", "Jurisdiction", {
+          span: withStatus ? HALF : 12,
+        })}
 
         <Grid.Col span={12}>
           <FleetsSelect
@@ -122,7 +128,6 @@ export const TaxMainFields = ({ form }) => {
     </>
   );
 };
-
 
 export const TaxAsideFields = ({ form }) => (
   <>

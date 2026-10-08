@@ -1,4 +1,4 @@
-import { useForm } from "@mantine/form";
+﻿import { useForm } from "@mantine/form";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCreatefleetMutation } from "../../api/fleet";
@@ -8,7 +8,7 @@ import { FleetAsideFields, FleetMainFields } from "./FleetFormFields";
 import {
   FLEET_INITIAL_VALUES,
   FLEET_VALIDATION,
-  fleetToFormData,
+  fleetToPayload,
 } from "./fleetForm";
 
 const AddfleetModal = ({ isOpen = false, onClose = () => {} }) => {
@@ -35,7 +35,7 @@ const AddfleetModal = ({ isOpen = false, onClose = () => {} }) => {
   };
 
   const handleSubmit = (values) => {
-    createfleetMutation.mutate(fleetToFormData(values, attachments), {
+    createfleetMutation.mutate(fleetToPayload(values, attachments), {
       onSuccess: ({ data }) => {
         form.reset();
         setAttachments([]);

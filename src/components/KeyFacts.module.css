@@ -1,0 +1,40 @@
+/*
+ * Hairline grid: the 1px gap shows the container's border colour through, so
+ * the dividers stay correct however the cells wrap.
+ */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--mantine-color-default-border);
+}
+
+@media (min-width: 62em) {
+  .grid {
+    grid-template-columns: repeat(var(--facts, 4), minmax(0, 1fr));
+  }
+}
+
+/* An odd fact out on the two-column phone grid takes the full row. */
+@media (max-width: 61.99em) {
+  .cell:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+.cell {
+  background: var(--mantine-color-body);
+  padding: var(--mantine-spacing-md) var(--mantine-spacing-lg);
+  min-width: 0;
+}
+
+@media (max-width: 36em) {
+  .cell {
+    padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  }
+}
+
+.value {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}

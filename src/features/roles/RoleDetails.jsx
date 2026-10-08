@@ -1,34 +1,26 @@
 import {
+  ActionIcon,
   Avatar,
   Badge,
   Center,
-  Grid,
+  CopyButton,
   Group,
   Loader,
-  SimpleGrid,
   Stack,
   Text,
   ThemeIcon,
+  Tooltip,
 } from "@mantine/core";
-import {
-  IconCalendarEvent,
-  IconEye,
-  IconForms,
-  IconPencil,
-  IconSettings,
-  IconShieldCheck,
-  IconShieldLock,
-  IconStack2,
-  IconX,
-} from "@tabler/icons-react";
+import { IconCheck, IconCopy, IconStack2, IconX } from "@tabler/icons-react";
 import { useParams } from "react-router-dom";
 import { useGetRoleByIdQuery } from "../../api/role";
-import DetailHero from "../../components/DetailHero";
+import DetailLayout from "../../components/DetailLayout";
 import DetailPanel from "../../components/DetailPanel";
-import PageHeader from "../../components/PageHeader";
+import KeyFacts from "../../components/KeyFacts";
 import Placeholder from "../../components/Placeholder";
-import StatTile from "../../components/StatTile";
-import formatDate from "../../utils/formatDate";
+import PropertyCard from "../../components/PropertyCard";
+import RecordHeader from "../../components/RecordHeader";
+import RecordMeta from "../../components/RecordMeta";
 import getAbbreviation from "../../utils/getAbbreviation";
 import DeleteRoleButton from "./DeleteRoleButton";
 import EditRoleModalButton from "./EditRoleModalButton";
@@ -58,7 +50,7 @@ const RoleDetails = () => {
   if (role.isError)
     return (
       <>
-        <PageHeader back title="Role" breadcrumbs={BREADCRUMBS} />
+        <RecordHeader title="Role" breadcrumbs={BREADCRUMBS} />
 
         <Placeholder
           title={
@@ -81,11 +73,21 @@ const RoleDetails = () => {
 
   return (
     <>
-      <PageHeader
-        back
+      <RecordHeader
         title={data.title || "Role"}
-        description={`Created ${formatDate(data.createdAt)} · Updated ${formatDate(data.updatedAt || data.createdAt)}`}
         breadcrumbs={[...BREADCRUMBS, { label: data.title || "Role" }]}
+        avatar={
+          <Avatar
+            size={48}
+            radius="md"
+            color={scope?.color || "gray"}
+            visibleFrom="xs"
+          >
+            {getAbbreviation(data.title || "?")}
+          </Avatar>
+        }
+        badges={<ScopeBadge scope={data.scope} size="md" />}
+        meta={scope?.description || "No data scope set"}
         actions={
           <>
             <EditRoleModalButton role={data} variant="button" />
@@ -95,111 +97,39 @@ const RoleDetails = () => {
         }
       />
 
-      <Stack gap="md">
-        <DetailHero
-          railColor={scope?.color}
-          title={
-            <Group gap="sm" wrap="nowrap">
-              <Avatar size={44} radius="md" color={scope?.color || "gray"}>
-                {getAbbreviation(data.title || "?")}
-              </Avatar>
+      <KeyFacts
+        items={[
+          {
+            label: "Permissions",
+            value: `${summary.granted}/${summary.total}`,
+            hint: `Across ${summary.resources} of ${summary.totalResources} resources`,
+          },
+          {
+            label: "Full access",
+            value: summary.fullAccess,
+            hint: "Create, read, update, delete",
+          },
+          {
+            label: "Read only",
+            value: summary.readOnly,
+            hint: "View without changing",
+          },
+          {
+            label: "Editable fields",
+            value: summary.editableFields,
+            hint: "Across every resource",
+          },
+        ]}
+      />
 
-              <Text fz="xl" fw={700} tt="capitalize">
-                {data.title || "—"}
-              </Text>
-            </Group>
-          }
-          badges={<ScopeBadge scope={data.scope} size="md" />}
-          subtitle={
-            <Text fz="sm" c="dimmed">
-              {scope?.description || "No data scope set"}
-            </Text>
-          }
-          figureLabel="Permissions granted"
-          figure={`${summary.granted}/${summary.total}`}
-          figureHint={`Across ${summary.resources} of ${summary.totalResources} resources`}
-        />
-
-        <SimpleGrid cols={{ base: 2, lg: 4 }} spacing="md">
-          <StatTile
-            label="Resources"
-            value={summary.resources}
-            hint={`of ${summary.totalResources} available`}
-            icon={IconStack2}
-          />
-
-          <StatTile
-            label="Full access"
-            value={summary.fullAccess}
-            hint="Create, read, update, delete"
-            icon={IconShieldCheck}
-            color="teal"
-          />
-
-          <StatTile
-            label="Read only"
-            value={summary.readOnly}
-            hint="View without changing"
-            icon={IconEye}
-            color="cyan"
-          />
-
-          <StatTile
-            label="Editable fields"
-            value={summary.editableFields}
-            hint="Across every resource"
-            icon={IconPencil}
-            color="grape"
-          />
-        </SimpleGrid>
-
-        <Grid>
-          <Grid.Col span={{ base: 12, md: 8 }}>
-            <DetailPanel
-              title="Permission matrix"
-              icon={IconShieldLock}
-              h="100%"
-            >
+      <DetailLayout
+        main={
+          <Stack gap="md">
+            <DetailPanel title="Permission matrix">
               <PermissionSummary role={data} catalog={catalog} />
             </DetailPanel>
-          </Grid.Col>
 
-          <Grid.Col span={{ base: 12, md: 4 }}>
-            <Stack gap="md">
-              <DetailPanel title="Settings" icon={IconSettings}>
-                <DetailPanel.FieldList>
-                  <DetailPanel.Field label="Data scope">
-                    <Group gap={6}>
-                      <ScopeBadge scope={data.scope} />
-                    </Group>
-                  </DetailPanel.Field>
-
-                  <DetailPanel.Field label="Landing page" numeric>
-                    {data.indexPath || "/"}
-                  </DetailPanel.Field>
-
-                  <DetailPanel.Field label="Role ID" numeric>
-                    {data._id}
-                  </DetailPanel.Field>
-                </DetailPanel.FieldList>
-              </DetailPanel>
-
-              <DetailPanel title="Record" icon={IconCalendarEvent}>
-                <SimpleGrid cols={2} spacing="md">
-                  <DetailPanel.Field label="Created on" numeric>
-                    {formatDate(data.createdAt)}
-                  </DetailPanel.Field>
-
-                  <DetailPanel.Field label="Last updated" numeric>
-                    {formatDate(data.updatedAt || data.createdAt)}
-                  </DetailPanel.Field>
-                </SimpleGrid>
-              </DetailPanel>
-            </Stack>
-          </Grid.Col>
-
-          <Grid.Col span={12}>
-            <DetailPanel title="Editable fields" icon={IconForms}>
+            <DetailPanel title="Editable fields">
               {editable.length ? (
                 <Stack gap="md">
                   {editable.map((p) => {
@@ -214,7 +144,12 @@ const RoleDetails = () => {
                         align="flex-start"
                         wrap="nowrap"
                       >
-                        <ThemeIcon size={26} radius="sm" variant="light">
+                        <ThemeIcon
+                          size={26}
+                          radius="sm"
+                          variant="light"
+                          color="gray"
+                        >
                           <Icon size={15} stroke={1.7} />
                         </ThemeIcon>
 
@@ -246,9 +181,56 @@ const RoleDetails = () => {
                 </Text>
               )}
             </DetailPanel>
-          </Grid.Col>
-        </Grid>
-      </Stack>
+          </Stack>
+        }
+        aside={
+          <PropertyCard
+            sections={[
+              {
+                title: "Settings",
+                items: [
+                  { label: "Landing page", value: data.indexPath || "/" },
+                  {
+                    label: "Role ID",
+                    value: (
+                      <Group gap={4} wrap="nowrap" miw={0}>
+                        <Text fz="xs" c="dimmed" ff="monospace" truncate>
+                          {data._id}
+                        </Text>
+
+                        <CopyButton value={data._id}>
+                          {({ copied, copy }) => (
+                            <Tooltip label={copied ? "Copied" : "Copy ID"}>
+                              <ActionIcon
+                                size="sm"
+                                color={copied ? "teal" : "gray"}
+                                onClick={copy}
+                                aria-label="Copy role ID"
+                              >
+                                {copied ? (
+                                  <IconCheck size={14} />
+                                ) : (
+                                  <IconCopy size={14} />
+                                )}
+                              </ActionIcon>
+                            </Tooltip>
+                          )}
+                        </CopyButton>
+                      </Group>
+                    ),
+                  },
+                ],
+              },
+            ]}
+            footer={
+              <RecordMeta
+                createdAt={data.createdAt}
+                updatedAt={data.updatedAt || data.createdAt}
+              />
+            }
+          />
+        }
+      />
     </>
   );
 };

@@ -253,9 +253,9 @@ export const FleetAsideFields = ({ form, showCurrentOdometer = false }) => {
             <UsersSelect
               selectProps={{
                 withAsterisk: true,
-                label: "Driver",
-                placeholder: "Select driver",
-                ...form.getInputProps("driverDetails.driver"),
+                label: "User",
+                placeholder: "Select user",
+                ...form.getInputProps("driverDetails.user"),
               }}
             />
           </Grid.Col>

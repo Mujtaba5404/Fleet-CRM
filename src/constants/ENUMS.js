@@ -18,6 +18,12 @@ const ENUMS = {
       COMPLETED: "completed",
     },
   },
+  INSURANCE: {
+    STATUSES: {
+      EXPIRED: "expired",
+      CANCELLED: "cancelled",
+    },
+  },
   TASK: {
     STATUSES: {
       OPEN: "open",

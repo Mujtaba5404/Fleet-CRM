@@ -107,8 +107,9 @@ const SortableHeader = ({ active, direction, onClick, children }) => (
  * Vehicles grouped two levels deep (e.g. fuel type → type): a column chart, a
  * donut of the second level, and the full table underneath. The groupings
  * live in the URL, so a particular view can be shared or bookmarked.
+ * `afterCharts` renders between the charts and the table.
  */
-const FleetGroupSummary = () => {
+const FleetGroupSummary = ({ afterCharts = null }) => {
   const vizColor = useVizColor();
   const { filters, setFilters } = useFilters();
   const [metric, setMetric] = useState("count");
@@ -269,6 +270,8 @@ const FleetGroupSummary = () => {
           description="The grouping may not be supported for this field."
           icon={<IconX size={32} />}
         />
+
+        {afterCharts}
       </Stack>
     );
 
@@ -285,6 +288,8 @@ const FleetGroupSummary = () => {
             <Skeleton height={340} radius="md" />
           </Grid.Col>
         </Grid>
+
+        {afterCharts}
       </Stack>
     );
 
@@ -298,6 +303,8 @@ const FleetGroupSummary = () => {
           description={`No vehicles carry a ${primaryLabel.toLowerCase()} value, so there is nothing to chart.`}
           icon={<IconChartBar size={32} />}
         />
+
+        {afterCharts}
       </Stack>
     );
 
@@ -384,6 +391,8 @@ const FleetGroupSummary = () => {
           </DetailPanel>
         </Grid.Col>
       </Grid>
+
+      {afterCharts}
 
       <DetailPanel
         title={`${primaryLabel} × ${secondaryLabel}`}

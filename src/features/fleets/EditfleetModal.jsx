@@ -1,4 +1,4 @@
-import { Group } from "@mantine/core";
+﻿import { Group } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useEffect, useState } from "react";
 import { useUpdatefleetMutation } from "../../api/fleet";
@@ -8,7 +8,7 @@ import AttachmentThumbnail from "../attachments/AttachmentThumbnail";
 import { FleetAsideFields, FleetMainFields } from "./FleetFormFields";
 import {
   FLEET_VALIDATION,
-  fleetToFormData,
+  fleetToPayload,
   fleetToFormValues,
 } from "./fleetForm";
 
@@ -52,7 +52,7 @@ const EditfleetModal = ({ fleet, isOpen = false, onClose = () => {} }) => {
 
   const handleSubmit = (values) => {
     updatefleetMutation.mutate(
-      { fleetId: fleet._id, payload: fleetToFormData(values, attachments) },
+      { fleetId: fleet._id, payload: fleetToPayload(values, attachments) },
       { onSuccess: () => onClose() },
     );
   };
