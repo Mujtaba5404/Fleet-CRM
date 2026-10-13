@@ -1,9 +1,11 @@
 import { useDeleteInsuranceMutation } from "../../api/insurance";
 import RecordRowMenu from "../../components/RecordRowMenu";
+import RESOURCES from "../../constants/RESOURCES";
 import EditInsuranceModal from "./EditInsuranceModal";
 
 const InsuranceTableRowMenu = ({ insurance }) => (
   <RecordRowMenu
+    resource={RESOURCES.INSURANCE}
     viewTo={`/insurance/${insurance._id}`}
     label="policy"
     itemId={insurance._id}

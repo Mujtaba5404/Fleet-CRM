@@ -1,17 +1,14 @@
 import {
   ActionIcon,
   Avatar,
-  Badge,
   Center,
   CopyButton,
   Group,
   Loader,
-  Stack,
   Text,
-  ThemeIcon,
   Tooltip,
 } from "@mantine/core";
-import { IconCheck, IconCopy, IconStack2, IconX } from "@tabler/icons-react";
+import { IconCheck, IconCopy, IconX } from "@tabler/icons-react";
 import { useParams } from "react-router-dom";
 import { useGetRoleByIdQuery } from "../../api/role";
 import DetailLayout from "../../components/DetailLayout";
@@ -25,7 +22,7 @@ import getAbbreviation from "../../utils/getAbbreviation";
 import DeleteRoleButton from "./DeleteRoleButton";
 import EditRoleModalButton from "./EditRoleModalButton";
 import PermissionSummary from "./PermissionSummary";
-import { getScopeOption, humanize, summarizeRole } from "./roleForm";
+import { getScopeOption, summarizeRole } from "./roleForm";
 import ScopeBadge from "./ScopeBadge";
 import usePermissionCatalog from "./usePermissionCatalog";
 
@@ -67,9 +64,6 @@ const RoleDetails = () => {
   const data = role.data;
   const scope = getScopeOption(data.scope);
   const summary = summarizeRole(data, catalog);
-  const editable = (data.permissions ?? []).filter(
-    (p) => p.actions?.includes("update") && p.allowedUpdateFields?.length,
-  );
 
   return (
     <>
@@ -124,64 +118,9 @@ const RoleDetails = () => {
 
       <DetailLayout
         main={
-          <Stack gap="md">
-            <DetailPanel title="Permission matrix">
-              <PermissionSummary role={data} catalog={catalog} />
-            </DetailPanel>
-
-            <DetailPanel title="Editable fields">
-              {editable.length ? (
-                <Stack gap="md">
-                  {editable.map((p) => {
-                    const Icon =
-                      catalog.find((entry) => entry.resource === p.resource)
-                        ?.icon ?? IconStack2;
-
-                    return (
-                      <Group
-                        key={p.resource}
-                        gap="sm"
-                        align="flex-start"
-                        wrap="nowrap"
-                      >
-                        <ThemeIcon
-                          size={26}
-                          radius="sm"
-                          variant="light"
-                          color="gray"
-                        >
-                          <Icon size={15} stroke={1.7} />
-                        </ThemeIcon>
-
-                        <Stack gap={6} miw={0}>
-                          <Text fz="sm" fw={600}>
-                            {humanize(p.resource)}
-                          </Text>
-
-                          <Group gap={6}>
-                            {p.allowedUpdateFields.map((field) => (
-                              <Badge
-                                key={field}
-                                size="sm"
-                                color="gray"
-                                tt="none"
-                              >
-                                {humanize(field)}
-                              </Badge>
-                            ))}
-                          </Group>
-                        </Stack>
-                      </Group>
-                    );
-                  })}
-                </Stack>
-              ) : (
-                <Text fz="sm" c="dimmed">
-                  This role cannot update any records.
-                </Text>
-              )}
-            </DetailPanel>
-          </Stack>
+          <DetailPanel title="Permission matrix">
+            <PermissionSummary role={data} catalog={catalog} />
+          </DetailPanel>
         }
         aside={
           <PropertyCard

@@ -42,6 +42,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Navigate, Outlet, useNavigate } from "react-router-dom";
 import { SESSION_EXPIRED_EVENT } from "../api/index";
+import useSessionAccess from "../hooks/useSessionAccess";
 
 const RequireAuth = () => {
   const [auth, , removeAuth] = useLocalStorage({
@@ -51,6 +52,9 @@ const RequireAuth = () => {
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  // Loads what this user may see. The shell renders straight away; links and
+  // buttons appear once the permissions are in.
+  useSessionAccess();
 
   // The API layer raises this when a refresh could not save the session.
   // Cached records go with it, so the next person to sign in on this machine

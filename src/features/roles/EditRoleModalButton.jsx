@@ -1,5 +1,6 @@
 import { useDisclosure } from "@mantine/hooks";
 import EditTrigger from "../../components/EditTrigger";
+import RESOURCES from "../../constants/RESOURCES";
 import EditRoleModal from "./EditRoleModal";
 
 const EditRoleModalButton = ({ role, variant = "icon" }) => {
@@ -9,7 +10,12 @@ const EditRoleModalButton = ({ role, variant = "icon" }) => {
     <>
       <EditRoleModal role={role} isOpen={opened} onClose={close} />
 
-      <EditTrigger onClick={open} variant={variant} label="Edit role" />
+      <EditTrigger
+        resource={RESOURCES.ROLE}
+        onClick={open}
+        variant={variant}
+        label="Edit role"
+      />
     </>
   );
 };

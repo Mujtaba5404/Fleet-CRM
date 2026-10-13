@@ -1,5 +1,6 @@
 import { useDisclosure } from "@mantine/hooks";
 import EditTrigger from "../../components/EditTrigger";
+import RESOURCES from "../../constants/RESOURCES";
 import EditfleetModal from "./EditfleetModal";
 
 const EditfleetModalButton = ({ fleet, variant = "icon" }) => {
@@ -9,7 +10,12 @@ const EditfleetModalButton = ({ fleet, variant = "icon" }) => {
     <>
       <EditfleetModal fleet={fleet} isOpen={opened} onClose={close} />
 
-      <EditTrigger onClick={open} variant={variant} label="Edit vehicle" />
+      <EditTrigger
+        resource={RESOURCES.FLEET}
+        onClick={open}
+        variant={variant}
+        label="Edit vehicle"
+      />
     </>
   );
 };

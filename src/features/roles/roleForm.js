@@ -1,14 +1,16 @@
 import {
-  IconApps,
-  IconBuilding,
-  IconBuildingStore,
   IconBox,
+  IconBuildingStore,
   IconCar,
   IconListDetails,
   IconPaperclip,
+  IconReceiptTax,
+  IconShieldCheck,
   IconShieldLock,
+  IconTool,
+  IconTrendingDown,
   IconUser,
-  IconUsers,
+  IconUserShield,
   IconUsersGroup,
   IconWorld,
 } from "@tabler/icons-react";
@@ -26,17 +28,10 @@ export const ACTIONS = ["create", "read", "update", "delete"];
  */
 export const RESOURCE_CATALOG = [
   {
-    resource: "Application",
-    icon: IconApps,
-    description: "API clients that sign in to the platform",
-    fields: [
-      "title",
-      "clientId",
-      "audience",
-      "description",
-      "isActive",
-      "createdAt",
-    ],
+    resource: "Access",
+    icon: IconUserShield,
+    description: "Which Central users can use Fleet, and with which roles",
+    fields: ["user", "roles", "isActive"],
   },
   {
     resource: "Attachment",
@@ -55,31 +50,79 @@ export const RESOURCE_CATALOG = [
     ],
   },
   {
-    resource: "Brand",
-    icon: IconBuildingStore,
-    description: "Brands that sit under a company",
+    resource: "Depreciation",
+    icon: IconTrendingDown,
+    description: "How vehicle value is written down over time",
     fields: [
-      "title",
-      "acronym",
-      "brandUrl",
-      "imgUrl",
-      "company",
-      "isActive",
-      "createdAt",
+      "fleet",
+      "method",
+      "acquisitionCost",
+      "salvageValue",
+      "usefulLifeMonths",
+      "depreciationRate",
+      "startDate",
     ],
   },
   {
-    resource: "Company",
-    icon: IconBuilding,
-    description: "Companies and their contact details",
+    resource: "Fleet",
+    icon: IconCar,
+    description: "Vehicles, their cost, odometer and assignment",
     fields: [
-      "title",
-      "acronym",
-      "imgUrl",
-      "website",
-      "phone",
-      "address",
-      "createdAt",
+      "make",
+      "model",
+      "year",
+      "type",
+      "fuelType",
+      "transmission",
+      "color",
+      "licensePlate",
+      "purchaseAmount",
+      "purchaseDate",
+      "rent",
+      "initialOdometer",
+      "currentOdometer",
+      "status",
+      "condition",
+      "company",
+      "driverDetails",
+      "assignedOn",
+      "inspector",
+    ],
+  },
+  {
+    resource: "Insurance",
+    icon: IconShieldCheck,
+    description: "Policies, coverage and renewals",
+    fields: [
+      "fleet",
+      "policyNumber",
+      "provider",
+      "status",
+      "startDate",
+      "endDate",
+      "cancellationDate",
+      "cancellationReason",
+      "premium",
+      "coverage",
+      "notes",
+    ],
+  },
+  {
+    resource: "Maintenance",
+    icon: IconTool,
+    description: "Service jobs, checklists and photos",
+    fields: [
+      "fleet",
+      "type",
+      "status",
+      "priority",
+      "vendor",
+      "startDate",
+      "endDate",
+      "odometer",
+      "cost",
+      "checklist",
+      "notes",
     ],
   },
   {
@@ -110,43 +153,20 @@ export const RESOURCE_CATALOG = [
     fields: ["title", "permissions", "scope", "indexPath", "createdAt"],
   },
   {
-    resource: "User",
-    icon: IconUsers,
-    description: "People who can sign in to the CRM",
+    resource: "Taxation",
+    icon: IconReceiptTax,
+    description: "Challans, filings and jurisdictions",
     fields: [
-      "name",
-      "email",
-      "password",
-      "companies",
-      "brands",
-      "roles",
-      "isActive",
-      "createdAt",
-    ],
-  },
-  {
-    resource: "Vehicle",
-    icon: IconCar,
-    description: "Vehicles, their cost, odometer and assignment",
-    fields: [
-      "make",
-      "model",
-      "year",
-      "color",
-      "licensePlate",
-      "purchaseAmount",
-      "purchaseDate",
-      "rent",
-      "initialOdometer",
-      "currentOdometer",
-      "status",
+      "fleet",
       "company",
-      "assignedTo",
-      "assignedBy",
-      "assignedOn",
-      "inspector",
-      "createdBy",
-      "createdAt",
+      "challanNumber",
+      "jurisdiction",
+      "status",
+      "startDate",
+      "endDate",
+      "filingDate",
+      "amount",
+      "notes",
     ],
   },
 ];
@@ -196,11 +216,19 @@ export const humanize = (value = "") => {
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 };
 
+const genericEntry = (resource) => ({
+  resource,
+  icon: IconBox,
+  description: `${humanize(resource)} records`,
+  fields: [],
+});
+
 /**
- * The static catalog plus any resource or field that the given roles mention
- * but the catalog does not, so nothing a role grants is ever hidden.
+ * The static catalog, corrected by `resources` (the API's own list from
+ * `roles/resources`, whose fields win), plus any resource or field that the
+ * given roles mention, so nothing a role grants is ever hidden.
  */
-export const buildCatalog = (roles = []) => {
+export const buildCatalog = (roles = [], resources = []) => {
   const catalog = new Map(
     RESOURCE_CATALOG.map((entry) => [
       entry.resource,
@@ -208,18 +236,20 @@ export const buildCatalog = (roles = []) => {
     ]),
   );
 
+  resources.forEach(({ resource, allowedUpdateFields }) => {
+    if (!resource) return;
+
+    catalog.set(resource, {
+      ...(catalog.get(resource) ?? genericEntry(resource)),
+      fields: [...(allowedUpdateFields ?? [])],
+    });
+  });
+
   roles.forEach((role) =>
     role?.permissions?.forEach(({ resource, allowedUpdateFields = [] }) => {
       if (!resource) return;
 
-      if (!catalog.has(resource)) {
-        catalog.set(resource, {
-          resource,
-          icon: IconBox,
-          description: `${humanize(resource)} records`,
-          fields: [],
-        });
-      }
+      if (!catalog.has(resource)) catalog.set(resource, genericEntry(resource));
 
       const entry = catalog.get(resource);
       allowedUpdateFields.forEach((field) => {
@@ -242,15 +272,11 @@ export const describeActions = (actions = []) => {
   return humanize(ACTIONS.filter((a) => actions.includes(a)).join(", "));
 };
 
-/**
- * Read is the floor every other action stands on: granting create, update or
- * delete also grants read, and revoking read revokes everything.
- */
+/** Each action is granted or revoked on its own, kept in `ACTIONS` order. */
 export const nextActions = (current, action, checked) => {
-  if (!checked)
-    return action === "read" ? [] : current.filter((a) => a !== action);
+  if (!checked) return current.filter((a) => a !== action);
 
-  const next = new Set([...current, action, "read"]);
+  const next = new Set([...current, action]);
   return ACTIONS.filter((a) => next.has(a));
 };
 
@@ -290,7 +316,10 @@ export const roleToFormValues = (role) => ({
   ),
 });
 
-/** Form values → the body POST and PATCH /roles expect. */
+/**
+ * Form values → the body POST and PATCH /roles expect. Who holds a role is set
+ * on the Access page, not here.
+ */
 export const formValuesToPayload = (values) => ({
   title: values.title.trim(),
   scope: values.scope,

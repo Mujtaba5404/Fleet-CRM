@@ -1,49 +1,21 @@
-// import { Button } from "@mantine/core";
-// import { useDisclosure } from "@mantine/hooks";
-// import { IconPlus } from "@tabler/icons-react";
-// import CanAccess from "../../components/CanAccess";
-// import AddfleetModal from "./AddfleetModal";
-
-// const AddfleetModalButton = () => {
-//   const [addfleetModalOpened, { open: openAddfleetModal, close: closeAddfleetModal }] = useDisclosure(false);
-
-//   return (
-//     <CanAccess resource="fleet" action="create">
-//       <AddfleetModal isOpen={addfleetModalOpened} onClose={closeAddfleetModal} />
-
-//       <Button onClick={openAddfleetModal} leftSection={<IconPlus size={18} />}>
-//         Add fleet
-//       </Button>
-//     </CanAccess>
-//   );
-// };
-
-// export default AddfleetModalButton;
 import { Button } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
+import CanAccess from "../../components/CanAccess";
+import RESOURCES from "../../constants/RESOURCES";
 import AddInsuranceModal from "./AddInsuranceModal";
 
 const AddInsuranceModalButton = () => {
-  const [
-    addmaintenanceModalOpened,
-    { open: openAddmaintenanceModal, close: closeAddmaintenanceModal },
-  ] = useDisclosure(false);
+  const [opened, { open, close }] = useDisclosure(false);
 
   return (
-    <>
-      <AddInsuranceModal
-        isOpen={addmaintenanceModalOpened}
-        onClose={closeAddmaintenanceModal}
-      />
+    <CanAccess resource={RESOURCES.INSURANCE} action="create">
+      <AddInsuranceModal isOpen={opened} onClose={close} />
 
-      <Button
-        onClick={openAddmaintenanceModal}
-        leftSection={<IconPlus size={18} />}
-      >
+      <Button onClick={open} leftSection={<IconPlus size={18} />}>
         Add insurance
       </Button>
-    </>
+    </CanAccess>
   );
 };
 

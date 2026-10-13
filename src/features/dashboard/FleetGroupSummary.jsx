@@ -1,6 +1,5 @@
 import {
   ActionIcon,
-  Badge,
   Box,
   Grid,
   Group,
@@ -9,22 +8,16 @@ import {
   Select,
   Skeleton,
   Stack,
-  Table,
   Text,
   Tooltip,
-  UnstyledButton,
 } from "@mantine/core";
 import {
   IconArrowsExchange,
-  IconArrowsSort,
   IconChartBar,
   IconChartDonut,
-  IconChevronDown,
-  IconChevronUp,
-  IconTable,
   IconX,
 } from "@tabler/icons-react";
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import { useGetfleetSummaryByGroupQuery } from "../../api/fleet";
 import ColumnChart, { ChartLegend } from "../../components/ColumnChart";
 import DetailPanel from "../../components/DetailPanel";
@@ -62,7 +55,6 @@ const labelBuckets = (field) => (bucket) => {
 
 const count = (bucket) => Number(bucket?.count) || 0;
 const value = (bucket) => Number(bucket?.purchaseAmount) || 0;
-const average = (bucket) => (count(bucket) ? value(bucket) / count(bucket) : 0);
 
 /** Count and value are the two ways to weigh a bucket; both charts follow it. */
 const METRICS = {
@@ -80,40 +72,15 @@ const METRICS = {
   },
 };
 
-/** A numeric column heading that sorts the table by its own figure. */
-const SortableHeader = ({ active, direction, onClick, children }) => (
-  <UnstyledButton onClick={onClick} w="100%">
-    <Group gap={4} wrap="nowrap" justify="flex-end">
-      {children}
-
-      <Box
-        c={active ? undefined : "dimmed"}
-        opacity={active ? 1 : 0.4}
-        style={{ display: "flex", flexShrink: 0 }}
-      >
-        {!active ? (
-          <IconArrowsSort size={12} />
-        ) : direction === "desc" ? (
-          <IconChevronDown size={12} />
-        ) : (
-          <IconChevronUp size={12} />
-        )}
-      </Box>
-    </Group>
-  </UnstyledButton>
-);
-
 /**
- * Vehicles grouped two levels deep (e.g. fuel type → type): a column chart, a
- * donut of the second level, and the full table underneath. The groupings
- * live in the URL, so a particular view can be shared or bookmarked.
- * `afterCharts` renders between the charts and the table.
+ * Vehicles grouped two levels deep (e.g. fuel type → type): a column chart and
+ * a donut of the second level. The groupings live in the URL, so a particular
+ * view can be shared or bookmarked. `afterCharts` renders below the charts.
  */
 const FleetGroupSummary = ({ afterCharts = null }) => {
   const vizColor = useVizColor();
   const { filters, setFilters } = useFilters();
   const [metric, setMetric] = useState("count");
-  const [sort, setSort] = useState({ key: "count", direction: "desc" });
 
   const primaryGroup = filters.primaryGroup || DEFAULT_PRIMARY_GROUP;
   const secondaryGroup = filters.secondaryGroup || DEFAULT_SECONDARY_GROUP;
@@ -141,30 +108,6 @@ const FleetGroupSummary = ({ afterCharts = null }) => {
   const totalValue = Number(data?.totalPurchaseAmount) || 0;
   const metricTotal = metric === "count" ? totalCount : totalValue;
 
-  const toRow = (bucket) => ({
-    key: bucket._id ?? "unassigned",
-    label: bucket.title || UNASSIGNED,
-    color: bucket.color,
-    count: count(bucket),
-    value: value(bucket),
-    average: average(bucket),
-  });
-
-  const compare = (a, b) => {
-    const delta = a[sort.key] - b[sort.key];
-
-    if (delta !== 0) return sort.direction === "desc" ? -delta : delta;
-
-    return a.label.localeCompare(b.label);
-  };
-
-  const rows = primaryBuckets
-    .map((bucket) => ({
-      ...toRow(bucket),
-      children: bucket.secondaryGroupWise.map(toRow).sort(compare),
-    }))
-    .sort(compare);
-
   // One series per second-level value, so every column shares one legend.
   // Colours are assigned before sorting, so switching Count/Value re-orders
   // the legend without repainting any series.
@@ -190,13 +133,6 @@ const FleetGroupSummary = ({ afterCharts = null }) => {
       ),
     }))
     .sort((a, b) => b.total - a.total);
-
-  const toggleSort = (key) =>
-    setSort((current) =>
-      current.key === key
-        ? { key, direction: current.direction === "desc" ? "asc" : "desc" }
-        : { key, direction: "desc" },
-    );
 
   // Grouping a field by itself tells you nothing, so block the overlap.
   const optionsFor = (excluded) =>
@@ -293,7 +229,7 @@ const FleetGroupSummary = ({ afterCharts = null }) => {
       </Stack>
     );
 
-  if (!rows.length)
+  if (!primaryBuckets.length)
     return (
       <Stack gap="md">
         {controls}
@@ -393,201 +329,6 @@ const FleetGroupSummary = ({ afterCharts = null }) => {
       </Grid>
 
       {afterCharts}
-
-      <DetailPanel
-        title={`${primaryLabel} × ${secondaryLabel}`}
-        icon={IconTable}
-        action={
-          <Text fz="xs" c="dimmed">
-            {rows.length} groups · {series.length}{" "}
-            {secondaryLabel.toLowerCase()} values
-          </Text>
-        }
-      >
-        <Table.ScrollContainer minWidth={680}>
-          <Table
-            withRowBorders={false}
-            highlightOnHover
-            verticalSpacing="xs"
-            horizontalSpacing="sm"
-            className="numeric"
-          >
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th w={220}>{primaryLabel}</Table.Th>
-
-                <Table.Th w={110}>
-                  <SortableHeader
-                    active={sort.key === "count"}
-                    direction={sort.direction}
-                    onClick={() => toggleSort("count")}
-                  >
-                    Vehicles
-                  </SortableHeader>
-                </Table.Th>
-
-                <Table.Th w={170} ta="right">
-                  Share
-                </Table.Th>
-
-                <Table.Th w={160}>
-                  <SortableHeader
-                    active={sort.key === "value"}
-                    direction={sort.direction}
-                    onClick={() => toggleSort("value")}
-                  >
-                    Purchase value
-                  </SortableHeader>
-                </Table.Th>
-
-                <Table.Th w={150}>
-                  <SortableHeader
-                    active={sort.key === "average"}
-                    direction={sort.direction}
-                    onClick={() => toggleSort("average")}
-                  >
-                    Average
-                  </SortableHeader>
-                </Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-
-            <Table.Tbody>
-              {rows.map((row, index) => (
-                <Fragment key={row.key}>
-                  {/* The rule sits on the group row, so each block reads as one unit. */}
-                  <Table.Tr
-                    style={
-                      index
-                        ? {
-                            borderTop:
-                              "1px solid var(--mantine-color-default-border)",
-                          }
-                        : undefined
-                    }
-                  >
-                    <Table.Td>
-                      <Badge
-                        size="sm"
-                        color={row.color || "gray"}
-                        tt="capitalize"
-                      >
-                        {row.label}
-                      </Badge>
-                    </Table.Td>
-
-                    <Table.Td ta="right" fw={650}>
-                      {formatNumber(row.count, "standard")}
-                    </Table.Td>
-
-                    <Table.Td>
-                      <Group gap={10} wrap="nowrap" justify="flex-end">
-                        <Box
-                          flex={1}
-                          h={6}
-                          miw={44}
-                          maw={90}
-                          style={{
-                            background: "var(--viz-grid)",
-                            borderRadius: 999,
-                            overflow: "hidden",
-                          }}
-                        >
-                          <Box
-                            h="100%"
-                            w={`${totalCount ? Math.max((row.count / totalCount) * 100, row.count > 0 ? 2 : 0) : 0}%`}
-                            style={{
-                              background: "var(--viz-fill)",
-                              borderRadius: "0 4px 4px 0",
-                            }}
-                          />
-                        </Box>
-
-                        <Text fz="xs" c="dimmed" w={32} ta="right">
-                          {Math.round(
-                            totalCount ? (row.count / totalCount) * 100 : 0,
-                          )}
-                          %
-                        </Text>
-                      </Group>
-                    </Table.Td>
-
-                    <Table.Td ta="right" fw={650}>
-                      {formatAmount(row.value)}
-                    </Table.Td>
-
-                    <Table.Td ta="right">{formatAmount(row.average)}</Table.Td>
-                  </Table.Tr>
-
-                  {row.children.map((child) => (
-                    <Table.Tr key={`${row.key}-${child.key}`}>
-                      <Table.Td pl={28}>
-                        <Group gap={8} wrap="nowrap">
-                          <Box
-                            w={10}
-                            h={1}
-                            bg="var(--mantine-color-default-border)"
-                            style={{ flexShrink: 0 }}
-                          />
-
-                          <Badge
-                            variant="dot"
-                            size="sm"
-                            color={child.color || "gray"}
-                            tt="capitalize"
-                            fw={500}
-                          >
-                            {child.label}
-                          </Badge>
-                        </Group>
-                      </Table.Td>
-
-                      <Table.Td ta="right" c="dimmed">
-                        {formatNumber(child.count, "standard")}
-                      </Table.Td>
-
-                      <Table.Td ta="right">
-                        <Text fz="xs" c="dimmed" tt="capitalize">
-                          {Math.round(
-                            row.count ? (child.count / row.count) * 100 : 0,
-                          )}
-                          % of {row.label}
-                        </Text>
-                      </Table.Td>
-
-                      <Table.Td ta="right" c="dimmed">
-                        {formatAmount(child.value)}
-                      </Table.Td>
-
-                      <Table.Td ta="right" c="dimmed">
-                        {formatAmount(child.average)}
-                      </Table.Td>
-                    </Table.Tr>
-                  ))}
-                </Fragment>
-              ))}
-            </Table.Tbody>
-
-            <Table.Tfoot
-              style={{
-                borderTop: "1px solid var(--mantine-color-default-border)",
-              }}
-            >
-              <Table.Tr>
-                <Table.Th>Total</Table.Th>
-                <Table.Th ta="right">
-                  {formatNumber(totalCount, "standard")}
-                </Table.Th>
-                <Table.Th />
-                <Table.Th ta="right">{formatAmount(totalValue)}</Table.Th>
-                <Table.Th ta="right">
-                  {formatAmount(totalCount ? totalValue / totalCount : 0)}
-                </Table.Th>
-              </Table.Tr>
-            </Table.Tfoot>
-          </Table>
-        </Table.ScrollContainer>
-      </DetailPanel>
     </Stack>
   );
 };

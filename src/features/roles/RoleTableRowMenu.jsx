@@ -1,9 +1,11 @@
 import { useDeleteRoleMutation } from "../../api/role";
 import RecordRowMenu from "../../components/RecordRowMenu";
+import RESOURCES from "../../constants/RESOURCES";
 import EditRoleModal from "./EditRoleModal";
 
 const RoleTableRowMenu = ({ role }) => (
   <RecordRowMenu
+    resource={RESOURCES.ROLE}
     viewTo={`/admin-settings/roles/${role._id}`}
     label="role"
     itemId={role._id}

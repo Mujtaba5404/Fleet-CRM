@@ -10,6 +10,15 @@ export const useGetAllRolesQuery = (params) => {
   });
 };
 
+/** Every resource the API guards: `[{ resource, actions, allowedUpdateFields }]`. */
+export const useGetRoleResourcesQuery = () => {
+  return useQuery({
+    queryKey: ["roles", "resources"],
+    queryFn: () => api.get("roles/resources").then(({ data }) => data),
+    staleTime: Infinity,
+  });
+};
+
 export const useGetRolesWithPaginationQuery = (params) => {
   return useQuery({
     queryKey: ["roles", params],

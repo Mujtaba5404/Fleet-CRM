@@ -19,11 +19,16 @@ const MIN_LABEL_SHARE = 12;
  * @param {Array<{key, label, value, color?}>} props.data
  * @param {Function} [props.valueFormatter]
  * @param {string}   [props.emptyMessage]
+ * @param {boolean}  [props.showLegend] - false leaves just the bar and its tooltips
+ * @param {boolean}  [props.namedSegments] - write each row's name next to its
+ *   share inside the bar; worth it when there is no legend to say which is which
  */
 const BarBreakdown = ({
   data = [],
   emptyMessage = "No data yet",
   valueFormatter = (value) => value,
+  showLegend = true,
+  namedSegments = false,
 }) => {
   if (!data.length) {
     return (
@@ -55,52 +60,58 @@ const BarBreakdown = ({
           >
             <Progress.Section value={row.share} color={row.color}>
               {row.share >= MIN_LABEL_SHARE && (
-                <Progress.Label>{Math.round(row.share)}%</Progress.Label>
+                <Progress.Label tt={namedSegments ? "capitalize" : undefined}>
+                  {namedSegments
+                    ? `${row.label} · ${Math.round(row.share)}%`
+                    : `${Math.round(row.share)}%`}
+                </Progress.Label>
               )}
             </Progress.Section>
           </Tooltip>
         ))}
       </Progress.Root>
 
-      <Stack gap={6}>
-        {rows.map((row) => (
-          <Group key={row.key ?? row.label} gap="xs" wrap="nowrap">
-            <Box
-              w={8}
-              h={8}
-              style={{
-                borderRadius: 999,
-                background: `var(--mantine-color-${row.color}-filled)`,
-                flexShrink: 0,
-              }}
-            />
+      {showLegend && (
+        <Stack gap={6}>
+          {rows.map((row) => (
+            <Group key={row.key ?? row.label} gap="xs" wrap="nowrap">
+              <Box
+                w={8}
+                h={8}
+                style={{
+                  borderRadius: 999,
+                  background: `var(--mantine-color-${row.color}-filled)`,
+                  flexShrink: 0,
+                }}
+              />
 
-            <Text fz="sm" tt="capitalize" truncate flex={1}>
-              {row.label}
-            </Text>
+              <Text fz="sm" tt="capitalize" truncate flex={1}>
+                {row.label}
+              </Text>
 
-            <Text
-              fz="sm"
-              fw={600}
-              className="numeric"
-              style={{ flexShrink: 0 }}
-            >
-              {valueFormatter(row.value)}
-            </Text>
+              <Text
+                fz="sm"
+                fw={600}
+                className="numeric"
+                style={{ flexShrink: 0 }}
+              >
+                {valueFormatter(row.value)}
+              </Text>
 
-            <Text
-              fz="xs"
-              c="dimmed"
-              w={38}
-              ta="right"
-              className="numeric"
-              style={{ flexShrink: 0 }}
-            >
-              {Math.round(row.share)}%
-            </Text>
-          </Group>
-        ))}
-      </Stack>
+              <Text
+                fz="xs"
+                c="dimmed"
+                w={38}
+                ta="right"
+                className="numeric"
+                style={{ flexShrink: 0 }}
+              >
+                {Math.round(row.share)}%
+              </Text>
+            </Group>
+          ))}
+        </Stack>
+      )}
     </Stack>
   );
 };

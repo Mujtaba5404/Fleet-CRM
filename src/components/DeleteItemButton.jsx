@@ -3,6 +3,7 @@ import { modals } from "@mantine/modals";
 import { IconTrash } from "@tabler/icons-react";
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import useCanAccess from "../hooks/useCanAccess";
 import capitalizeLetters from "../utils/capitalizeLetters";
 
 /**
@@ -16,8 +17,8 @@ import capitalizeLetters from "../utils/capitalizeLetters";
  * - Optional redirect once the delete actually succeeds
  *
  * @param {Object} props
- * @param {string} [props.resource] - Reserved for the CanAccess guard, which
- *   is not applied yet (permissions are not populated in every deployment).
+ * @param {string} props.resource - The API resource; the control only renders
+ *   for roles with `delete` on it.
  * @param {string} props.label - Human-readable noun for the modal and button
  *   text (e.g. "policy")
  * @param {string|number|Array} props.itemId - The id(s) to delete
@@ -31,7 +32,7 @@ import capitalizeLetters from "../utils/capitalizeLetters";
  * @param {string} [props.buttonText] - Custom button text (for variant="button")
  * @param {React.ReactNode} [props.children] - Custom trigger element
  */
-const DeleteItemButton = ({
+const DeleteItemControl = ({
   label,
   itemId,
   mutationHook,
@@ -114,5 +115,10 @@ const DeleteItemButton = ({
 
   return tooltip ? <Tooltip {...tooltip}>{content}</Tooltip> : content;
 };
+
+// The check sits outside the control so the mutation hook is never set up
+// for a role that cannot use it.
+const DeleteItemButton = ({ resource, ...props }) =>
+  useCanAccess(resource, "delete") ? <DeleteItemControl {...props} /> : null;
 
 export default DeleteItemButton;

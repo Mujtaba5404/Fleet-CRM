@@ -2,6 +2,7 @@ import { ActionIcon, Menu } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconDots, IconEye, IconPencil, IconTrash } from "@tabler/icons-react";
 import { Link } from "react-router-dom";
+import { usePermissions } from "../hooks/useCanAccess";
 import DeleteItemButton from "./DeleteItemButton";
 
 /**
@@ -12,7 +13,10 @@ import DeleteItemButton from "./DeleteItemButton";
  * looked live but did nothing. Wiring the edit drawer through
  * `renderEditModal` makes that impossible to repeat.
  *
+ * Edit and Delete only appear for roles with `update` / `delete` on `resource`.
+ *
  * @param {Object}   props
+ * @param {string}   props.resource           API resource the row belongs to.
  * @param {string}   props.viewTo             Route for the detail screen.
  * @param {string}   props.label              Noun for the delete confirmation.
  * @param {string}   props.itemId
@@ -20,6 +24,7 @@ import DeleteItemButton from "./DeleteItemButton";
  * @param {Function} props.renderEditModal    ({ opened, onClose }) => ReactNode
  */
 const RecordRowMenu = ({
+  resource,
   viewTo,
   label,
   itemId,
@@ -28,10 +33,14 @@ const RecordRowMenu = ({
 }) => {
   const [editOpened, { open: openEdit, close: closeEdit }] =
     useDisclosure(false);
+  const can = usePermissions();
+
+  const canEdit = !!renderEditModal && can(resource, "update");
+  const canDelete = can(resource, "delete");
 
   return (
     <>
-      {renderEditModal?.({ opened: editOpened, onClose: closeEdit })}
+      {canEdit && renderEditModal({ opened: editOpened, onClose: closeEdit })}
 
       <Menu position="bottom-end" withinPortal>
         <Menu.Target>
@@ -49,7 +58,7 @@ const RecordRowMenu = ({
             View
           </Menu.Item>
 
-          {renderEditModal && (
+          {canEdit && (
             <Menu.Item
               leftSection={<IconPencil size={16} />}
               onClick={openEdit}
@@ -58,17 +67,22 @@ const RecordRowMenu = ({
             </Menu.Item>
           )}
 
-          <Menu.Divider />
+          {canDelete && (
+            <>
+              <Menu.Divider />
 
-          <DeleteItemButton
-            label={label}
-            mutationHook={deleteMutationHook}
-            itemId={itemId}
-          >
-            <Menu.Item color="red" leftSection={<IconTrash size={16} />}>
-              Delete
-            </Menu.Item>
-          </DeleteItemButton>
+              <DeleteItemButton
+                resource={resource}
+                label={label}
+                mutationHook={deleteMutationHook}
+                itemId={itemId}
+              >
+                <Menu.Item color="red" leftSection={<IconTrash size={16} />}>
+                  Delete
+                </Menu.Item>
+              </DeleteItemButton>
+            </>
+          )}
         </Menu.Dropdown>
       </Menu>
     </>

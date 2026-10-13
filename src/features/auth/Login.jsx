@@ -19,11 +19,16 @@ import {
   IconTool,
   IconTruck,
 } from "@tabler/icons-react";
-import { memo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { memo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { authUserId } from "../../api/access";
 import { useLoginMutation } from "../../api/auth";
 import Logo from "../../components/Logo";
-import { HOME_PATH } from "../../layouts/navigation";
+import {
+  sessionAccessQuery,
+  toSessionAccess,
+} from "../../hooks/useSessionAccess";
 import classes from "./Login.module.css";
 import LoginBackdrop from "./LoginBackdrop";
 
@@ -86,7 +91,10 @@ const Login = () => {
     getInitialValueInEffect: false,
   });
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const loginMutation = useLoginMutation();
+  // Signed in, still fetching permissions: keep the button busy.
+  const [opening, setOpening] = useState(false);
 
   const form = useForm({
     mode: "uncontrolled",
@@ -98,15 +106,33 @@ const Login = () => {
     },
   });
 
-  // The response is the whole session: profile, token, permissions and the
-  // companies this user belongs to (which feed every company select).
+  // The response is the profile and the companies this user belongs to (which
+  // feed every company select). Permissions come from the user's Access record,
+  // fetched before leaving so the app opens with its menu and pages in place
+  // instead of blank. If that fails, RequireAuth asks again and explains.
   const handleSubmit = (values) => {
     loginMutation.mutate(values, {
-      onSuccess: ({ data }) => {
-        setAuth(data);
+      onSuccess: async ({ data }) => {
+        let session = data;
 
-        // The role's landing page; "/" itself redirects to HOME_PATH.
-        navigate(data?.indexPath || HOME_PATH, { replace: true });
+        // Stored first: the API layer reads the token from it for the access call.
+        setAuth(data);
+        setOpening(true);
+
+        try {
+          const access = await queryClient.fetchQuery(
+            sessionAccessQuery(authUserId(data)),
+          );
+          session = { ...data, ...toSessionAccess(access) };
+        } catch {
+          // Left to RequireAuth.
+        }
+
+        setAuth(session);
+        setOpening(false);
+
+        // The role's landing page; "/" picks the first screen the role can read.
+        navigate(session?.indexPath || "/", { replace: true });
       },
     });
   };
@@ -172,7 +198,7 @@ const Login = () => {
                 type="submit"
                 mt="sm"
                 fullWidth
-                loading={loginMutation.isPending}
+                loading={loginMutation.isPending || opening}
               >
                 Sign in
               </Button>

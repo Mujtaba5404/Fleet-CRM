@@ -263,7 +263,7 @@ const PermissionMatrix = ({ form, catalog }) => {
   return (
     <FormSection
       title="Permissions"
-      description="What this role can do with each resource. Read is included with any other action."
+      description="What this role can do with each resource."
       icon={IconShieldLock}
       plain
       action={

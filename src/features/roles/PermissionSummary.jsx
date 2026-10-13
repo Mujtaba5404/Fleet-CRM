@@ -26,13 +26,24 @@ const Mark = ({ granted, label }) =>
   );
 
 /**
- * Read-only resource × action grid for a role, listing every resource in the
- * catalog so what a role cannot do is as plain as what it can.
+ * Read-only resource × action grid for a role, listing only the resources the
+ * role has at least one action on.
  */
 const PermissionSummary = ({ role, catalog }) => {
   const byResource = new Map(
     (role.permissions ?? []).map((p) => [p.resource, p]),
   );
+
+  const granted = catalog.filter(
+    ({ resource }) => byResource.get(resource)?.actions?.length,
+  );
+
+  if (!granted.length)
+    return (
+      <Text fz="sm" c="dimmed">
+        This role has no permissions yet.
+      </Text>
+    );
 
   return (
     <Table.ScrollContainer minWidth={600}>
@@ -62,21 +73,20 @@ const PermissionSummary = ({ role, catalog }) => {
         </Table.Thead>
 
         <Table.Tbody>
-          {catalog.map(({ resource, icon: Icon, fields: catalogFields }) => {
+          {granted.map(({ resource, icon: Icon, fields: catalogFields }) => {
             const permission = byResource.get(resource);
-            const actions = permission?.actions ?? [];
-            const fields = permission?.allowedUpdateFields ?? [];
-            const isActive = actions.length > 0;
+            const actions = permission.actions;
+            const fields = permission.allowedUpdateFields ?? [];
 
             return (
-              <Table.Tr key={resource} opacity={isActive ? 1 : 0.6}>
+              <Table.Tr key={resource}>
                 <Table.Td>
                   <Group gap="sm" wrap="nowrap">
                     <ThemeIcon
                       size={30}
                       radius="md"
                       variant="light"
-                      color={isActive ? "brand" : "gray"}
+                      color="brand"
                     >
                       <Icon size={16} stroke={1.7} />
                     </ThemeIcon>

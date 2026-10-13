@@ -6,8 +6,14 @@ import {
   IconShieldCheck,
   IconShieldLock,
   IconTool,
+  IconTrendingDown,
 } from "@tabler/icons-react";
+import RESOURCES from "../constants/RESOURCES";
 
+/**
+ * Each link shows only for users who can `read` its `resource`. A list of
+ * resources means any one of them is enough.
+ */
 export const NAV_SECTIONS = [
   {
     label: "Overview",
@@ -17,6 +23,8 @@ export const NAV_SECTIONS = [
         path: "/summary",
         icon: IconChartHistogram,
         description: "Fleet health, mix and summary charts",
+        // Almost every band on the summary is vehicle data.
+        resource: RESOURCES.FLEET,
       },
     ],
   },
@@ -28,28 +36,35 @@ export const NAV_SECTIONS = [
         path: "/fleets",
         icon: IconCar,
         description: "Every vehicle in your fleet",
-        resource: "vehicle",
+        resource: RESOURCES.FLEET,
       },
       {
         title: "Maintenance",
         path: "/maintenance",
         icon: IconTool,
         description: "Service jobs, checklists and photos",
-        resource: "maintenance",
+        resource: RESOURCES.MAINTENANCE,
       },
       {
         title: "Insurance",
         path: "/insurance",
         icon: IconShieldCheck,
         description: "Policies, coverage and renewals",
-        resource: "insurance",
+        resource: RESOURCES.INSURANCE,
       },
       {
         title: "Tax",
         path: "/tax",
         icon: IconReceiptTax,
         description: "Challans, filings and jurisdictions",
-        resource: "taxation",
+        resource: RESOURCES.TAXATION,
+      },
+      {
+        title: "Depreciation",
+        path: "/depreciations",
+        icon: IconTrendingDown,
+        description: "How each vehicle's value falls over time",
+        resource: RESOURCES.DEPRECIATION,
       },
     ],
   },
@@ -61,14 +76,14 @@ export const NAV_SECTIONS = [
         path: "/admin-settings/picklists",
         icon: IconListDetails,
         description: "Dropdown values used across the CRM",
-        resource: "picklist",
+        resource: RESOURCES.PICKLIST,
       },
       {
         title: "Roles",
         path: "/admin-settings/roles",
         icon: IconShieldLock,
         description: "Who can see and change what",
-        resource: "role",
+        resource: RESOURCES.ROLE,
       },
     ],
   },

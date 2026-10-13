@@ -19,10 +19,8 @@ const EditRoleModal = ({ role, isOpen = false, onClose = () => {} }) => {
     validate: ROLE_VALIDATION,
   });
 
-  // Refill from the latest record every time the modal opens.
   useEffect(() => {
     if (isOpen && role) form.setValues(roleToFormValues(role));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, role?._id, role?.updatedAt]);
 
   const handleClose = () => {
@@ -33,7 +31,7 @@ const EditRoleModal = ({ role, isOpen = false, onClose = () => {} }) => {
   const handleSubmit = (values) => {
     updateRoleMutation.mutate(
       { roleId: role._id, payload: formValuesToPayload(values) },
-      { onSuccess: () => onClose() },
+      { onSuccess: onClose },
     );
   };
 

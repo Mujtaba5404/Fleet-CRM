@@ -1,4 +1,5 @@
-import { Grid, Skeleton } from "@mantine/core";
+import { useMemo, useState } from "react";
+import { Select, Skeleton } from "@mantine/core";
 import {
   IconCar,
   IconGasStation,
@@ -54,34 +55,64 @@ const breakdownBy = (fleets, field, resolve = (value) => value) => {
 const BREAKDOWNS = [
   {
     field: "status",
+    label: "Status",
     title: "Vehicles by status",
     icon: IconProgressCheck,
     // An enum, not a picklist: give it a label and colour.
     resolve: toStatusBucket,
   },
-  { field: "type", title: "Vehicles by type", icon: IconCar },
-  { field: "fuelType", title: "Vehicles by fuel type", icon: IconGasStation },
-  { field: "condition", title: "Vehicles by condition", icon: IconSparkles },
+  { field: "type", label: "Type", title: "Vehicles by type", icon: IconCar },
+  {
+    field: "fuelType",
+    label: "Fuel type",
+    title: "Vehicles by fuel type",
+    icon: IconGasStation,
+  },
+  {
+    field: "condition",
+    label: "Condition",
+    title: "Vehicles by condition",
+    icon: IconSparkles,
+  },
 ];
 
-/** Four part-to-whole bars over the whole fleet. */
-const FleetBreakdowns = ({ fleets = [], isLoading = false }) => (
-  <Grid gutter="md">
-    {BREAKDOWNS.map(({ field, title, icon, resolve }) => (
-      <Grid.Col key={field} span={{ base: 12, lg: 6 }}>
-        {isLoading ? (
-          <Skeleton height={150} radius="md" />
-        ) : (
-          <DetailPanel title={title} icon={icon} h="100%">
-            <BarBreakdown
-              data={breakdownBy(fleets, field, resolve)}
-              emptyMessage="No vehicles yet"
-            />
-          </DetailPanel>
-        )}
-      </Grid.Col>
-    ))}
-  </Grid>
-);
+/** One part-to-whole bar over the whole fleet, split by the picked field. */
+const FleetBreakdowns = ({ fleets = [], isLoading = false }) => {
+  const [field, setField] = useState(BREAKDOWNS[0].field);
+  const { title, icon, resolve } =
+    BREAKDOWNS.find((breakdown) => breakdown.field === field) || BREAKDOWNS[0];
+
+  const data = useMemo(
+    () => breakdownBy(fleets, field, resolve),
+    [fleets, field, resolve],
+  );
+
+  if (isLoading) return <Skeleton height={150} radius="md" />;
+
+  return (
+    <DetailPanel
+      title={title}
+      icon={icon}
+      action={
+        <Select
+          size="xs"
+          w={150}
+          value={field}
+          onChange={(value) => value && setField(value)}
+          allowDeselect={false}
+          searchable={false}
+          aria-label="Split vehicles by"
+          data={BREAKDOWNS.map(({ field, label }) => ({ value: field, label }))}
+        />
+      }
+    >
+      <BarBreakdown
+        data={data}
+        emptyMessage="No vehicles yet"
+        showLegend={false}
+      />
+    </DetailPanel>
+  );
+};
 
 export default FleetBreakdowns;

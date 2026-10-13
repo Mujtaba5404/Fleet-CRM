@@ -1,5 +1,6 @@
 import { useDeleteMaintenanceMutation } from "../../api/maintenance";
 import DeleteItemButton from "../../components/DeleteItemButton";
+import RESOURCES from "../../constants/RESOURCES";
 
 const DeleteMaintenanceButton = ({
   maintenanceId,
@@ -7,6 +8,7 @@ const DeleteMaintenanceButton = ({
   variant = "icon",
 }) => (
   <DeleteItemButton
+    resource={RESOURCES.MAINTENANCE}
     label="maintenance job"
     mutationHook={useDeleteMaintenanceMutation}
     itemId={maintenanceId}

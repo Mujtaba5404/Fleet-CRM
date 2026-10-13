@@ -1,14 +1,14 @@
 import { useDeletePicklistMutation } from "../../../api/picklist";
 import DeleteItemButton from "../../../components/DeleteItemButton";
-import PICKLIST_SCOPE from "../../../constants/PICKLIST_SCOPE";
+import RESOURCES from "../../../constants/RESOURCES";
 import { usePicklists } from "../../../context/PicklistContext";
 
 const DeletePicklistButton = ({ picklistId }) => {
-  const { scope, resource, featureName } = usePicklists();
+  const { featureName } = usePicklists();
 
   return (
     <DeleteItemButton
-      resource={scope === PICKLIST_SCOPE.RESOURCE ? resource : "picklist"}
+      resource={RESOURCES.PICKLIST}
       label={featureName}
       mutationHook={useDeletePicklistMutation}
       itemId={picklistId}

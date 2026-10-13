@@ -1,5 +1,6 @@
 import { useDisclosure } from "@mantine/hooks";
 import EditTrigger from "../../components/EditTrigger";
+import RESOURCES from "../../constants/RESOURCES";
 import EditInsuranceModal from "./EditInsuranceModal";
 
 const EditInsuranceModalButton = ({ insurance, variant = "icon" }) => {
@@ -13,7 +14,12 @@ const EditInsuranceModalButton = ({ insurance, variant = "icon" }) => {
         onClose={close}
       />
 
-      <EditTrigger onClick={open} variant={variant} label="Edit policy" />
+      <EditTrigger
+        resource={RESOURCES.INSURANCE}
+        onClick={open}
+        variant={variant}
+        label="Edit policy"
+      />
     </>
   );
 };

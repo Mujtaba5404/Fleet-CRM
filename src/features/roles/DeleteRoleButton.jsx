@@ -1,8 +1,10 @@
 import { useDeleteRoleMutation } from "../../api/role";
 import DeleteItemButton from "../../components/DeleteItemButton";
+import RESOURCES from "../../constants/RESOURCES";
 
 const DeleteRoleButton = ({ roleId, redirect = false, variant = "icon" }) => (
   <DeleteItemButton
+    resource={RESOURCES.ROLE}
     label="role"
     mutationHook={useDeleteRoleMutation}
     itemId={roleId}

@@ -1,6 +1,7 @@
 import { Route } from "react-router-dom";
 import Picklists from "../pages/Picklists";
 import Protected from "../components/Protected";
+import RESOURCES from "../constants/RESOURCES";
 import FleetMake from "../features/picklists/features/FleetMake";
 import FleetModel from "../features/picklists/features/FleetModel";
 import FleetType from "../features/picklists/features/FleetType";
@@ -22,9 +23,9 @@ export const picklistRoutes = (
   <Route
     path="picklists"
     element={
-      // <Protected resource="picklist" action="read">
-      <Picklists />
-      // </Protected>
+      <Protected resource={RESOURCES.PICKLIST}>
+        <Picklists />
+      </Protected>
     }
   >
     <Route index element={<FleetMake />} />

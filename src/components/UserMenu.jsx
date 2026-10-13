@@ -15,11 +15,14 @@ import {
   IconMoonStars,
   IconSunHigh,
   IconUserCircle,
+  IconUserShield,
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useLogoutMutation } from "../api/auth";
+import RESOURCES from "../constants/RESOURCES";
 import ChangePasswordModal from "../features/auth/ChangePasswordModal";
+import CanAccess from "./CanAccess";
 
 const UserMenu = () => {
   const [auth, , removeAuth] = useLocalStorage({
@@ -84,6 +87,12 @@ const UserMenu = () => {
               <Text fz="xs" c="dimmed" truncate>
                 {auth?.email || auth?.effectiveScope || "—"}
               </Text>
+
+              {auth?.accessRoles?.length > 0 && (
+                <Text fz="xs" c="dimmed" tt="capitalize" truncate>
+                  Role · {auth.accessRoles.map((role) => role.title).join(", ")}
+                </Text>
+              )}
             </Stack>
           </Group>
 
@@ -101,6 +110,17 @@ const UserMenu = () => {
           >
             Toggle color scheme
           </Menu.Item>
+
+          {/* Who can sign in, and with which role — shown only to roles that may manage it. */}
+          <CanAccess resource={RESOURCES.ACCESS} action="read">
+            <Menu.Item
+              component={Link}
+              to="/access"
+              leftSection={<IconUserShield size={18} />}
+            >
+              Access
+            </Menu.Item>
+          </CanAccess>
 
           <Menu.Item
             onClick={openChangePasswordModal}

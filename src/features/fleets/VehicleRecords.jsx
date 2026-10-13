@@ -1,9 +1,18 @@
 import { Badge, Loader, Tabs } from "@mantine/core";
-import { IconReceiptTax, IconShieldCheck, IconTool } from "@tabler/icons-react";
+import {
+  IconReceiptTax,
+  IconShieldCheck,
+  IconTool,
+  IconTrendingDown,
+} from "@tabler/icons-react";
 import { useMemo } from "react";
+import { useGetAllDepreciationsQuery } from "../../api/depreciation";
 import { useGetAllInsuranceQuery } from "../../api/insurance";
 import { useGetAllMaintenanceQuery } from "../../api/maintenance";
 import { useGetAllTaxQuery } from "../../api/tax";
+import RESOURCES from "../../constants/RESOURCES";
+import { usePermissions } from "../../hooks/useCanAccess";
+import DepreciationTable from "../depreciations/DepreciationTable";
 import InsuranceTable from "../Insurance/InsuranceTable";
 import MaintenanceTable from "../maintenance/MaintenanceTable";
 import TaxTable from "../tax/TaxTable";
@@ -51,14 +60,15 @@ const pinToVehicle = (data, fleet) =>
  * Builds a drop-in replacement for a table's paginated query hook that only
  * ever returns this vehicle's records.
  *
- * The plate narrows the request on the server, but a plate search can match
- * other vehicles too ("ABC-1" also finds "ABC-12"), so rows are pinned to the
- * vehicle's id here and paged and sorted locally.
+ * The plate narrows the request on the server (where the API supports it),
+ * but a plate search can match other vehicles too ("ABC-1" also finds
+ * "ABC-12"), so rows are pinned to the vehicle's id here and paged and sorted
+ * locally.
  */
-const createVehicleQuery = (useAllQuery, fleet) =>
+const createVehicleQuery = (useAllQuery, fleet, byPlate = true) =>
   function useVehicleQuery({ page, pageSize, sort, query }) {
     const result = useAllQuery({
-      query: { ...query, licensePlate: fleet.licensePlate },
+      query: byPlate ? { ...query, licensePlate: fleet.licensePlate } : query,
     });
 
     const rows = sortRows(pinToVehicle(result.data, fleet), sort);
@@ -80,6 +90,7 @@ const TABS = [
     value: "maintenance",
     label: "Maintenance",
     icon: IconTool,
+    resource: RESOURCES.MAINTENANCE,
     Table: MaintenanceTable,
     useAllQuery: useGetAllMaintenanceQuery,
   },
@@ -87,6 +98,7 @@ const TABS = [
     value: "insurance",
     label: "Insurance",
     icon: IconShieldCheck,
+    resource: RESOURCES.INSURANCE,
     Table: InsuranceTable,
     useAllQuery: useGetAllInsuranceQuery,
   },
@@ -94,12 +106,23 @@ const TABS = [
     value: "tax",
     label: "Tax",
     icon: IconReceiptTax,
+    resource: RESOURCES.TAXATION,
     Table: TaxTable,
     useAllQuery: useGetAllTaxQuery,
   },
+  {
+    value: "depreciation",
+    label: "Depreciation",
+    icon: IconTrendingDown,
+    resource: RESOURCES.DEPRECIATION,
+    Table: DepreciationTable,
+    useAllQuery: useGetAllDepreciationsQuery,
+    // Not known to filter by plate; the rows are pinned by id either way.
+    byPlate: false,
+  },
 ];
 
-/** The vehicle's own maintenance, insurance and tax, in the usual tables. */
+/** The vehicle's own maintenance, insurance, tax and depreciation, in the usual tables. */
 const VehicleRecords = ({ fleet }) => {
   const plate = { query: { licensePlate: fleet.licensePlate } };
 
@@ -108,6 +131,7 @@ const VehicleRecords = ({ fleet }) => {
     maintenance: useGetAllMaintenanceQuery(plate),
     insurance: useGetAllInsuranceQuery(plate),
     tax: useGetAllTaxQuery(plate),
+    depreciation: useGetAllDepreciationsQuery({ query: {} }),
   };
 
   const queryHooks = useMemo(
@@ -115,19 +139,26 @@ const VehicleRecords = ({ fleet }) => {
       Object.fromEntries(
         TABS.map((tab) => [
           tab.value,
-          createVehicleQuery(tab.useAllQuery, {
-            _id: fleet._id,
-            licensePlate: fleet.licensePlate,
-          }),
+          createVehicleQuery(
+            tab.useAllQuery,
+            { _id: fleet._id, licensePlate: fleet.licensePlate },
+            tab.byPlate,
+          ),
         ]),
       ),
     [fleet._id, fleet.licensePlate],
   );
 
+  // Only the kinds of record this role can read.
+  const can = usePermissions();
+  const tabs = TABS.filter((tab) => can(tab.resource, "read"));
+
+  if (!tabs.length) return null;
+
   return (
-    <Tabs defaultValue={TABS[0].value}>
+    <Tabs defaultValue={tabs[0].value}>
       <Tabs.List mb="md">
-        {TABS.map(({ value, label, icon: Icon }) => (
+        {tabs.map(({ value, label, icon: Icon }) => (
           <Tabs.Tab
             key={value}
             value={value}
@@ -147,7 +178,7 @@ const VehicleRecords = ({ fleet }) => {
         ))}
       </Tabs.List>
 
-      {TABS.map(({ value, Table }) => (
+      {tabs.map(({ value, Table }) => (
         <Tabs.Panel key={value} value={value}>
           <Table queryHook={queryHooks[value]} hideColumns={["fleet"]} />
         </Tabs.Panel>

@@ -2,18 +2,13 @@ import react from "@vitejs/plugin-react";
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 
-/**
- * In dev the app talks to both backends through this server, so the session
- * cookies Auth360 sets are first-party on localhost and ride along with every
- * request to the fleet API too.
- */
+
 const BACKENDS = {
   "/fleet-api": "https://rv10n5m4-8005.inc1.devtunnels.ms",
   "/auth-api": "https://rv10n5m4-8004.inc1.devtunnels.ms",
 };
 
-// The tunnel issues cookies for its own domain with SameSite=None; Secure.
-// Rewrite them so the browser keeps them for http://localhost.
+
 const rewriteSessionCookies = (response) => {
   const cookies = response.headers["set-cookie"];
 

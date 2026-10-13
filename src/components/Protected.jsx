@@ -1,7 +1,13 @@
 import { Outlet } from "react-router-dom";
 import CanAccess from "./CanAccess";
 
-const Protected = ({ resource, action, redirectPath = "/404", children }) => {
+/** A route the role cannot open goes back to "/", which finds one it can. */
+const Protected = ({
+  resource,
+  action = "read",
+  redirectPath = "/",
+  children,
+}) => {
   return (
     <CanAccess
       resource={resource}

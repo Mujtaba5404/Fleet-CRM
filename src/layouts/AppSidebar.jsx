@@ -1,89 +1,80 @@
 import { ActionIcon, ScrollArea, Stack, Tooltip } from "@mantine/core";
-import { useLocalStorage } from "@mantine/hooks";
 import {
   IconChevronLeft,
   IconChevronRight,
   IconTruck,
 } from "@tabler/icons-react";
-import CanAccess from "../components/CanAccess";
 import Logo from "../components/Logo";
+import { usePermissions } from "../hooks/useCanAccess";
 import AppSidebarLink from "./AppSidebarLink";
 import { NAV_SECTIONS } from "./navigation";
 import classes from "./Appsidebar.module.css";
 
+const AppSidebar = ({ collapsed = false, onToggle, onNavigate }) => {
+  const can = usePermissions();
 
-const Guard = ({ resource, children }) => {
-  const [auth] = useLocalStorage({
-    key: "auth",
-    getInitialValueInEffect: false,
-  });
-
-  if (!resource || !auth?.effectivePermissions?.length) return children;
+  // Only links the role can read; a section left with none is dropped too.
+  const sections = NAV_SECTIONS.map((section) => ({
+    ...section,
+    links: section.links.filter((link) => can(link.resource, "read")),
+  })).filter((section) => section.links.length);
 
   return (
-    <CanAccess resource={resource} action="read">
-      {children}
-    </CanAccess>
-  );
-};
-
-
-const AppSidebar = ({ collapsed = false, onToggle, onNavigate }) => (
-  <div className={classes.sidebar} data-collapsed={collapsed}>
-    {onToggle && (
-      <Tooltip
-        label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        position="right"
-        withArrow
-      >
-        <ActionIcon
-          className={classes.collapseHandle}
-          size={24}
-          radius="xl"
-          variant="default"
-          onClick={onToggle}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+    <div className={classes.sidebar} data-collapsed={collapsed}>
+      {onToggle && (
+        <Tooltip
+          label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          position="right"
+          withArrow
         >
-          {collapsed ? (
-            <IconChevronRight size={14} />
-          ) : (
-            <IconChevronLeft size={14} />
-          )}
-        </ActionIcon>
-      </Tooltip>
-    )}
-
-    <div className={classes.brand}>
-      {collapsed ? (
-        // The wordmark cannot survive a 76px rail, so fall back to the mark.
-        <span className={classes.brandMark}>
-          <IconTruck size={20} stroke={1.8} />
-        </span>
-      ) : (
-        <Logo w={150} alt="FleetCRM" />
+          <ActionIcon
+            className={classes.collapseHandle}
+            size={24}
+            radius="xl"
+            variant="default"
+            onClick={onToggle}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? (
+              <IconChevronRight size={14} />
+            ) : (
+              <IconChevronLeft size={14} />
+            )}
+          </ActionIcon>
+        </Tooltip>
       )}
-    </div>
 
-    <ScrollArea className={classes.nav} scrollbarSize={4} type="hover">
-      {NAV_SECTIONS.map((section) => (
-        <div key={section.label}>
-          <div className={classes.sectionLabel}>{section.label}</div>
+      <div className={classes.brand}>
+        {collapsed ? (
+          // The wordmark cannot survive a 76px rail, so fall back to the mark.
+          <span className={classes.brandMark}>
+            <IconTruck size={20} stroke={1.8} />
+          </span>
+        ) : (
+          <Logo w={150} alt="FleetCRM" />
+        )}
+      </div>
 
-          <Stack gap={2}>
-            {section.links.map((link) => (
-              <Guard key={link.path} resource={link.resource}>
+      <ScrollArea className={classes.nav} scrollbarSize={4} type="hover">
+        {sections.map((section) => (
+          <div key={section.label}>
+            <div className={classes.sectionLabel}>{section.label}</div>
+
+            <Stack gap={2}>
+              {section.links.map((link) => (
                 <AppSidebarLink
+                  key={link.path}
                   link={link}
                   collapsed={collapsed}
                   onNavigate={onNavigate}
                 />
-              </Guard>
-            ))}
-          </Stack>
-        </div>
-      ))}
-    </ScrollArea>
-  </div>
-);
+              ))}
+            </Stack>
+          </div>
+        ))}
+      </ScrollArea>
+    </div>
+  );
+};
 
 export default AppSidebar;

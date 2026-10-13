@@ -14,6 +14,7 @@ import PicklistsList from "./components/PicklistsList";
  * @param {string} scope - Scope for the picklist
  * @param {string} resource - API resource name
  * @param {string} field - API field name
+ * @param {Object} [validate] - Extra form rules, e.g. requiring a parent picklist
  * @param {React.ReactNode} children - Compound components (Modal, List, AddButton, etc.)
  */
 const Picklists = ({
@@ -21,6 +22,7 @@ const Picklists = ({
   scope = PICKLIST_SCOPE.RESOURCE,
   resource = "",
   field = "",
+  validate,
   children,
 }) => {
   const [existingPicklist, setExistingPicklist] = useState(null);
@@ -38,6 +40,7 @@ const Picklists = ({
       parentPicklist: undefined,
       meta: {},
     },
+    validate,
   });
 
   const openCreateModal = () => {

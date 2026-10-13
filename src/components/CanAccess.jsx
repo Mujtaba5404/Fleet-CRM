@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import useCanAccess from "../hooks/useCanAccess";
+import useCanAccess, { usePermissionsLoaded } from "../hooks/useCanAccess";
 
 const CanAccess = ({
   resource = "",
@@ -10,12 +10,16 @@ const CanAccess = ({
   children,
 }) => {
   const hasAccess = useCanAccess(resource, action, options);
+  const loaded = usePermissionsLoaded();
 
   if (hasAccess) {
     return children;
   }
 
-  return redirect ? <Navigate to={redirectPath ?? -1} replace /> : null;
+  // Only redirect once permissions are known; until then just show nothing.
+  return redirect && loaded ? (
+    <Navigate to={redirectPath ?? -1} replace />
+  ) : null;
 };
 
 export default CanAccess;

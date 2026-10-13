@@ -1,5 +1,6 @@
 import { useDeleteInsuranceMutation } from "../../api/insurance";
 import DeleteItemButton from "../../components/DeleteItemButton";
+import RESOURCES from "../../constants/RESOURCES";
 
 const DeleteInsuranceButton = ({
   insuranceId,
@@ -7,6 +8,7 @@ const DeleteInsuranceButton = ({
   variant = "icon",
 }) => (
   <DeleteItemButton
+    resource={RESOURCES.INSURANCE}
     label="policy"
     mutationHook={useDeleteInsuranceMutation}
     itemId={insuranceId}

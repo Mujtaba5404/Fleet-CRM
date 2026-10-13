@@ -1,5 +1,6 @@
 import { useDisclosure } from "@mantine/hooks";
 import EditTrigger from "../../components/EditTrigger";
+import RESOURCES from "../../constants/RESOURCES";
 import EditTaxModal from "./EditTaxModal";
 
 const EditTaxModalButton = ({ tax, variant = "icon" }) => {
@@ -9,7 +10,12 @@ const EditTaxModalButton = ({ tax, variant = "icon" }) => {
     <>
       <EditTaxModal tax={tax} isOpen={opened} onClose={close} />
 
-      <EditTrigger onClick={open} variant={variant} label="Edit challan" />
+      <EditTrigger
+        resource={RESOURCES.TAXATION}
+        onClick={open}
+        variant={variant}
+        label="Edit challan"
+      />
     </>
   );
 };

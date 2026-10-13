@@ -1,5 +1,6 @@
 import { useDisclosure } from "@mantine/hooks";
 import EditTrigger from "../../components/EditTrigger";
+import RESOURCES from "../../constants/RESOURCES";
 import EditMaintenanceModal from "./EditMaintenanceModal";
 
 const EditMaintenanceModalButton = ({ maintenance, variant = "icon" }) => {
@@ -13,7 +14,12 @@ const EditMaintenanceModalButton = ({ maintenance, variant = "icon" }) => {
         onClose={close}
       />
 
-      <EditTrigger onClick={open} variant={variant} label="Edit job" />
+      <EditTrigger
+        resource={RESOURCES.MAINTENANCE}
+        onClick={open}
+        variant={variant}
+        label="Edit job"
+      />
     </>
   );
 };
