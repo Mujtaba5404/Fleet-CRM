@@ -73,27 +73,35 @@ const FilePreview = ({ file, onRemove }) => {
 };
 
 /**
- * Image picker: a drop area, with the picked files listed underneath it.
+ * File picker: a drop area, with the picked files listed underneath it.
+ * Images by default; `accept`, `title` and `icon` adapt it to other files.
  *
  * The list must live outside the Dropzone. Mantine's Dropzone sets
  * `pointer-events: none` on its content, so a remove button placed inside it
  * can never be clicked.
  */
-const AttachmentsUpload = ({ value = [], onChange }) => {
+const AttachmentsUpload = ({
+  value = [],
+  onChange,
+  accept = IMAGE_MIME_TYPE,
+  title = "Drag images here or click to upload",
+  hint = "You can add several at once",
+  icon: Icon = IconPhotoPlus,
+}) => {
   const handleDrop = (files) => onChange?.([...value, ...files]);
 
   const removeFile = (index) => onChange?.(value.filter((_, i) => i !== index));
 
   return (
     <Stack gap="sm">
-      <Dropzone accept={IMAGE_MIME_TYPE} multiple onDrop={handleDrop} p="md">
+      <Dropzone accept={accept} multiple onDrop={handleDrop} p="md">
         <Stack align="center" justify="center" gap={4} mih={90}>
-          <IconPhotoPlus size={34} stroke={1.25} />
+          <Icon size={34} stroke={1.25} />
 
-          <Text size="sm">Drag images here or click to upload</Text>
+          <Text size="sm">{title}</Text>
 
           <Text size="xs" c="dimmed">
-            You can add several at once
+            {hint}
           </Text>
         </Stack>
       </Dropzone>

@@ -3,12 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { showNotification } from "../notifications/showNotification";
 import api from "./index";
 
-/*
- * The API sends a policy's provider as a bare picklist id. Records are given
- * the full picklist ({ _id, title, color }) here, so every screen can show
- * the provider's name. The query key matches the provider dropdown's, so both
- * share one cached request.
- */
+
 const PROVIDER_PARAMS = { query: { resource: "Insurance", field: "provider" } };
 
 const fetchProviders = (queryClient) =>
@@ -34,7 +29,7 @@ const withProvider = (providers) => (record) =>
       }
     : record;
 
-/** Bare arrays (`/all`) and paginated `{ data, meta }` responses alike. */
+
 const withProviders = async (queryClient, data) => {
   const attach = withProvider(await fetchProviders(queryClient));
 

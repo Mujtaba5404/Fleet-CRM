@@ -12,12 +12,19 @@ import {
   insuranceToPayload,
 } from "./insuranceForm";
 
-const AddInsuranceModal = ({ isOpen = false, onClose = () => {} }) => {
+/**
+ * Pass `fleet` to add a policy for that vehicle from its own screen: the
+ * vehicle is fixed and you stay on that screen afterwards.
+ */
+const AddInsuranceModal = ({ isOpen = false, onClose = () => {}, fleet }) => {
   const createInsuranceMutation = useCreateInsuranceMutation();
   const navigate = useNavigate();
 
   const form = useForm({
-    initialValues: INSURANCE_INITIAL_VALUES,
+    initialValues: {
+      ...INSURANCE_INITIAL_VALUES,
+      ...(fleet && { fleet: fleet._id }),
+    },
     validate: INSURANCE_VALIDATION,
   });
 
@@ -31,7 +38,7 @@ const AddInsuranceModal = ({ isOpen = false, onClose = () => {} }) => {
       onSuccess: ({ data }) => {
         form.reset();
         onClose();
-        navigate(`/insurance/${data._id}`);
+        if (!fleet) navigate(`/insurance/${data._id}`);
       },
     });
   };
@@ -48,7 +55,7 @@ const AddInsuranceModal = ({ isOpen = false, onClose = () => {} }) => {
       error={createInsuranceMutation.error}
       aside={<InsuranceAsideFields form={form} />}
     >
-      <InsuranceMainFields form={form} />
+      <InsuranceMainFields form={form} fleetLocked={!!fleet} />
     </FormShell>
   );
 };

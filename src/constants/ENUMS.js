@@ -20,6 +20,7 @@ const ENUMS = {
   },
   INSURANCE: {
     STATUSES: {
+      ACTIVE: "active",
       EXPIRED: "expired",
       CANCELLED: "cancelled",
     },

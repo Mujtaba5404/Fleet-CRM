@@ -4,7 +4,6 @@ import {
   CloseButton,
   Grid,
   Modal,
-  ScrollArea,
   Stack,
   Text,
 } from "@mantine/core";
@@ -77,8 +76,15 @@ const FormShell = ({
           display: "flex",
           flexDirection: "column",
           maxHeight: isMobile ? "100dvh" : "94vh",
+          overflow: "hidden",
         },
-        body: { flex: 1, minHeight: 0, padding: 0 },
+        body: {
+          display: "flex",
+          flexDirection: "column",
+          flex: 1,
+          minHeight: 0,
+          padding: 0,
+        },
       }}
     >
       <form onSubmit={onSubmit} className={classes.form} noValidate>
@@ -98,7 +104,7 @@ const FormShell = ({
           <CloseButton onClick={onClose} aria-label="Close" size="lg" />
         </div>
 
-        <ScrollArea className={classes.body} scrollbars="y">
+        <div className={classes.body}>
           <div className={classes.bodyInner}>
             {aside ? (
               <Grid gutter="md" align="flex-start">
@@ -120,7 +126,7 @@ const FormShell = ({
               </Stack>
             )}
           </div>
-        </ScrollArea>
+        </div>
 
         <div className={classes.footer}>
           <Button variant="default" onClick={onClose} disabled={isSubmitting}>

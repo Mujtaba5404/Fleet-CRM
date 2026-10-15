@@ -1,9 +1,3 @@
-/**
- * Fleet fields the summary endpoint can group by.
- *
- * These are the picklist-backed fields on a vehicle, so every one of them
- * returns a `{ title, color }` the summary can render as a badge.
- */
 const FLEET_GROUP_FIELDS = [
   { value: "make", label: "Make" },
   { value: "model", label: "Model" },

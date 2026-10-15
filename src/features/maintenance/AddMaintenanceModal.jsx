@@ -15,13 +15,20 @@ import {
 } from "./maintenanceForm";
 import useConditionPhotos from "./useConditionPhotos";
 
-const AddMaintenanceModal = ({ isOpen = false, onClose = () => {} }) => {
+/**
+ * Pass `fleet` to add a job for that vehicle from its own screen: the vehicle
+ * is fixed and you stay on that screen afterwards.
+ */
+const AddMaintenanceModal = ({ isOpen = false, onClose = () => {}, fleet }) => {
   const createMaintenanceMutation = useCreateMaintenanceMutation();
   const navigate = useNavigate();
   const { photos, setPhotoField, resetPhotos } = useConditionPhotos();
 
   const form = useForm({
-    initialValues: MAINTENANCE_INITIAL_VALUES,
+    initialValues: {
+      ...MAINTENANCE_INITIAL_VALUES,
+      ...(fleet && { fleet: fleet._id }),
+    },
     validate: MAINTENANCE_VALIDATION,
   });
 
@@ -42,7 +49,7 @@ const AddMaintenanceModal = ({ isOpen = false, onClose = () => {} }) => {
         form.reset();
         resetPhotos();
         onClose();
-        navigate(`/maintenance/${data._id}`);
+        if (!fleet) navigate(`/maintenance/${data._id}`);
       },
     });
   };
@@ -68,7 +75,7 @@ const AddMaintenanceModal = ({ isOpen = false, onClose = () => {} }) => {
         </>
       }
     >
-      <MaintenanceMainFields form={form} />
+      <MaintenanceMainFields form={form} fleetLocked={!!fleet} />
     </FormShell>
   );
 };

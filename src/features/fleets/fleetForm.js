@@ -1,9 +1,3 @@
-/**
- * Shared form contract for the add and edit fleet drawers.
- *
- * Both drawers previously duplicated the field list and neither validated
- * anything — `required` was decoration, so an empty form still hit the API.
- */
 import dayjs from "dayjs";
 import ENUMS from "../../constants/ENUMS";
 import toFormData from "../../utils/toFormData";
@@ -29,11 +23,9 @@ export const FLEET_INITIAL_VALUES = {
   rent: "",
   initialOdometer: "",
   currentOdometer: "",
-  // An enum on the API; a newly registered vehicle starts in house.
   status: ENUMS.FLEET.STATUSES.IN_HOUSE,
   condition: null,
   company: null,
-  // Only used, shown and sent while the status is "assigned".
   driverDetails: { ...EMPTY_DRIVER_DETAILS },
   assignedOn: null,
   inspector: null,
@@ -42,7 +34,6 @@ export const FLEET_INITIAL_VALUES = {
 const required = (message) => (value) =>
   value === null || value === undefined || value === "" ? message : null;
 
-/** Driver details are only checked for an assigned vehicle. */
 const whenAssigned = (rule) => (value, values) =>
   isAssignedStatus(values.status) ? rule(value, values) : null;
 
@@ -144,12 +135,6 @@ const isEmpty = (value) =>
 
 const toDay = (value) => dayjs(value).format("YYYY-MM-DD");
 
-/**
- * Form values → the vehicle as the API should receive it: numbers as
- * numbers, dates as "YYYY-MM-DD", and empty optionals (an unpicked inspector,
- * no rent) left out entirely, so the server sees `undefined` rather than "".
- * Driver details are included only for an assigned vehicle.
- */
 const toFleetBody = (values) => {
   const { driverDetails, ...rest } = values;
   const assigned = isAssignedStatus(values.status);
@@ -175,26 +160,23 @@ const toFleetBody = (values) => {
   return body;
 };
 
-/**
- * The request body for create / update.
- *
- * Without new files it is plain JSON, which is the only way numbers reach the
- * server as numbers. With files it has to be multipart, where every value is a
- * string by definition; there the server's validator must coerce them.
- * Nested driver details then go in bracket notation (`driverDetails[user]`),
- * which multipart parsers rebuild into an object.
- */
-export const fleetToPayload = (values, attachments = []) => {
-  const body = toFleetBody(values);
+export const EMPTY_FLEET_FILES = { images: [], documents: [] };
 
-  if (!attachments.length) return body;
+export const fleetToPayload = (values, files = EMPTY_FLEET_FILES) => {
+  const body = toFleetBody(values);
+  const { images = [], documents = [] } = files;
+
+  if (!images.length && !documents.length) return body;
 
   const { driverDetails, ...flat } = body;
-  const formData = toFormData(flat, attachments);
+  const formData = toFormData(flat);
 
   Object.entries(driverDetails ?? {}).forEach(([key, value]) =>
     formData.append(`driverDetails[${key}]`, value),
   );
+
+  documents.forEach((file) => formData.append("documents", file));
+  images.forEach((file) => formData.append("images", file));
 
   return formData;
 };

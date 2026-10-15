@@ -23,6 +23,7 @@ import PicklistsMultiSelect from "../picklists/components/PicklistsMultiSelect";
 import { MAINTENANCE_STATUS_OPTIONS } from "./maintenanceForm";
 import MaintenanceStatusBadge from "./MaintenanceStatusBadge";
 import MaintenanceTableRowMenu from "./MaintenanceTableRowMenu";
+import capitalizeLetters from "../../utils/capitalizeLetters";
 
 const photoCount = (row) =>
   (row.conditionBefore?.length || 0) + (row.conditionAfter?.length || 0);
@@ -229,7 +230,7 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     width: 220,
     render: (row) => (
       <NoteHoverCell
-        note={row.notes}
+        note={capitalizeLetters(row.notes)}
         author={row.createdBy}
         date={row.updatedAt || row.createdAt}
       />

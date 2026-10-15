@@ -19,6 +19,7 @@ import useFilters from "../../hooks/useFilters";
 import formatAmount from "../../utils/formatAmount";
 import formatDate from "../../utils/formatDate";
 import PicklistsMultiSelect from "../picklists/components/PicklistsMultiSelect";
+import FleetFilesPreview from "./FleetFilesPreview";
 import { FLEET_STATUS_OPTIONS } from "./fleetStatus";
 import FleetStatusBadge from "./FleetStatusBadge";
 import FleetTableRowMenu from "./FleetTableRowMenu";
@@ -166,16 +167,9 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     accessor: "documents",
     width: 90,
     textAlign: "center",
-    render: (row) =>
-      row.documents?.length ? (
-        <Badge variant="light" color="gray">
-          {row.documents.length}
-        </Badge>
-      ) : (
-        <Text size="sm" c="dimmed">
-          -
-        </Text>
-      ),
+    render: (row) => (
+      <FleetFilesPreview images={row.images} documents={row.documents} />
+    ),
   },
   {
     accessor: "condition",

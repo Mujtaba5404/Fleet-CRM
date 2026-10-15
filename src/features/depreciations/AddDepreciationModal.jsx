@@ -14,13 +14,18 @@ import {
   DepreciationAsideFields,
   DepreciationMainFields,
 } from "./DepreciationFormFields";
+/** What a vehicle already tells us: its cost and when it was bought. */
+const fromVehicle = (fleet) => ({
+  fleet: fleet._id,
+  ...(fleet.purchaseAmount && { acquisitionCost: fleet.purchaseAmount }),
+  ...(fleet.purchaseDate && { startDate: toDateString(fleet.purchaseDate) }),
+});
 
-
-const AddDepreciationModal = ({
-  isOpen = false,
-  onClose = () => {},
-  fleetId,
-}) => {
+/**
+ * Pass `fleet` to add a schedule for that vehicle from its own screen: the
+ * vehicle is fixed and you stay on that screen afterwards.
+ */
+const AddDepreciationModal = ({ isOpen = false, onClose = () => {}, fleet }) => {
   const createDepreciationMutation = useCreateDepreciationMutation();
   const navigate = useNavigate();
 
@@ -29,12 +34,11 @@ const AddDepreciationModal = ({
   const form = useForm({
     initialValues: {
       ...DEPRECIATION_INITIAL_VALUES,
-      ...(fleetId && { fleet: fleetId }),
+      ...(fleet && fromVehicle(fleet)),
     },
     validate: DEPRECIATION_VALIDATION,
   });
 
- 
   const handleFleetChange = (fleetId) => {
     const fleet = fleets.data?.find((item) => item._id === fleetId);
     if (!fleet) return;
@@ -56,7 +60,7 @@ const AddDepreciationModal = ({
       onSuccess: ({ data }) => {
         form.reset();
         onClose();
-        navigate(`/depreciations/${data._id}`);
+        if (!fleet) navigate(`/depreciations/${data._id}`);
       },
     });
   };
@@ -80,7 +84,11 @@ const AddDepreciationModal = ({
       error={createDepreciationMutation.error}
       aside={<DepreciationAsideFields form={form} />}
     >
-      <DepreciationMainFields form={form} onFleetChange={handleFleetChange} />
+      <DepreciationMainFields
+        form={form}
+        onFleetChange={handleFleetChange}
+        fleetLocked={!!fleet}
+      />
     </FormShell>
   );
 };

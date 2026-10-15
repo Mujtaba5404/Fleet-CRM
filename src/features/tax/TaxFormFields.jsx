@@ -75,8 +75,15 @@ const useTaxFields = (form) => {
   return { picklist, date, year };
 };
 
-/** `withStatus={false}` leaves status out (the add form does not ask for it). */
-export const TaxMainFields = ({ form, withStatus = true }) => {
+/**
+ * `withStatus={false}` leaves status out (the add form does not ask for it).
+ * `fleetLocked` keeps the vehicle fixed when opened from that vehicle's screen.
+ */
+export const TaxMainFields = ({
+  form,
+  withStatus = true,
+  fleetLocked = false,
+}) => {
   const { picklist, date, year } = useTaxFields(form);
 
   return (
@@ -107,6 +114,7 @@ export const TaxMainFields = ({ form, withStatus = true }) => {
               label: "Vehicle",
               placeholder: "Search by plate, make or model",
               ...form.getInputProps("fleet"),
+              disabled: fleetLocked,
             }}
           />
         </Grid.Col>

@@ -5,15 +5,23 @@ import CanAccess from "../../components/CanAccess";
 import RESOURCES from "../../constants/RESOURCES";
 import AddMaintenanceModal from "./AddMaintenanceModal";
 
-const AddMaintenanceModalButton = () => {
+const AddMaintenanceModalButton = ({
+  label = "Add maintenance",
+  fleet,
+  ...buttonProps
+}) => {
   const [opened, { open, close }] = useDisclosure(false);
 
   return (
     <CanAccess resource={RESOURCES.MAINTENANCE} action="create">
-      <AddMaintenanceModal isOpen={opened} onClose={close} />
+      <AddMaintenanceModal isOpen={opened} onClose={close} fleet={fleet} />
 
-      <Button onClick={open} leftSection={<IconPlus size={18} />}>
-        Add maintenance
+      <Button
+        onClick={open}
+        leftSection={<IconPlus size={18} />}
+        {...buttonProps}
+      >
+        {label}
       </Button>
     </CanAccess>
   );

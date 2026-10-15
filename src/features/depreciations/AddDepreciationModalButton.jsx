@@ -7,14 +7,14 @@ import AddDepreciationModal from "./AddDepreciationModal";
 
 const AddDepreciationModalButton = ({
   label = "Add depreciation",
-  fleetId,
+  fleet,
   ...buttonProps
 }) => {
   const [opened, { open, close }] = useDisclosure(false);
 
   return (
     <CanAccess resource={RESOURCES.DEPRECIATION} action="create">
-      <AddDepreciationModal isOpen={opened} onClose={close} fleetId={fleetId} />
+      <AddDepreciationModal isOpen={opened} onClose={close} fleet={fleet} />
 
       <Button
         onClick={open}

@@ -1,21 +1,35 @@
 import {
+  Anchor,
   Grid,
   Group,
+  Image,
   NumberInput,
   Select,
+  Stack,
   Text,
   TextInput,
 } from "@mantine/core";
 import { DateInput, YearPickerInput } from "@mantine/dates";
 import {
+  IMAGE_MIME_TYPE,
+  MS_EXCEL_MIME_TYPE,
+  MS_WORD_MIME_TYPE,
+  PDF_MIME_TYPE,
+} from "@mantine/dropzone";
+import {
   IconBuilding,
   IconCar,
   IconCash,
+  IconFileText,
+  IconFileUpload,
   IconLicense,
+  IconPaperclip,
   IconSteeringWheel,
 } from "@tabler/icons-react";
 import CurrencyInput from "../../components/CurrencyInput";
 import FormSection from "../../components/FormSection";
+import toFileUrl from "../../utils/toFileUrl";
+import AttachmentsUpload from "../attachments/AttachmentsUpload";
 import CompaniesSelect from "../companies/CompaniesSelect";
 import PicklistsSelect from "../picklists/components/PicklistsSelect";
 import UsersSelect from "../users/UsersSelect";
@@ -155,6 +169,111 @@ export const FleetMainFields = ({ form }) => {
     </FormSection>
   );
 };
+
+const DOCUMENT_MIME_TYPES = [
+  ...PDF_MIME_TYPE,
+  ...MS_WORD_MIME_TYPE,
+  ...MS_EXCEL_MIME_TYPE,
+  ...IMAGE_MIME_TYPE,
+];
+
+const fileName = (file) =>
+  (typeof file === "string" ? file : file?.originalName || file?.filePath || "")
+    .split(/[\\/]/)
+    .pop() || "File";
+
+/** Files the vehicle already has, shown above the pickers on edit. */
+const SavedFiles = ({ images = [], documents = [] }) => {
+  const savedImages = images.filter((image) => toFileUrl(image));
+  const savedDocuments = documents.filter((document) => toFileUrl(document));
+
+  if (!savedImages.length && !savedDocuments.length) return null;
+
+  return (
+    <Stack gap="xs">
+      <Text fz="xs" c="dimmed">
+        Already saved
+      </Text>
+
+      <Group gap="sm">
+        {savedImages.map((image, index) => (
+          <Anchor
+            key={`image-${index}`}
+            href={toFileUrl(image)}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <Image
+              src={toFileUrl(image)}
+              alt={fileName(image)}
+              w={88}
+              h={56}
+              radius="sm"
+              fit="cover"
+            />
+          </Anchor>
+        ))}
+
+        {savedDocuments.map((document, index) => (
+          <Anchor
+            key={`document-${index}`}
+            href={toFileUrl(document)}
+            target="_blank"
+            rel="noreferrer"
+            fz="xs"
+          >
+            <Group gap={4} wrap="nowrap">
+              <IconFileText size={16} />
+              {fileName(document)}
+            </Group>
+          </Anchor>
+        ))}
+      </Group>
+    </Stack>
+  );
+};
+
+/**
+ * Last section of the form: pictures of the vehicle and its paperwork, sent
+ * as `images` and `documents`. `files` holds the newly picked ones; `saved`
+ * is the record being edited, if any.
+ */
+export const FleetFilesFields = ({ files, onChange, saved }) => (
+  <FormSection
+    title="Images & documents"
+    description="Pictures of the vehicle and its paperwork"
+    icon={IconPaperclip}
+    plain
+  >
+    <Stack gap="md">
+      <SavedFiles images={saved?.images} documents={saved?.documents} />
+
+      <Stack gap={6}>
+        <Text fz="sm" fw={500}>
+          Images
+        </Text>
+        <AttachmentsUpload
+          value={files.images}
+          onChange={(images) => onChange({ ...files, images })}
+        />
+      </Stack>
+
+      <Stack gap={6}>
+        <Text fz="sm" fw={500}>
+          Documents
+        </Text>
+        <AttachmentsUpload
+          value={files.documents}
+          onChange={(documents) => onChange({ ...files, documents })}
+          accept={DOCUMENT_MIME_TYPES}
+          title="Drag documents here or click to upload"
+          hint="PDF, Word, Excel or images"
+          icon={IconFileUpload}
+        />
+      </Stack>
+    </Stack>
+  </FormSection>
+);
 
 /** Right column: what it cost and who holds it. */
 export const FleetAsideFields = ({ form, showCurrentOdometer = false }) => {

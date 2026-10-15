@@ -48,8 +48,11 @@ const useInsuranceFields = (form) => {
   return { picklist, date };
 };
 
-/** Left column: who is covered, by whom, and for how long. */
-export const InsuranceMainFields = ({ form }) => {
+/**
+ * Left column: who is covered, by whom, and for how long. `fleetLocked` keeps
+ * the vehicle fixed when the form is opened from that vehicle's screen.
+ */
+export const InsuranceMainFields = ({ form, fleetLocked = false }) => {
   const { picklist, date } = useInsuranceFields(form);
 
   return (
@@ -92,6 +95,7 @@ export const InsuranceMainFields = ({ form }) => {
               label: "Vehicle",
               placeholder: "Search by plate, make or model",
               ...form.getInputProps("fleet"),
+              disabled: fleetLocked,
             }}
           />
         </Grid.Col>

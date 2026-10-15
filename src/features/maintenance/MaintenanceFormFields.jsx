@@ -77,8 +77,11 @@ const StatusIcon = ({ status }) => {
   );
 };
 
-/** Left column: what the job is and who is doing it. */
-export const MaintenanceMainFields = ({ form }) => {
+/**
+ * Left column: what the job is and who is doing it. `fleetLocked` keeps the
+ * vehicle fixed when the form is opened from that vehicle's screen.
+ */
+export const MaintenanceMainFields = ({ form, fleetLocked = false }) => {
   const { picklist, date } = useMaintenanceFields(form);
   const statusInput = form.getInputProps("status");
 
@@ -103,6 +106,7 @@ export const MaintenanceMainFields = ({ form }) => {
               label: "Vehicle",
               placeholder: "Search by plate, make or model",
               ...form.getInputProps("fleet"),
+              disabled: fleetLocked,
             }}
           />
         </Grid.Col>

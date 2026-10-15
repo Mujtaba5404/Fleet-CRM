@@ -1,7 +1,11 @@
+/* Header and footer stay put; only .body scrolls. Every link in the chain
+   (modal content → modal body → form → body) is a flex item with
+   min-height: 0, which is what lets the body shrink below its content and
+   scroll instead of stretching the whole modal. */
 .form {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
   min-height: 0;
 }
 
@@ -24,6 +28,8 @@
 .body {
   flex: 1;
   min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--mantine-color-gray-0);
 }
 

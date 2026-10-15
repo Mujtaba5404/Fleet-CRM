@@ -62,7 +62,7 @@ const picklistFilter = (field, filters, setFilters) => ({
 const DEFAULT_COLUMNS = (filters, setFilters) => [
   {
     accessor: "createdAt",
-    title: "Logged",
+    title: "Date",
     width: 150,
     textAlign: "center",
     sortable: true,
@@ -107,10 +107,6 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
         <Badge variant="light" tt="uppercase">
           {row.policyNumber || "-"}
         </Badge>
-
-        <Text size="xs" c="dimmed" tt="capitalize" mt={2}>
-          {title(row.type) || "-"}
-        </Text>
       </UnstyledButton>
     ),
   },
@@ -197,17 +193,7 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     title: "Payable",
     width: 150,
     sortable: true,
-    render: (row) => (
-      <TwoLine
-        top={formatAmount(payable(row))}
-        bottom={[
-          row.taxAmount ? `Tax ${formatAmount(row.taxAmount)}` : null,
-          row.discountAmount ? `− ${formatAmount(row.discountAmount)}` : null,
-        ]
-          .filter(Boolean)
-          .join(" · ")}
-      />
-    ),
+    render: (row) => (row.totalAmount ?? row.totalPremium ?? row.premium ?? 0),
   },
   {
     accessor: "coverage",

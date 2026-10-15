@@ -30,9 +30,14 @@ const HALF = { base: 12, sm: 6 };
 
 /**
  * Left column: which vehicle, how, and over how long. `onFleetChange` lets the
- * add form fill in what it can from the picked vehicle.
+ * add form fill in what it can from the picked vehicle. `fleetLocked` keeps
+ * the vehicle fixed when the form is opened from that vehicle's screen.
  */
-export const DepreciationMainFields = ({ form, onFleetChange }) => {
+export const DepreciationMainFields = ({
+  form,
+  onFleetChange,
+  fleetLocked = false,
+}) => {
   const fleetInput = form.getInputProps("fleet");
   const isDeclining =
     form.values.method === DEPRECIATION_METHODS.DECLINING_BALANCE;
@@ -54,6 +59,7 @@ export const DepreciationMainFields = ({ form, onFleetChange }) => {
               fleetInput.onChange(value);
               onFleetChange?.(value);
             },
+            disabled: fleetLocked,
           }}
         />
       </Grid.Col>

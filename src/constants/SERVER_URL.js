@@ -1,5 +1,3 @@
-// Dev goes through the Vite proxy (see vite.config.js) so session cookies work
-// on localhost; production builds call the backends directly.
 const useProxy = import.meta.env.DEV;
 
 export const SERVER_URL = useProxy

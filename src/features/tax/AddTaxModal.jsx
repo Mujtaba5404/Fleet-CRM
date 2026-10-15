@@ -9,7 +9,11 @@ import { TAX_CREATE_VALIDATION, TAX_INITIAL_VALUES } from "./taxForm";
 
 const idOf = (value) => value?._id ?? value ?? null;
 
-const AddTaxModal = ({ isOpen = false, onClose = () => {} }) => {
+/**
+ * Pass `fleet` to add tax for that vehicle from its own screen: the vehicle
+ * is fixed and you stay on that screen afterwards.
+ */
+const AddTaxModal = ({ isOpen = false, onClose = () => {}, fleet }) => {
   const createTaxMutation = useCreateTaxMutation();
   const navigate = useNavigate();
 
@@ -17,7 +21,10 @@ const AddTaxModal = ({ isOpen = false, onClose = () => {} }) => {
   const fleets = useGetAllfleetsQuery({ query: {} });
 
   const form = useForm({
-    initialValues: TAX_INITIAL_VALUES,
+    initialValues: {
+      ...TAX_INITIAL_VALUES,
+      ...(fleet && { fleet: fleet._id }),
+    },
     validate: TAX_CREATE_VALIDATION,
   });
 
@@ -30,8 +37,9 @@ const AddTaxModal = ({ isOpen = false, onClose = () => {} }) => {
   // company is the vehicle's: the form has no company field.
   // eslint-disable-next-line no-unused-vars
   const handleSubmit = ({ status, company, ...values }) => {
-    const fleet = fleets.data?.find((item) => item._id === values.fleet);
-    const fleetCompany = idOf(fleet?.company) || company;
+    const vehicle =
+      fleets.data?.find((item) => item._id === values.fleet) ?? fleet;
+    const fleetCompany = idOf(vehicle?.company) || company;
 
     createTaxMutation.mutate(
       { ...values, ...(fleetCompany && { company: fleetCompany }) },
@@ -39,7 +47,7 @@ const AddTaxModal = ({ isOpen = false, onClose = () => {} }) => {
         onSuccess: ({ data }) => {
           form.reset();
           onClose();
-          navigate(`/tax/${data._id}`);
+          if (!fleet) navigate(`/tax/${data._id}`);
         },
       },
     );
@@ -65,7 +73,7 @@ const AddTaxModal = ({ isOpen = false, onClose = () => {} }) => {
       error={createTaxMutation.error}
       aside={<TaxAsideFields form={form} />}
     >
-      <TaxMainFields form={form} withStatus={false} />
+      <TaxMainFields form={form} withStatus={false} fleetLocked={!!fleet} />
     </FormShell>
   );
 };

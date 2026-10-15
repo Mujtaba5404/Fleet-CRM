@@ -1,22 +1,19 @@
 import {
   Alert,
   Avatar,
-  Badge,
   Center,
   Group,
   Loader,
-  Text,
+  Text
 } from "@mantine/core";
 import { IconAlertTriangle, IconX } from "@tabler/icons-react";
 import dayjs from "dayjs";
+import { Fragment } from "react";
 import { useParams } from "react-router-dom";
 import { useGetfleetByIdQuery } from "../../api/fleet";
-import DetailLayout from "../../components/DetailLayout";
 import KeyFacts from "../../components/KeyFacts";
 import Placeholder from "../../components/Placeholder";
-import PropertyCard from "../../components/PropertyCard";
 import RecordHeader from "../../components/RecordHeader";
-import RecordMeta from "../../components/RecordMeta";
 import formatAmount from "../../utils/formatAmount";
 import formatDate from "../../utils/formatDate";
 import getAbbreviation from "../../utils/getAbbreviation";
@@ -62,11 +59,19 @@ const FleetDetails = () => {
   const vehicleName = [data.make?.title, data.model?.title]
     .filter(Boolean)
     .join(" ");
+  // Make and model are the title; the rest of the spec reads as one line under it.
+  const spec = [
+    { label: "Year", value: data.year },
+    { label: "Type", value: picklistTitle(data.type) },
+    { label: "Fuel type", value: picklistTitle(data.fuelType) },
+    { label: "Transmission", value: picklistTitle(data.transmission) },
+    { label: "Condition", value: picklistTitle(data.condition) },
+    { label: "Colour", value: data.color },
+  ].filter(({ value }) => value != null && value !== "");
+
   const distanceDriven =
     (data.currentOdometer ?? 0) - (data.initialOdometer ?? 0);
 
-  // Only an assigned vehicle carries driver details.
-  // The person is sent as `user`; older records stored it as `driver`.
   const driverUser = data.driverDetails?.user ?? data.driverDetails?.driver;
   const driver = driverUser ? data.driverDetails : null;
   const driverName = typeof driverUser === "object" ? driverUser?.name : null;
@@ -97,17 +102,18 @@ const FleetDetails = () => {
           data.status && <FleetStatusBadge status={data.status} size="md" />
         }
         meta={
-          <Group gap={8} wrap="wrap">
-            <Badge size="md" variant="default" radius="sm" tt="uppercase">
-              {data.licensePlate || "No plate"}
-            </Badge>
-
-            <Text fz="sm" c="dimmed" tt="capitalize">
-              {[data.year, data.color, picklistTitle(data.type)]
-                .filter(Boolean)
-                .join(" · ")}
-            </Text>
-          </Group>
+          spec.length > 0 && (
+            <Group gap={6} wrap="wrap" fz="sm" c="dimmed">
+              {spec.map(({ label, value }, index) => (
+                <Fragment key={label}>
+                  {index > 0 && <Text span inherit aria-hidden>·</Text>}
+                  <Text span inherit tt="capitalize" title={label}>
+                    {value}
+                  </Text>
+                </Fragment>
+              ))}
+            </Group>
+          )
         }
         actions={
           <>
@@ -163,98 +169,7 @@ const FleetDetails = () => {
         ]}
       />
 
-      <DetailLayout
-        asideFirst
-        main={<VehicleRecords fleet={data} />}
-        aside={
-          <PropertyCard
-            sections={[
-              {
-                title: "Specification",
-                items: [
-                  {
-                    label: "Make",
-                    value: picklistTitle(data.make),
-                    tt: "capitalize",
-                  },
-                  {
-                    label: "Model",
-                    value: picklistTitle(data.model),
-                    tt: "capitalize",
-                  },
-                  { label: "Year", value: data.year, numeric: true },
-                  {
-                    label: "Type",
-                    value: picklistTitle(data.type),
-                    tt: "capitalize",
-                  },
-                  {
-                    label: "Fuel type",
-                    value: picklistTitle(data.fuelType),
-                    tt: "capitalize",
-                  },
-                  {
-                    label: "Transmission",
-                    value: picklistTitle(data.transmission),
-                    tt: "capitalize",
-                  },
-                  {
-                    label: "Condition",
-                    value: picklistTitle(data.condition),
-                    tt: "capitalize",
-                  },
-                  { label: "Colour", value: data.color, tt: "capitalize" },
-                ],
-              },
-              {
-                title: "Odometer",
-                items: [
-                  {
-                    label: "Initial reading",
-                    value: data.initialOdometer?.toLocaleString(),
-                    numeric: true,
-                  },
-                ],
-              },
-              {
-                title: "Driver",
-                items: [
-                  {
-                    label: "License number",
-                    value: driver?.licenseNumber,
-                    numeric: true,
-                  },
-                  {
-                    label: "License expiry",
-                    value: driver?.licenseExpiry && (
-                      <Text
-                        fz="sm"
-                        fw={500}
-                        c={licenseExpired ? "red" : undefined}
-                        className="numeric"
-                      >
-                        {formatDate(driver.licenseExpiry)}
-                      </Text>
-                    ),
-                  },
-                  {
-                    label: "Inspector",
-                    value: data.inspector?.name,
-                    tt: "capitalize",
-                  },
-                ],
-              },
-            ]}
-            footer={
-              <RecordMeta
-                company={data.company}
-                createdAt={data.createdAt}
-                updatedAt={data.updatedAt}
-              />
-            }
-          />
-        }
-      />
+      <VehicleRecords fleet={data} />
     </>
   );
 };

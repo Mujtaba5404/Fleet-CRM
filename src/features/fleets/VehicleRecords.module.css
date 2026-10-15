@@ -1,0 +1,48 @@
+
+.list {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 2px;
+  padding: 3px;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-8));
+}
+
+.tab {
+  height: 34px;
+  padding: 0 var(--mantine-spacing-md);
+  flex-shrink: 0;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+  color: var(--mantine-color-dimmed);
+  border: 1px solid transparent;
+  border-radius: var(--mantine-radius-sm);
+  background: transparent;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease;
+}
+
+.tab:hover {
+  color: var(--mantine-color-text);
+  background: transparent;
+}
+
+.tab.tab[data-active],
+.tab.tab[data-active]:hover {
+  color: var(--mantine-primary-color-contrast);
+  background: var(--mantine-primary-color-filled);
+  border-color: transparent;
+  box-shadow: var(--mantine-shadow-xs);
+}
+
+/* The count chip reads on the filled active tab too. */
+.tab[data-active] .count {
+  color: var(--mantine-primary-color-contrast);
+  background: rgba(255, 255, 255, 0.2);
+}

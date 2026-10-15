@@ -1,11 +1,15 @@
-﻿import { useForm } from "@mantine/form";
+import { useForm } from "@mantine/form";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCreatefleetMutation } from "../../api/fleet";
 import FormShell from "../../components/FormShell";
-import AttachmentsUpload from "../attachments/AttachmentsUpload";
-import { FleetAsideFields, FleetMainFields } from "./FleetFormFields";
 import {
+  FleetAsideFields,
+  FleetFilesFields,
+  FleetMainFields,
+} from "./FleetFormFields";
+import {
+  EMPTY_FLEET_FILES,
   FLEET_INITIAL_VALUES,
   FLEET_VALIDATION,
   fleetToPayload,
@@ -17,7 +21,7 @@ const AddfleetModal = ({ isOpen = false, onClose = () => {} }) => {
 
   // Held outside the form: Files are not form values, they are appended to
   // the multipart body on submit.
-  const [attachments, setAttachments] = useState([]);
+  const [files, setFiles] = useState(EMPTY_FLEET_FILES);
 
   const form = useForm({
     initialValues: FLEET_INITIAL_VALUES,
@@ -30,15 +34,15 @@ const AddfleetModal = ({ isOpen = false, onClose = () => {} }) => {
 
   const handleClose = () => {
     form.reset();
-    setAttachments([]);
+    setFiles(EMPTY_FLEET_FILES);
     onClose();
   };
 
   const handleSubmit = (values) => {
-    createfleetMutation.mutate(fleetToPayload(values, attachments), {
+    createfleetMutation.mutate(fleetToPayload(values, files), {
       onSuccess: ({ data }) => {
         form.reset();
-        setAttachments([]);
+        setFiles(EMPTY_FLEET_FILES);
         onClose();
         navigate(`/fleets/${data._id}`);
       },
@@ -55,9 +59,13 @@ const AddfleetModal = ({ isOpen = false, onClose = () => {} }) => {
       onSubmit={form.onSubmit(handleSubmit)}
       isSubmitting={createfleetMutation.isPending}
       error={createfleetMutation.error}
-      aside={<FleetAsideFields form={form} />}
+      aside={
+        <>
+          <FleetAsideFields form={form} />
+          <FleetFilesFields files={files} onChange={setFiles} />
+        </>
+      }
     >
-      <AttachmentsUpload value={attachments} onChange={setAttachments} />
       <FleetMainFields form={form} />
     </FormShell>
   );

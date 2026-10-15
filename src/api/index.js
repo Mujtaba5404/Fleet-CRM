@@ -3,7 +3,7 @@ import { AUTH_SERVER_URL, SERVER_URL } from "../constants/SERVER_URL";
 
 export const AUTH_STORAGE_KEY = "auth";
 
-/** Auth360: sign in, refresh, sign out and password changes. */
+
 export const authApi = axios.create({
   baseURL: `${AUTH_SERVER_URL}api/v1`,
   withCredentials: true,
@@ -22,7 +22,7 @@ export const readAuth = () => {
   }
 };
 
-/** Raised when the session cannot be refreshed; RequireAuth listens for it. */
+
 export const SESSION_EXPIRED_EVENT = "fleet360:session-expired";
 
 export const clearAuth = () => {
@@ -44,7 +44,6 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// One refresh at a time: a burst of 401s all wait on the same request.
 let refreshing = null;
 
 const refreshSession = () => {

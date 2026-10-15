@@ -1,12 +1,14 @@
-﻿import { Group } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useEffect, useState } from "react";
 import { useUpdatefleetMutation } from "../../api/fleet";
 import FormShell from "../../components/FormShell";
-import AttachmentsUpload from "../attachments/AttachmentsUpload";
-import AttachmentThumbnail from "../attachments/AttachmentThumbnail";
-import { FleetAsideFields, FleetMainFields } from "./FleetFormFields";
 import {
+  FleetAsideFields,
+  FleetFilesFields,
+  FleetMainFields,
+} from "./FleetFormFields";
+import {
+  EMPTY_FLEET_FILES,
   FLEET_VALIDATION,
   fleetToPayload,
   fleetToFormValues,
@@ -16,16 +18,16 @@ const EditfleetModal = ({ fleet, isOpen = false, onClose = () => {} }) => {
   const updatefleetMutation = useUpdatefleetMutation();
 
   // Only newly picked files live here; saved ones are read straight from
-  // `fleet.attachments` and deleted individually. The seed is reset during
-  // render rather than in an effect, so reopening never flashes the previous
+  // `fleet.images` / `fleet.documents`. The seed is reset during render
+  // rather than in an effect, so reopening never flashes the previous
   // session's picks.
   const seed = `${isOpen}:${fleet?._id}`;
-  const [attachmentsSeed, setAttachmentsSeed] = useState(seed);
-  const [attachments, setAttachments] = useState([]);
+  const [filesSeed, setFilesSeed] = useState(seed);
+  const [files, setFiles] = useState(EMPTY_FLEET_FILES);
 
-  if (attachmentsSeed !== seed) {
-    setAttachmentsSeed(seed);
-    setAttachments([]);
+  if (filesSeed !== seed) {
+    setFilesSeed(seed);
+    setFiles(EMPTY_FLEET_FILES);
   }
 
   const form = useForm({
@@ -46,13 +48,13 @@ const EditfleetModal = ({ fleet, isOpen = false, onClose = () => {} }) => {
 
   const handleClose = () => {
     form.reset();
-    setAttachments([]);
+    setFiles(EMPTY_FLEET_FILES);
     onClose();
   };
 
   const handleSubmit = (values) => {
     updatefleetMutation.mutate(
-      { fleetId: fleet._id, payload: fleetToPayload(values, attachments) },
+      { fleetId: fleet._id, payload: fleetToPayload(values, files) },
       { onSuccess: () => onClose() },
     );
   };
@@ -67,17 +69,13 @@ const EditfleetModal = ({ fleet, isOpen = false, onClose = () => {} }) => {
       onSubmit={form.onSubmit(handleSubmit)}
       isSubmitting={updatefleetMutation.isPending}
       error={updatefleetMutation.error}
-      aside={<FleetAsideFields form={form} showCurrentOdometer />}
+      aside={
+        <>
+          <FleetAsideFields form={form} showCurrentOdometer />
+          <FleetFilesFields files={files} onChange={setFiles} saved={fleet} />
+        </>
+      }
     >
-      {fleet?.attachments?.length > 0 && (
-        <Group gap="sm">
-          {fleet.attachments.map((attachment) => (
-            <AttachmentThumbnail key={attachment._id} attachment={attachment} />
-          ))}
-        </Group>
-      )}
-
-      <AttachmentsUpload value={attachments} onChange={setAttachments} />
       <FleetMainFields form={form} />
     </FormShell>
   );

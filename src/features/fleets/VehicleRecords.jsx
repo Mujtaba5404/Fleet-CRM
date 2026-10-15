@@ -1,21 +1,26 @@
-import { Badge, Loader, Tabs } from "@mantine/core";
+import { Badge, Group, Loader, Tabs } from "@mantine/core";
 import {
   IconReceiptTax,
   IconShieldCheck,
   IconTool,
   IconTrendingDown,
 } from "@tabler/icons-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useGetAllDepreciationsQuery } from "../../api/depreciation";
 import { useGetAllInsuranceQuery } from "../../api/insurance";
 import { useGetAllMaintenanceQuery } from "../../api/maintenance";
 import { useGetAllTaxQuery } from "../../api/tax";
 import RESOURCES from "../../constants/RESOURCES";
 import { usePermissions } from "../../hooks/useCanAccess";
+import AddDepreciationModalButton from "../depreciations/AddDepreciationModalButton";
 import DepreciationTable from "../depreciations/DepreciationTable";
+import AddInsuranceModalButton from "../Insurance/AddInsuranceModalButton";
 import InsuranceTable from "../Insurance/InsuranceTable";
+import AddMaintenanceModalButton from "../maintenance/AddMaintenanceModalButton";
 import MaintenanceTable from "../maintenance/MaintenanceTable";
+import AddTaxModalButton from "../tax/AddTaxModalButton";
 import TaxTable from "../tax/TaxTable";
+import classes from "./VehicleRecords.module.css";
 
 /** The `/all` endpoints return a bare array; the paginated ones wrap it. */
 const toList = (data) => (Array.isArray(data) ? data : (data?.data ?? []));
@@ -52,19 +57,10 @@ const sortRows = (rows, sort) => {
   });
 };
 
-/** Every record of a kind that belongs to this vehicle, and nothing else. */
 const pinToVehicle = (data, fleet) =>
   toList(data).filter((row) => idOf(row.fleet) === fleet._id);
 
-/**
- * Builds a drop-in replacement for a table's paginated query hook that only
- * ever returns this vehicle's records.
- *
- * The plate narrows the request on the server (where the API supports it),
- * but a plate search can match other vehicles too ("ABC-1" also finds
- * "ABC-12"), so rows are pinned to the vehicle's id here and paged and sorted
- * locally.
- */
+
 const createVehicleQuery = (useAllQuery, fleet, byPlate = true) =>
   function useVehicleQuery({ page, pageSize, sort, query }) {
     const result = useAllQuery({
@@ -92,6 +88,7 @@ const TABS = [
     icon: IconTool,
     resource: RESOURCES.MAINTENANCE,
     Table: MaintenanceTable,
+    AddButton: AddMaintenanceModalButton,
     useAllQuery: useGetAllMaintenanceQuery,
   },
   {
@@ -100,6 +97,7 @@ const TABS = [
     icon: IconShieldCheck,
     resource: RESOURCES.INSURANCE,
     Table: InsuranceTable,
+    AddButton: AddInsuranceModalButton,
     useAllQuery: useGetAllInsuranceQuery,
   },
   {
@@ -108,6 +106,7 @@ const TABS = [
     icon: IconReceiptTax,
     resource: RESOURCES.TAXATION,
     Table: TaxTable,
+    AddButton: AddTaxModalButton,
     useAllQuery: useGetAllTaxQuery,
   },
   {
@@ -116,8 +115,8 @@ const TABS = [
     icon: IconTrendingDown,
     resource: RESOURCES.DEPRECIATION,
     Table: DepreciationTable,
+    AddButton: AddDepreciationModalButton,
     useAllQuery: useGetAllDepreciationsQuery,
-    // Not known to filter by plate; the rows are pinned by id either way.
     byPlate: false,
   },
 ];
@@ -153,30 +152,52 @@ const VehicleRecords = ({ fleet }) => {
   const can = usePermissions();
   const tabs = TABS.filter((tab) => can(tab.resource, "read"));
 
+  const [active, setActive] = useState(null);
+
   if (!tabs.length) return null;
 
+  const current = tabs.find((tab) => tab.value === active) ?? tabs[0];
+  const AddButton = current.AddButton;
+
   return (
-    <Tabs defaultValue={tabs[0].value}>
-      <Tabs.List mb="md">
-        {tabs.map(({ value, label, icon: Icon }) => (
-          <Tabs.Tab
-            key={value}
-            value={value}
-            leftSection={<Icon size={16} />}
-            rightSection={
-              counts[value].isLoading ? (
-                <Loader size={12} type="oval" />
-              ) : (
-                <Badge size="sm" variant="light" color="gray" circle>
-                  {pinToVehicle(counts[value].data, fleet).length}
-                </Badge>
-              )
-            }
-          >
-            {label}
-          </Tabs.Tab>
-        ))}
-      </Tabs.List>
+    <Tabs
+      value={current.value}
+      onChange={setActive}
+      variant="pills"
+      classNames={{ list: classes.list, tab: classes.tab }}
+    >
+      {/* Add one for this vehicle without leaving its screen. */}
+      <Group justify="space-between" wrap="nowrap" gap="sm" mb="md">
+        <Tabs.List>
+          {tabs.map(({ value, label, icon: Icon }) => (
+            <Tabs.Tab
+              key={value}
+              value={value}
+              leftSection={<Icon size={16} stroke={1.8} />}
+              rightSection={
+                counts[value].isLoading ? (
+                  <Loader size={12} type="oval" color="currentColor" />
+                ) : (
+                  <Badge
+                    size="sm"
+                    variant="light"
+                    circle
+                    className={classes.count}
+                  >
+                    {pinToVehicle(counts[value].data, fleet).length}
+                  </Badge>
+                )
+              }
+            >
+              {label}
+            </Tabs.Tab>
+          ))}
+        </Tabs.List>
+
+        {can(current.resource, "create") && (
+          <AddButton fleet={fleet} size="xs" style={{ flexShrink: 0 }} />
+        )}
+      </Group>
 
       {tabs.map(({ value, Table }) => (
         <Tabs.Panel key={value} value={value}>
