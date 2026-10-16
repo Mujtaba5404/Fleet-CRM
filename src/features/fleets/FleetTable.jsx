@@ -167,9 +167,7 @@ const DEFAULT_COLUMNS = (filters, setFilters) => [
     accessor: "documents",
     width: 90,
     textAlign: "center",
-    render: (row) => (
-      <FleetFilesPreview images={row.images} documents={row.documents} />
-    ),
+    render: (row) => <FleetFilesPreview fleet={row} />,
   },
   {
     accessor: "condition",

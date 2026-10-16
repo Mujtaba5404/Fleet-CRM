@@ -1,8 +1,6 @@
 import { Group, Paper, Text, ThemeIcon } from "@mantine/core";
 
-/**
- * A titled card in the main column of a detail screen.
- */
+
 const DetailPanel = ({ title, icon: Icon, action, children, ...props }) => (
   <Paper p="lg" {...props}>
     <Group justify="space-between" mb="md" wrap="nowrap" gap="sm">

@@ -24,6 +24,7 @@ import { memo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authUserId } from "../../api/access";
 import { useLoginMutation } from "../../api/auth";
+import CarLoader from "../../components/CarLoader";
 import Logo from "../../components/Logo";
 import {
   sessionAccessQuery,
@@ -95,6 +96,7 @@ const Login = () => {
   const loginMutation = useLoginMutation();
   // Signed in, still fetching permissions: keep the button busy.
   const [opening, setOpening] = useState(false);
+  const signingIn = loginMutation.isPending || opening;
 
   const form = useForm({
     mode: "uncontrolled",
@@ -194,18 +196,15 @@ const Login = () => {
                 {...form.getInputProps("password")}
               />
 
-              <Button
-                type="submit"
-                mt="sm"
-                fullWidth
-                loading={loginMutation.isPending || opening}
-              >
+              <Button type="submit" mt="sm" fullWidth loading={signingIn}>
                 Sign in
               </Button>
             </Stack>
           </Stack>
         </SimpleGrid>
       </Paper>
+
+      {signingIn && <CarLoader overlay size={180} label="Signing you in…" />}
     </Box>
   );
 };

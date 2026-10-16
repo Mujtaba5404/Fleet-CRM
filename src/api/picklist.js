@@ -3,11 +3,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { showNotification } from "../notifications/showNotification";
 import api from "../api/index";
 
-export const useGetAllPicklistsQuery = (params) => {
+export const useGetAllPicklistsQuery = (params, options = {}) => {
   return useQuery({
     queryKey: ["picklists", "all", params],
     queryFn: () =>
       api.get("picklists/all", { params }).then(({ data }) => data),
+    ...options,
   });
 };
 

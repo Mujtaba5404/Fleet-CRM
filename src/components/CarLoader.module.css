@@ -1,0 +1,101 @@
+.root {
+  /* Paint follows the brand colour; outline and road flip for the dark surface. */
+  --car-ink: var(--mantine-color-dark-7);
+  --car-paint: var(--mantine-primary-color-filled);
+  --car-tyre: var(--mantine-color-dark-7);
+  --car-shine: var(--mantine-color-white);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  width: fit-content;
+  margin-inline: auto;
+}
+
+:global([data-mantine-color-scheme="dark"]) .root {
+  --car-ink: var(--mantine-color-dark-1);
+}
+
+.svg {
+  display: block;
+  overflow: visible;
+}
+
+/* A light bounce on the suspension. */
+.body {
+  animation: bounce 0.35s ease-in-out infinite alternate;
+}
+
+@keyframes bounce {
+  to {
+    transform: translateY(-1.2px);
+  }
+}
+
+.wheel {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Speed lines stream away behind the car. */
+.streak {
+  animation: streak 0.9s linear infinite;
+}
+
+.streak:nth-of-type(2) {
+  animation-delay: -0.3s;
+}
+
+.streak:nth-of-type(3) {
+  animation-delay: -0.6s;
+}
+
+.streak:nth-of-type(4) {
+  animation-delay: -0.45s;
+}
+
+@keyframes streak {
+  0% {
+    transform: translateX(6px);
+    opacity: 0;
+  }
+
+  25% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(-10px);
+    opacity: 0;
+  }
+}
+
+/* Covers the screen while signing in or out. */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--mantine-color-body) 82%, transparent);
+  backdrop-filter: blur(4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .body,
+  .streak {
+    animation: none;
+  }
+
+  .wheel {
+    animation-duration: 1.6s;
+  }
+}

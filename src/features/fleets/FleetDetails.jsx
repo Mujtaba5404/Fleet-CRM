@@ -20,6 +20,7 @@ import getAbbreviation from "../../utils/getAbbreviation";
 import picklistTitle from "../../utils/picklistTitle";
 import DeletefleetButton from "./DeletefleetButton";
 import EditfleetModalButton from "./EditfleetModalButton";
+import FleetFiles from "./FleetFiles";
 import FleetStatusBadge from "./FleetStatusBadge";
 import VehicleRecords from "./VehicleRecords";
 
@@ -59,7 +60,6 @@ const FleetDetails = () => {
   const vehicleName = [data.make?.title, data.model?.title]
     .filter(Boolean)
     .join(" ");
-  // Make and model are the title; the rest of the spec reads as one line under it.
   const spec = [
     { label: "Year", value: data.year },
     { label: "Type", value: picklistTitle(data.type) },
@@ -170,6 +170,8 @@ const FleetDetails = () => {
       />
 
       <VehicleRecords fleet={data} />
+
+      <FleetFiles fleet={data} />
     </>
   );
 };

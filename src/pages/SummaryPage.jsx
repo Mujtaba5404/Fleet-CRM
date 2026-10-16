@@ -324,7 +324,7 @@ const SummaryPage = () => {
             value={fleetList.length.toLocaleString()}
             hint="In your fleet"
             icon={IconCar}
-            to="/fleets"
+            // to="/fleets"
             loading={fleets.isLoading}
           />
 
@@ -344,7 +344,7 @@ const SummaryPage = () => {
               hint={`${openJobs.length} open · ${formatAmountCompact(maintenanceCost)} spent`}
               icon={IconTool}
               color="grape"
-              to="/maintenance"
+              // to="/maintenance"
               loading={maintenance.isLoading}
             />
           )}

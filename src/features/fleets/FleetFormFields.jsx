@@ -33,6 +33,7 @@ import AttachmentsUpload from "../attachments/AttachmentsUpload";
 import CompaniesSelect from "../companies/CompaniesSelect";
 import PicklistsSelect from "../picklists/components/PicklistsSelect";
 import UsersSelect from "../users/UsersSelect";
+import { fileName } from "./fleetFileUtils";
 import {
   FLEET_STATUS_OPTIONS,
   getFleetStatusOption,
@@ -176,11 +177,6 @@ const DOCUMENT_MIME_TYPES = [
   ...MS_EXCEL_MIME_TYPE,
   ...IMAGE_MIME_TYPE,
 ];
-
-const fileName = (file) =>
-  (typeof file === "string" ? file : file?.originalName || file?.filePath || "")
-    .split(/[\\/]/)
-    .pop() || "File";
 
 /** Files the vehicle already has, shown above the pickers on edit. */
 const SavedFiles = ({ images = [], documents = [] }) => {

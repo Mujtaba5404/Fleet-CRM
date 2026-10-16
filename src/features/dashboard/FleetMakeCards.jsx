@@ -28,12 +28,7 @@ const plural = (amount, word) => `${amount} ${word}${amount === 1 ? "" : "s"}`;
 
 const makeKey = (make) => make._id ?? "unassigned";
 
-/**
- * Every make in the picklist, with its vehicles from the summary. The summary
- * only lists makes that have vehicles, so a make with none still shows up
- * (with a count of 0), and a summary bucket missing from the picklist (an
- * unset or deleted make) is kept too. Most vehicles first.
- */
+
 const mergeMakes = (picklistMakes = [], buckets = []) => {
   const byId = new Map(buckets.map((bucket) => [makeKey(bucket), bucket]));
 
@@ -55,66 +50,23 @@ const mergeMakes = (picklistMakes = [], buckets = []) => {
   );
 };
 
-/**
- * One card for one vehicle make (Suzuki, Toyota…): how many vehicles it has
- * and how they split across its models (Alto, Cultus…). The dropdown in the
- * card's corner switches make; it opens on the make with the most vehicles.
- */
-const FleetMakeCards = () => {
-  const [selected, setSelected] = useState(null);
 
-  const summary = useGetfleetSummaryByGroupQuery({
-    primaryGroup: "make",
-    secondaryGroup: "model",
-  });
-  const picklistMakes = useGetAllPicklistsQuery({
-    query: { resource: "Fleet", field: "make" },
-  });
-  // Every model, each tied to its make by `parentPicklist`.
-  const picklistModels = useGetAllPicklistsQuery({
-    query: { resource: "Fleet", field: "model" },
-  });
-
-  if (summary.isLoading || picklistMakes.isLoading)
-    return <Skeleton height={150} radius="md" />;
-
-  if (summary.isError)
-    return (
-      <Text fz="sm" c="red">
-        {summary.error?.response?.data?.message ||
-          summary.error?.message ||
-          "Could not load vehicles by make"}
-      </Text>
-    );
-
-  // Without the picklist, the makes that have vehicles are still worth showing.
-  const makes = mergeMakes(
-    Array.isArray(picklistMakes.data) ? picklistMakes.data : [],
-    summary.data?.primaryGroupWise ?? [],
-  );
-
-  if (!makes.length)
-    return (
-      <Placeholder
-        title="No makes yet"
-        description="Add makes under Configuration → Picklists to see them here."
-        icon={<IconCar size={32} />}
-      />
-    );
-
-  const make = makes.find((item) => makeKey(item) === selected) ?? makes[0];
+const MakeCard = ({ make, makes, onSelect }) => {
   const makeCount = count(make);
 
-  // The make's models as set up in the picklist, with or without vehicles.
-  const makeModels = (
-    Array.isArray(picklistModels.data) ? picklistModels.data : []
-  ).filter(
-    (model) => (model.parentPicklist?._id ?? model.parentPicklist) === make._id,
+
+  const picklistModels = useGetAllPicklistsQuery(
+    { query: { resource: "Fleet", field: "model", parentPicklist: make._id } },
+    { enabled: !!make._id },
   );
 
-  // Picklist models with their vehicle counts, plus any model the summary
-  // reports that the picklist does not (an unset or re-parented one).
-  // Colours are fixed here so the bar and the chips below agree.
+  const makeModels = make._id
+    ? (Array.isArray(picklistModels.data) ? picklistModels.data : []).filter(
+        (model) =>
+          (model.parentPicklist?._id ?? model.parentPicklist) === make._id,
+      )
+    : [];
+
   const vehiclesByModel = new Map(
     (make.secondaryGroupWise ?? []).map((model) => [
       model._id ?? "unassigned",
@@ -131,7 +83,11 @@ const FleetMakeCards = () => {
         value: count(vehiclesByModel.get(model._id)),
       })),
       ...[...vehiclesByModel]
-        .filter(([key]) => !makeModels.some((model) => model._id === key))
+        .filter(
+          ([key, model]) =>
+            count(model) > 0 &&
+            !makeModels.some((picklistModel) => picklistModel._id === key),
+        )
         .map(([key, model]) => ({
           key,
           label: model.title || UNASSIGNED,
@@ -174,7 +130,7 @@ const FleetMakeCards = () => {
             size="xs"
             w={170}
             value={makeKey(make)}
-            onChange={(value) => value && setSelected(value)}
+            onChange={(value) => value && onSelect(value)}
             allowDeselect={false}
             searchable
             nothingFoundMessage="No make found"
@@ -187,7 +143,6 @@ const FleetMakeCards = () => {
           />
         </Group>
 
-        {/* The models that have vehicles, in one full-width bar. */}
         <BarBreakdown
           data={withVehicles}
           emptyMessage="No vehicles of this make yet"
@@ -195,37 +150,83 @@ const FleetMakeCards = () => {
           namedSegments
         />
 
-        {/* Every model of the make, including those with no vehicles yet. */}
-        {models.length > 0 && (
-          <Group gap="xs">
-            {models.map((model) => (
-              <Badge
-                key={model.key}
-                variant="default"
-                tt="capitalize"
-                fw={500}
-                opacity={model.value ? 1 : 0.55}
-                leftSection={
-                  <Box
-                    w={8}
-                    h={8}
-                    style={{
-                      borderRadius: 999,
-                      background: model.value
-                        ? `var(--mantine-color-${model.color}-filled)`
-                        : "var(--mantine-color-dimmed)",
-                    }}
-                  />
-                }
-              >
-                {model.label} · {model.value}
-              </Badge>
-            ))}
-          </Group>
+        {picklistModels.isFetching ? (
+          <Skeleton height={22} width="60%" radius="xl" />
+        ) : (
+          models.length > 0 && (
+            <Group gap="xs">
+              {models.map((model) => (
+                <Badge
+                  key={model.key}
+                  variant="default"
+                  tt="capitalize"
+                  fw={500}
+                  opacity={model.value ? 1 : 0.55}
+                  leftSection={
+                    <Box
+                      w={8}
+                      h={8}
+                      style={{
+                        borderRadius: 999,
+                        background: model.value
+                          ? `var(--mantine-color-${model.color}-filled)`
+                          : "var(--mantine-color-dimmed)",
+                      }}
+                    />
+                  }
+                >
+                  {model.label} · {model.value}
+                </Badge>
+              ))}
+            </Group>
+          )
         )}
       </Stack>
     </Paper>
   );
+};
+
+
+const FleetMakeCards = () => {
+  const [selected, setSelected] = useState(null);
+
+  const summary = useGetfleetSummaryByGroupQuery({
+    primaryGroup: "make",
+    secondaryGroup: "model",
+  });
+  const picklistMakes = useGetAllPicklistsQuery({
+    query: { resource: "Fleet", field: "make" },
+  });
+
+  if (summary.isLoading || picklistMakes.isLoading)
+    return <Skeleton height={150} radius="md" />;
+
+  if (summary.isError)
+    return (
+      <Text fz="sm" c="red">
+        {summary.error?.response?.data?.message ||
+          summary.error?.message ||
+          "Could not load vehicles by make"}
+      </Text>
+    );
+
+  const makes = mergeMakes(
+    Array.isArray(picklistMakes.data) ? picklistMakes.data : [],
+    summary.data?.primaryGroupWise ?? [],
+  );
+
+  if (!makes.length)
+    return (
+      <Placeholder
+        title="No makes yet"
+        description="Add makes under Configuration → Picklists to see them here."
+        icon={<IconCar size={32} />}
+      />
+    );
+
+  const make = makes.find((item) => makeKey(item) === selected) ?? makes[0];
+
+  return <MakeCard make={make} makes={makes} onSelect={setSelected} />;
 };
 
 export default FleetMakeCards;

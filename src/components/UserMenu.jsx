@@ -23,6 +23,7 @@ import { useLogoutMutation } from "../api/auth";
 import RESOURCES from "../constants/RESOURCES";
 import ChangePasswordModal from "../features/auth/ChangePasswordModal";
 import CanAccess from "./CanAccess";
+import CarLoader from "./CarLoader";
 
 const UserMenu = () => {
   const [auth, , removeAuth] = useLocalStorage({
@@ -66,6 +67,10 @@ const UserMenu = () => {
         isOpen={changePasswordModalOpened}
         onClose={closeChangePasswordModal}
       />
+
+      {logoutMutation.isPending && (
+        <CarLoader overlay size={180} label="Signing you out…" />
+      )}
 
       <Menu width={230} position="bottom-end" shadow="md">
         <Menu.Target>

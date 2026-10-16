@@ -3,8 +3,7 @@ import { IconX } from "@tabler/icons-react";
 import useFilters from "../hooks/useFilters";
 import formatDate from "../utils/formatDate";
 
-// A cleared date range comes back as [null, null] rather than disappearing, so
-// an array counts as empty when nothing inside it survives either.
+
 const isEmpty = (value) =>
   value == null ||
   value === "" ||
@@ -20,9 +19,6 @@ const describe = (value) => {
   if (value instanceof Date) return formatDate(value);
 
   if (Array.isArray(value)) {
-    // A date range arrives as [from, to], and either end may be left open.
-    // Note the arrow: passing formatDate straight to map hands it the array
-    // index as its `format` argument, which dayjs then tries to call .replace on.
     if (value.some((item) => item instanceof Date)) {
       return value
         .map((item) => (item instanceof Date ? formatDate(item) : "any"))

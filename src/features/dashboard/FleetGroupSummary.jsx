@@ -35,14 +35,10 @@ import useVizColor from "../../utils/useVizColor";
 import { toStatusBucket } from "../fleets/fleetStatus";
 import { withFallbackColors } from "../../utils/vizPalette";
 
-// "Unassigned" would read as a vehicle status, so a missing value is "Not set".
+
 const UNASSIGNED = "Not set";
 
-/**
- * Status is an enum, so its summary buckets arrive as `{ _id: "assigned" }`
- * with no title or colour; give them the same label and colour as the badge.
- * Picklist buckets pass through untouched.
- */
+
 const labelBuckets = (field) => (bucket) => {
   if (field !== "status") return bucket;
 
@@ -56,7 +52,7 @@ const labelBuckets = (field) => (bucket) => {
 const count = (bucket) => Number(bucket?.count) || 0;
 const value = (bucket) => Number(bucket?.purchaseAmount) || 0;
 
-/** Count and value are the two ways to weigh a bucket; both charts follow it. */
+
 const METRICS = {
   count: {
     label: "Count",
@@ -72,11 +68,7 @@ const METRICS = {
   },
 };
 
-/**
- * Vehicles grouped two levels deep (e.g. fuel type → type): a column chart and
- * a donut of the second level. The groupings live in the URL, so a particular
- * view can be shared or bookmarked. `afterCharts` renders below the charts.
- */
+
 const FleetGroupSummary = ({ afterCharts = null }) => {
   const vizColor = useVizColor();
   const { filters, setFilters } = useFilters();
@@ -108,9 +100,7 @@ const FleetGroupSummary = ({ afterCharts = null }) => {
   const totalValue = Number(data?.totalPurchaseAmount) || 0;
   const metricTotal = metric === "count" ? totalCount : totalValue;
 
-  // One series per second-level value, so every column shares one legend.
-  // Colours are assigned before sorting, so switching Count/Value re-orders
-  // the legend without repainting any series.
+
   const series = withFallbackColors(
     secondaryBuckets.map((bucket) => ({
       key: bucket._id ?? "unassigned",
@@ -134,7 +124,6 @@ const FleetGroupSummary = ({ afterCharts = null }) => {
     }))
     .sort((a, b) => b.total - a.total);
 
-  // Grouping a field by itself tells you nothing, so block the overlap.
   const optionsFor = (excluded) =>
     FLEET_GROUP_FIELDS.map((field) => ({
       ...field,
